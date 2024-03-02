@@ -6,23 +6,27 @@ import numpy as np
 import os
 
 
-BASE_DIR = "tests/assets"
+ASSETS_DIR = "assets"
 
 
 class TestGfr(unittest.TestCase):
     @parameterized.expand([
-        ("cover/00001.jpeg", "features_matlab/00001_gfr.mat"),
-        ("cover/00002.jpeg", "features_matlab/00002_gfr.mat"),
-        ("cover/00003.jpeg", "features_matlab/00003_gfr.mat"),
-        ("cover/00004.jpeg", "features_matlab/00004_gfr.mat"),
-        ("cover/00005.jpeg", "features_matlab/00005_gfr.mat"),
+        ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/gfr/dolphin.mat"),
+        ("cover/jpeg_75_gray/hafelekar.jpg", "features_matlab/gfr/hafelekar.mat"),
+        ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/gfr/otter1.mat"),
+        ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/gfr/otter2.mat"),
+        ("cover/jpeg_75_gray/patscherkofel1.jpg", "features_matlab/gfr/patscherkofel1.mat"),
+        ("cover/jpeg_75_gray/patscherkofel2.jpg", "features_matlab/gfr/patscherkofel2.mat"),
+        ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/gfr/seal1.mat"),
+        ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/gfr/seal2.mat"),
+        ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/gfr/seal3.mat"),
+        ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/gfr/seal4.mat"),
     ])
     def test_compare_matlab(self, cover_filepath, matlab_features_filepath):
-        gfr_features_npy = extract_gfr_original_features_from_file(os.path.join(BASE_DIR, cover_filepath), num_rotations=32, qf=75)
+        gfr_features_npy = extract_gfr_original_features_from_file(os.path.join(ASSETS_DIR, cover_filepath), num_rotations=32, qf=75)
         gfr_features_npy = gfr_features_npy.flatten()
-        gfr_features_matlab = loadmat(os.path.join(BASE_DIR, matlab_features_filepath))["features"].flatten()
+        gfr_features_matlab = loadmat(os.path.join(ASSETS_DIR, matlab_features_filepath))["features"].flatten()
 
-        # TODO: Reduce atol
         np.testing.assert_allclose(gfr_features_npy, gfr_features_matlab, atol=1e-6)
 
 
