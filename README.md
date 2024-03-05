@@ -6,13 +6,13 @@ TODOs:
 
 The following steganalysis feature implementations are provided:
 
-| Abbreviation | Full name                                   | Dimensionality |                                                   Reference |
-|--------------|---------------------------------------------|----------------|------------------------------------------------------------:|
-| SPAM         | Subtractive pixel adjacency matrix          | 686            |   [Reference](https://ieeexplore.ieee.org/document/5437325) | 
-| JRM          | JPEG rich model                             | 11255          |              [Reference](https://doi.org/10.1117/12.907495) |
-| DCTR         | Discrete cosine transform residual features | 8000           |   [Reference](https://ieeexplore.ieee.org/document/6935011) |
-| PHARM        | Phase-aware projection rich model           | 12600          |             [Reference](https://doi.org/10.1117/12.2075239) |
-| GFR          | Gabor filter residual features              | 17000          | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) |
+| Abbreviation | Full name                                   | Dimensionality | Reference                                                   |
+|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|
+| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://ieeexplore.ieee.org/document/5437325)   | 
+| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              |
+| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://ieeexplore.ieee.org/document/6935011)   |
+| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             |
+| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) |
 
 # Usage
 
