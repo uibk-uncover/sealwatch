@@ -14,6 +14,8 @@ The following steganalysis feature implementations are provided:
 | PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             |
 | GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) |
 
+These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
+
 # Usage
 
 Extract features from a single JPEG image
@@ -86,7 +88,7 @@ For more details, see [this blog post](https://www.benediktlorch.com/blog/2023/m
 
 ## Other differences
 
-- The Matlab implementation of the PHARM features contains a bug in the symmetrization. We provide both the original implementation (*pharm_original*) and a variant with correct symmetrization (*pharm_revisited*). The revisited implementation also does not crop the image borders to simplify the indexing. Therefore, it gives slightly different results than the original implementation when symmetrization is disabled.
+- The Matlab implementation of the PHARM features contains a bug in the symmetrization. We provide both the original implementation (*pharm_original*) and a variant with correct symmetrization (*pharm_revisited*). The revisited implementation also does not crop the image borders to simplify the indexing. Therefore, it gives slightly different results compared to the original implementation when symmetrization is disabled.
 - The Matlab implementation of the FLD ensemble contains two peculiarities:
   * The function `add_gridpoints` in lines 588-605 looks like it implements insertion into a sorted list, but it inserts the new element one position too early.
   * While searching for the optimal `d_sub`, the condition in line 355 uses `settings.d_sub`. However, `settings.d_sub` is the `d_sub` that was previously evaluated. We believe that `settings.d_sub` should be replaced by `SEARCH.x(minE_id)` in line 355 and in line 358.
