@@ -18,6 +18,7 @@ from test_gfr import *
 from test_grouping import *
 from test_pharm import *
 from test_spam import *
+from test_fld_ensemble_classifier import *
 # ==================
 
 # run unittests

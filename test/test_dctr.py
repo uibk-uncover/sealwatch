@@ -29,9 +29,9 @@ class TestDctr(unittest.TestCase):
         dctr_features = dctr_features.flatten()
 
         matlab_features_filepath = os.path.join(ASSETS_DIR, matlab_features_filepath)
-        gfr_features_matlab = loadmat(matlab_features_filepath)["features"].flatten()
+        dctr_features_matlab = loadmat(matlab_features_filepath)["features"].flatten()
 
-        np.testing.assert_allclose(dctr_features, gfr_features_matlab)
+        np.testing.assert_allclose(dctr_features, dctr_features_matlab)
 
 
 __all__ = ["TestDctr"]
