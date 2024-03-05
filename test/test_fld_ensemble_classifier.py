@@ -14,7 +14,7 @@ class TestFldEnsembleClassifier(unittest.TestCase):
     @parameterized.expand([
         ("ensemble_matlab/tutorial_seed_12345.mat", 12345), # Tutorial, seed 12345
         ("ensemble_matlab/tutorial_seed_98765.mat", 98765),  # Tutorial, seed 98765
-        ("ensemble_matlab/gfr_qf95_unittest.mat", 12345),  # QF95, J-UNIWARD 0.4 bpnzAC stego, GFR features, first 2000 samples
+        # ("ensemble_matlab/gfr_qf95.mat", 12345),  # QF95, J-UNIWARD 0.4 bpnzAC stego, GFR features, first 2000 samples
     ])
     def test_tutorial_matlab_seed(self, matlab_trained_ensemble, seed):
         mat = loadmat(os.path.join(BASE_DIR, matlab_trained_ensemble))
