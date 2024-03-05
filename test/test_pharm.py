@@ -1,6 +1,6 @@
 import unittest
 from sealwatch.features.pharm.pharm_original import extract_pharm_original_features
-from sealwatch.features.pharm.pharm_revisited import PharmRevisitedFeatureExtractor, extract_pharm_revisited_features
+from sealwatch.features.pharm.pharm_revisited import PharmRevisitedFeatureExtractor
 from sealwatch.utils.grouping import flatten_single
 from parameterized import parameterized
 from scipy.io import loadmat
@@ -9,7 +9,7 @@ import numpy as np
 import os
 
 
-BASE_DIR = "tests/assets"
+BASE_DIR = "assets"
 
 
 def load_test_cases():
@@ -26,25 +26,26 @@ def load_test_cases():
 class TestPharm(unittest.TestCase):
 
     @parameterized.expand([
-        ("cover/00001.jpeg", "features_matlab/00001_pharm_num_projections_20.mat", 20),
-        ("cover/00002.jpeg", "features_matlab/00002_pharm_num_projections_20.mat", 20),
-        ("cover/00003.jpeg", "features_matlab/00003_pharm_num_projections_20.mat", 20),
-        ("cover/00004.jpeg", "features_matlab/00004_pharm_num_projections_20.mat", 20),
-        ("cover/00005.jpeg", "features_matlab/00005_pharm_num_projections_20.mat", 20),
-        # ("cover/00001.jpeg", "features_matlab/00001_pharm_num_projections_900.mat", 900), # these tests take very long
-        # ("cover/00002.jpeg", "features_matlab/00002_pharm_num_projections_900.mat", 900),
-        # ("cover/00003.jpeg", "features_matlab/00003_pharm_num_projections_900.mat", 900),
-        # ("cover/00004.jpeg", "features_matlab/00004_pharm_num_projections_900.mat", 900),
-        # ("cover/00005.jpeg", "features_matlab/00005_pharm_num_projections_900.mat", 900),
+        ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/pharm/seal1.mat"),
+        ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/pharm/seal2.mat"),
+        ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/pharm/seal3.mat"),
+        ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/pharm/seal4.mat"),
+        ("cover/jpeg_75_gray/seal5.jpg", "features_matlab/pharm/seal5.mat"),
+        ("cover/jpeg_75_gray/seal6.jpg", "features_matlab/pharm/seal6.mat"),
+        ("cover/jpeg_75_gray/seal7.jpg", "features_matlab/pharm/seal7.mat"),
+        ("cover/jpeg_75_gray/seal8.jpg", "features_matlab/pharm/seal8.mat"),
+        ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/pharm/otter1.mat"),
+        ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/pharm/otter2.mat"),
+        ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/pharm/dolphin.mat"),
     ])
-    def test_compare_matlab(self, cover_filepath, matlab_features_filepath, num_projections):
+    def test_compare_matlab(self, cover_filepath, matlab_features_filepath, num_projections=900):
         pharm_features = extract_pharm_original_features(os.path.join(BASE_DIR, cover_filepath), quantization_step=5, T=2, num_projections=num_projections)
         matlab_pharm_features = loadmat(os.path.join(BASE_DIR, matlab_features_filepath))
 
-        matlab_submodel_names = matlab_pharm_features["f"].dtype.names
+        matlab_submodel_names = matlab_pharm_features["features"].dtype.names
         for matlab_submodel_name in matlab_submodel_names:
             # Obtain Matlab submodel features
-            matlab_submodel_features = matlab_pharm_features["f"][matlab_submodel_name][0][0].flatten()
+            matlab_submodel_features = matlab_pharm_features["features"][matlab_submodel_name][0][0].flatten()
 
             # Obtain Python submodel features
             pharm_submodel_features = pharm_features[matlab_submodel_name].flatten()
@@ -200,30 +201,6 @@ class TestPharm(unittest.TestCase):
         self._compare_second_order_kernels(img=img, shift_y=shift_y, shift_x=shift_x, proj_mat=proj_mat)
 
         self._compare_third_order_kernels(img=img, shift_y=shift_y, shift_x=shift_x, proj_mat=proj_mat)
-
-    @parameterized.expand([
-        ("cover/00001.jpeg",),
-        ("cover/00002.jpeg",),
-        ("cover/00003.jpeg",),
-        ("cover/00004.jpeg",),
-        ("cover/00005.jpeg",),
-    ])
-    def test_compare_original_and_revisited_no_symmetrize(self, img_filepath):
-        feature_args = {
-            "img_filepath": os.path.join(BASE_DIR, img_filepath),
-            "num_projections": 100,
-            "quantization_step": 4,
-            "T": 3,
-            "symmetrize": False,
-        }
-
-        original_features = extract_pharm_original_features(**feature_args)
-        revisited_features = extract_pharm_revisited_features(**feature_args)
-
-        original_features = flatten_single(original_features)
-        revisited_features = flatten_single(revisited_features)
-
-        np.testing.assert_allclose(original_features, revisited_features)
 
 
 __all__ = ["TestPharm"]

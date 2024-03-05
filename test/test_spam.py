@@ -7,16 +7,22 @@ import numpy as np
 import os
 
 
-BASE_DIR = "tests/assets"
+BASE_DIR = "assets"
 
 
 class TestSpam(unittest.TestCase):
     @parameterized.expand([
-        ("cover/00001.jpeg", "features_matlab/00001_spam.mat"),
-        ("cover/00002.jpeg", "features_matlab/00002_spam.mat"),
-        ("cover/00003.jpeg", "features_matlab/00003_spam.mat"),
-        ("cover/00004.jpeg", "features_matlab/00004_spam.mat"),
-        ("cover/00005.jpeg", "features_matlab/00005_spam.mat"),
+        ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/spam/seal1.mat"),
+        ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/spam/seal2.mat"),
+        ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/spam/seal3.mat"),
+        ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/spam/seal4.mat"),
+        ("cover/jpeg_75_gray/seal5.jpg", "features_matlab/spam/seal5.mat"),
+        ("cover/jpeg_75_gray/seal6.jpg", "features_matlab/spam/seal6.mat"),
+        ("cover/jpeg_75_gray/seal7.jpg", "features_matlab/spam/seal7.mat"),
+        ("cover/jpeg_75_gray/seal8.jpg", "features_matlab/spam/seal8.mat"),
+        ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/spam/otter1.mat"),
+        ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/spam/otter2.mat"),
+        ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/spam/dolphin.mat"),
     ])
     def test_compare_matlab(self, cover_filepath, matlab_features_filepath):
         npy_spam_features = extract_spam686_features_from_filepath(os.path.join(BASE_DIR, cover_filepath))

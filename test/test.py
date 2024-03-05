@@ -12,12 +12,12 @@ if __name__ == "__main__":
 
 
 # === unit tests ===
-# from test_crm import *
-# from test_jrm import *
-# from test_fld_ensemble import *
-# from test_grouping import *
-# from test_pharm import *
-# from test_spam import *
+from test_dctr import *
+from test_jrm import *
+from test_gfr import *
+from test_grouping import *
+from test_pharm import *
+from test_spam import *
 # ==================
 
 # run unittests

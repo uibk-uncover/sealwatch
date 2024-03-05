@@ -7,7 +7,7 @@ import re
 import os
 
 
-BASE_DIR = "tests/assets"
+BASE_DIR = "assets"
 
 
 class TestJRM(unittest.TestCase):
@@ -20,11 +20,17 @@ class TestJRM(unittest.TestCase):
     }
 
     @parameterized.expand([
-        ("cover/00001.jpeg", "features_matlab/00001_ccJRM.mat"),
-        ("cover/00002.jpeg", "features_matlab/00002_ccJRM.mat"),
-        ("cover/00003.jpeg", "features_matlab/00003_ccJRM.mat"),
-        ("cover/00004.jpeg", "features_matlab/00004_ccJRM.mat"),
-        ("cover/00005.jpeg", "features_matlab/00005_ccJRM.mat"),
+        ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/jrm/seal1.mat"),
+        ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/jrm/seal2.mat"),
+        ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/jrm/seal3.mat"),
+        ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/jrm/seal4.mat"),
+        ("cover/jpeg_75_gray/seal5.jpg", "features_matlab/jrm/seal5.mat"),
+        ("cover/jpeg_75_gray/seal6.jpg", "features_matlab/jrm/seal6.mat"),
+        ("cover/jpeg_75_gray/seal7.jpg", "features_matlab/jrm/seal7.mat"),
+        ("cover/jpeg_75_gray/seal8.jpg", "features_matlab/jrm/seal8.mat"),
+        ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/jrm/otter1.mat"),
+        ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/jrm/otter2.mat"),
+        ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/jrm/dolphin.mat"),
     ])
     def test_compare_matlab(self, cover_filepath, matlab_features_filepath):
         npy_jrm_features = extract_jrm_features_from_filepath(os.path.join(BASE_DIR, cover_filepath))
