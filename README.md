@@ -2,6 +2,18 @@ TODOs:
 - Consistent flattening/grouping of features
 - Add license headers
 
+# Contents
+
+The following steganalysis feature implementations are provided:
+
+| Abbreviation | Full name                                   | Dimensionality | Reference                                                   |
+|--------------|---------------------------------------------|----------------|-------------------------------------------------------------|
+| DCTR         | Discrete cosine transform residual features | 8000           | [Reference](https://ieeexplore.ieee.org/document/6935011)   |
+| GFR          | Gabor filter residual features              | 17000          | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) |
+| JRM          | JPEG rich model                             | 11255          | [Reference](https://doi.org/10.1117/12.907495)              |
+| PHARM        | Phase-aware projection rich model           | 12600          | [Reference](https://doi.org/10.1117/12.2075239)             |
+| SPAM         | Subtractive pixel adjacency matrix          | 686            | [Reference](https://ieeexplore.ieee.org/document/5437325)   | 
+
 # Usage
 
 Extract features from a single JPEG image
@@ -12,7 +24,7 @@ from sealwatch.features.gfr.gfr import extract_gfr_features_from_file
 features = extract_gfr_features_from_file("seal1.jpg")
 ```
 
-Extract features for a directory of JPEG images
+Extract features for a directory of JPEG images and store them to a HDF5 file in the output directory.
 
 ```bash
 python sealwatch/batch_extraction/extract_features.py \
