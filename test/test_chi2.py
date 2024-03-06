@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 
-import defs
+from . import defs
 
 
 class TestChi2(unittest.TestCase):

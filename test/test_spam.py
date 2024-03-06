@@ -6,7 +6,7 @@ from scipy.io import loadmat
 import numpy as np
 import os
 
-import defs
+from . import defs
 FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'spam'
 
 
