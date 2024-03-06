@@ -31,10 +31,6 @@ jobs:
       - name: Run unittests
         shell: bash
         run: |
-          pwd
-          ls
-          ls test
-          ls test/assets
           python -m unittest
       - name: Print log
         shell: bash
