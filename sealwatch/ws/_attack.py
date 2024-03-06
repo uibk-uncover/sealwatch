@@ -61,10 +61,16 @@ def attack(
 
     Heavily inspired by implementation by Remi Cogranne.
 
-    Args:
-        img (np.ndarray): Color image in spatial domain
-    Returns:
-        (float): Relative payload estimate.
+    :param spatial:
+    :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param pixel_predictor:
+    :type pixel_predictor:
+    :param correct_bias:
+    :type correct_bias: bool
+    :param weighted:
+    :type weighted: bool
+    :return: change rate estimate
+    :rtype: float
     """
     # add channel axis
     if len(spatial.shape) == 2:

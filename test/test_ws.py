@@ -25,10 +25,7 @@ class TestWS(unittest.TestCase):
         os.remove(self.tmp.name)
         del self.tmp
 
-    @parameterized.expand([
-        [fname]
-        for fname in defs.TEST_IMAGES
-    ])
+    @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
     def test_attack_cover(self, fname: str):
         self._logger.info(f'TestWS.test_attack_cover({fname})')
         # load cover image

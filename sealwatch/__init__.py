@@ -3,12 +3,13 @@ import pkg_resources
 
 # attacks
 from . import chi2
+from . import rjca
 from . import ws
 
 # features
 
 #
-from . import tools
+from . import utils
 
 # package version
 try:
@@ -18,7 +19,8 @@ except pkg_resources.DistributionNotFound:
 
 __all__ = [
     'chi2',
+    'rjca',
     'ws',
-    'tools',
+    'utils',
     '__version__',
 ]

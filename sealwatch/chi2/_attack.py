@@ -11,12 +11,9 @@ Authors: Martin Benes, Benedikt Lorch
 Affiliation: University of Innsbruck
 """
 
-import logging
 import numpy as np
 import scipy.stats
 import typing
-
-from ..tools import EPS
 
 
 def attack(
