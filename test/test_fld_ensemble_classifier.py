@@ -5,8 +5,8 @@ from scipy.io import loadmat
 import numpy as np
 import os
 
-
-BASE_DIR = "assets"
+import defs
+FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'spam'
 
 
 class TestFldEnsembleClassifier(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestFldEnsembleClassifier(unittest.TestCase):
         # ("ensemble_matlab/gfr_qf95.mat", 12345),  # QF95, J-UNIWARD 0.4 bpnzAC stego, GFR features, first 2000 samples
     ])
     def test_tutorial_matlab_seed(self, matlab_trained_ensemble, seed):
-        mat = loadmat(os.path.join(BASE_DIR, matlab_trained_ensemble))
+        mat = loadmat(defs.ASSETS_DIR / matlab_trained_ensemble)
 
         Xc_train = np.ascontiguousarray(mat["TRN_cover"])
         Xs_train = np.ascontiguousarray(mat["TRN_stego"])
@@ -26,7 +26,8 @@ class TestFldEnsembleClassifier(unittest.TestCase):
             Xc=Xc_train,
             Xs=Xs_train,
             seed=seed,
-            verbose=1,
+            # verbose=1,
+            verbose=0,
         )
 
         ensemble_classifier, training_records = trainer.train()

@@ -4,5 +4,5 @@ Authors: Martin Benes, Benedikt Lorch
 Affiliation: University of Innsbruck
 """
 
-from ._attack import attack, attack_along_path
+from ._attack import attack
 from . import _attack

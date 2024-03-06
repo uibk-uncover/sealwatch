@@ -28,7 +28,7 @@ class TestWS(unittest.TestCase):
 
     @parameterized.expand([
         [fname]
-        for fname in defs.TEST_UG_IMAGES
+        for fname in defs.TEST_IMAGES
     ])
     def test_attack_cover(self, fname: str):
         self._logger.info(f'TestWS.test_attack_cover({fname})')
@@ -44,7 +44,7 @@ class TestWS(unittest.TestCase):
 
     @parameterized.expand([
         [fname, alpha]
-        for fname in defs.TEST_UG_IMAGES
+        for fname in defs.TEST_IMAGES
         for alpha in [.4]  # .05, .1, .2, .4, .6, .8, 1.]
     ])
     def test_attack_stego(self, fname: str, alpha: float):

@@ -28,7 +28,7 @@ class TestChi2(unittest.TestCase):
 
     @parameterized.expand([
         [fname]
-        for fname in defs.TEST_UG_IMAGES
+        for fname in defs.TEST_IMAGES
         if fname not in {'seal4', 'seal5'}  # avoid, raise FP
     ])
     def test_chi2_cover(self, fname: str):
@@ -52,7 +52,7 @@ class TestChi2(unittest.TestCase):
 
     @parameterized.expand([
         [fname, alpha]
-        for fname in defs.TEST_UG_IMAGES
+        for fname in defs.TEST_IMAGES
         for alpha in [.95, 1.]
         if fname not in {'seal4', 'seal5'}  # avoid, raise FP
     ])
@@ -68,7 +68,7 @@ class TestChi2(unittest.TestCase):
 
     @parameterized.expand([
         [fname, alpha]
-        for fname in defs.TEST_UG_IMAGES
+        for fname in defs.TEST_IMAGES
         for alpha in [.1, .25]
         if fname not in {'seal4', 'seal5'}  # avoid, raise FP
     ])
@@ -81,50 +81,3 @@ class TestChi2(unittest.TestCase):
 
         # check result
         self.assertLess(p_stego, .01)
-
-    # def embed_lsbr_path(self, x:np.ndarray, alpha:float, seed:int, generator:str=None) -> np.ndarray:
-    #     # random message
-    #     rng = np.random.default_rng(seed)
-    #     message = rng.integers(0, 2, int(alpha * x.size))
-    #     # select path
-    #     perm = revelio.chi2.get_path(x, generator=generator, seed=seed)
-    #     # embed
-    #     y = x.copy()
-    #     for m_it, (h, w, c) in enumerate(zip(*perm)):
-    #         if len(message) <= m_it:
-    #             break
-    #         y[h, w, c] = (y[h, w, c] & ~0x1) | message[m_it]
-    #     return y
-
-    # @parameterized.expand([['lizard'], ['mountain'], ['nuclear']])
-    # def test_chi2_path_cover(self, fname:str):
-    #     """"""
-    #     # load cover
-    #     x = np.array(Image.open(f'img/{fname}.png'))
-    #     # attack
-    #     m_grid = np.arange(0, 1000, 100)
-    #     scores, pvalues = revelio.chi2.attack_along_path(x, m_grid, seed=None)
-    #     # estimate alpha
-    #     alpha_hat = m_grid[np.argmax(pvalues < .95)] / x.size
-    #     self.assertLess(alpha_hat, 1e-3)
-
-    @parameterized.expand([
-        [fname]
-        for fname in defs.TEST_UG_IMAGES
-        if fname in {'seal2', 'seal3', 'seal8'}  # these yield ok estimates
-    ])
-    def test_chi2_path_sequential_stego(self, fname: str):
-        """"""
-        # load cover
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
-
-        # embed
-        y = cl.lsb.simulate(x, .4, permute=False)
-
-        # attack
-        grid, scores, pvalues = sw.chi2.attack_along_path(y, 1000, order='F', seed=None)
-
-        # estimate alpha
-        alpha_hat = grid[np.argmax(pvalues < .05)] / y.size
-        # print(fname, alpha_hat, .4)
-        np.testing.assert_allclose(alpha_hat, .4, atol=.12)  # quite imprecise estimate

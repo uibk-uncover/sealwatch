@@ -9,7 +9,11 @@ import numpy as np
 import os
 
 
-BASE_DIR = "assets"
+import defs
+FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'pharm'
+
+
+# BASE_DIR = "assets"
 
 
 def load_test_cases():
@@ -25,22 +29,43 @@ def load_test_cases():
 
 class TestPharm(unittest.TestCase):
 
-    @parameterized.expand([
-        ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/pharm/seal1.mat"),
-        ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/pharm/seal2.mat"),
-        ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/pharm/seal3.mat"),
-        ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/pharm/seal4.mat"),
-        ("cover/jpeg_75_gray/seal5.jpg", "features_matlab/pharm/seal5.mat"),
-        ("cover/jpeg_75_gray/seal6.jpg", "features_matlab/pharm/seal6.mat"),
-        ("cover/jpeg_75_gray/seal7.jpg", "features_matlab/pharm/seal7.mat"),
-        ("cover/jpeg_75_gray/seal8.jpg", "features_matlab/pharm/seal8.mat"),
-        ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/pharm/otter1.mat"),
-        ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/pharm/otter2.mat"),
-        ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/pharm/dolphin.mat"),
-    ])
-    def test_compare_matlab(self, cover_filepath, matlab_features_filepath, num_projections=900):
-        pharm_features = extract_pharm_original_features(os.path.join(BASE_DIR, cover_filepath), quantization_step=5, T=2, num_projections=num_projections)
-        matlab_pharm_features = loadmat(os.path.join(BASE_DIR, matlab_features_filepath))
+    # @parameterized.expand([
+    #     ("cover/jpeg_75_gray/seal1.jpg", "features_matlab/pharm/seal1.mat"),
+    #     ("cover/jpeg_75_gray/seal2.jpg", "features_matlab/pharm/seal2.mat"),
+    #     ("cover/jpeg_75_gray/seal3.jpg", "features_matlab/pharm/seal3.mat"),
+    #     ("cover/jpeg_75_gray/seal4.jpg", "features_matlab/pharm/seal4.mat"),
+    #     ("cover/jpeg_75_gray/seal5.jpg", "features_matlab/pharm/seal5.mat"),
+    #     ("cover/jpeg_75_gray/seal6.jpg", "features_matlab/pharm/seal6.mat"),
+    #     ("cover/jpeg_75_gray/seal7.jpg", "features_matlab/pharm/seal7.mat"),
+    #     ("cover/jpeg_75_gray/seal8.jpg", "features_matlab/pharm/seal8.mat"),
+    #     ("cover/jpeg_75_gray/otter1.jpg", "features_matlab/pharm/otter1.mat"),
+    #     ("cover/jpeg_75_gray/otter2.jpg", "features_matlab/pharm/otter2.mat"),
+    #     ("cover/jpeg_75_gray/dolphin.jpg", "features_matlab/pharm/dolphin.mat"),
+    # ])
+    # def test_compare_matlab(self, cover_filepath, matlab_features_filepath, num_projections=900):
+    #     pharm_features = extract_pharm_original_features(os.path.join(BASE_DIR, cover_filepath), quantization_step=5, T=2, num_projections=num_projections)
+    #     matlab_pharm_features = loadmat(os.path.join(BASE_DIR, matlab_features_filepath))
+
+    #     matlab_submodel_names = matlab_pharm_features["features"].dtype.names
+    #     for matlab_submodel_name in matlab_submodel_names:
+    #         # Obtain Matlab submodel features
+    #         matlab_submodel_features = matlab_pharm_features["features"][matlab_submodel_name][0][0].flatten()
+
+    #         # Obtain Python submodel features
+    #         pharm_submodel_features = pharm_features[matlab_submodel_name].flatten()
+
+    #         # Compare
+    #         np.testing.assert_allclose(pharm_submodel_features, matlab_submodel_features)
+
+    @parameterized.expand([[f] for f in defs.TEST_IMAGES])
+    def test_compare_matlab(self, fname, num_projections=900):
+        pharm_features = extract_pharm_original_features(
+            defs.COVER_CG_DIR / f'{fname}.jpg',
+            quantization_step=5,
+            T=2,
+            num_projections=num_projections,
+        )
+        matlab_pharm_features = loadmat(FEATURES_DIR / f'{fname}.mat')
 
         matlab_submodel_names = matlab_pharm_features["features"].dtype.names
         for matlab_submodel_name in matlab_submodel_names:
