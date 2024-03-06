@@ -52,6 +52,7 @@ dev = [
     "jpeglib",
     "pillow",
     "conseal",
+    "scikit-learn",
 ]
 deploy = []
 

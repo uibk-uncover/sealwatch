@@ -53,7 +53,7 @@ class TestWS(unittest.TestCase):
         x = x[..., None]
 
         # embed lsb replacement
-        y = cl.lsb.simulate(x, alpha, modify='replacement', permute=True, seed=12345)
+        y = cl.lsb.simulate(x, alpha, modify=cl.LSB_REPLACEMENT, permute=True, seed=12345)
 
         # estimate alpha with WS
         beta_hat = sw.ws.attack(y)
