@@ -16,6 +16,7 @@ if __name__ == "__main__":
 
 # === unit tests ===
 from test_chi2 import *
+from test_ws import *
 # from test_dctr import *
 # from test_jrm import *
 # from test_gfr import *

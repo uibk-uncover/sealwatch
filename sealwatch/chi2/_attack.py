@@ -59,88 +59,131 @@ def attack(
     return distance, p_value
 
 
-# def get_path(
-#     img: np.ndarray,
-#     seed: int = None,
-#     generator: str = None,
-# ) -> typing.Tuple[np.ndarray]:
-#     """Generates path through image from seed.
+def get_path(
+    spatial: np.ndarray,
+    *,
+    order: str = 'C',
+    generator: str = None,
+    seed: int = None,
+) -> typing.Tuple[np.ndarray]:
+    """Generates path through image from seed.
 
-#     Args:
-#         img (np.ndarray): Pixel tensor.
-#         seed (int): Random number generator seed for reproducibility.
-#         generator (str): Random number generator. One of None (numpy default), or MT19937, used by Matlab.
-#     Returns:
-#         (tuple): Indices through array.
-
-#     Example:
-#         Sequential pass, channel-column-row.
-#         >>> idx = revelio.chi2.get_path(img)
-#         >>> img[idx].reshape(img)
-
-#         Sequential pass, channel-row-column.
-#         >>> idx = revelio.chi2.get_path(img.transpose(1, 0, 2))
-#         >>> idx = tuple([idx[i] for i in [1, 0, 2]])
-
-#         Permuted pass.
-#         >>> idx = revelio.chi2.get_path(img, seed=12345)
-#     """
-#     # sequential path
-#     perm = np.arange(img.size)
-#     # permutative straddling
-#     if seed is not None:
-#         # set generator
-#         if generator is None:  # default
-#             rng = np.random.default_rng(seed)
-#         elif generator == 'MT19937':  # Matlab
-#             rng = np.random.RandomState(seed)
-#         else:
-#             raise NotImplementedError(f'unsupported generator {generator}')
-#         # permute
-#         perm = rng.permutation(perm)
-#     # permutation to indices
-#     idx = []
-#     for dim in reversed(img.shape):
-#         idx.append(perm % dim)
-#         perm //= dim
-#     return tuple(reversed(idx))
+    :param spatial: image pixels
+    :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param grid: Number of message length to test, or a sequence with grid.
+    :type grid: int | list
+    :param generator: random number generator to choose,
+        None (numpy default) or 'MT19937' (used by Matlab)
+    :type generator: str
+    :param order: order of changes,
+        'C' (C-order, column-row) or 'F' (F-order, row-column).
+    :type order: str
+    :param seed: random seed for embedding simulator
+    :type seed: int
 
 
-# def attack_along_path(
-#     img: np.ndarray,
-#     message_lengths: np.ndarray,
-#     generator: str = None,
-#     seed: int = None,
-# ) -> typing.Tuple[np.ndarray]:
-#     """Chi2 test for testing a specific path.
+    :Example:
 
-#     Calls `attack()` with subsets of image along certain path.
-#     Returns scores in a compact way.
-#     This way, one can test
+    Sequential pass, channel-column-row.
 
-#     Coded based on discussion with Jan Butora,
-#     inspired by Remi Cogranne's implementation.
+    >>> idx = revelio.chi2.get_path(img)
+    >>> img[idx].reshape(img)
 
-#     Args:
-#         x (np.ndarray): Spatial domain, cover or stego.
-#         message_lengths (np.ndarray): Grid of message lengths to test.
-#         seed (int): Random path. If None, sequential pass is used.
-#         generator (str): Random number generator. One of None (numpy default), or MT19937, used by Matlab.
-#     Returns:
-#         (np.ndarray): Chi2 scores corresponding to M-grid.
-#     """
-#     # select path
-#     path_permutation = get_path(img=img, seed=seed, generator=generator)
+    Sequential pass, channel-row-column.
 
-#     # scores per message length
-#     scores, pvalues = [], []
-#     for message_length in message_lengths:
-#         logging.info(f'running chi2 along {seed} for {message_length}')
+    >>> idx = revelio.chi2.get_path(img.transpose(1, 0, 2))
+    >>> idx = tuple([idx[i] for i in [1, 0, 2]])
 
-#         # attack first m_i image pixels
-#         path_permutation_i = tuple([p[:message_length] for p in path_permutation])
-#         score_i, pvalue_i = attack(img[path_permutation_i])
-#         scores.append(score_i)
-#         pvalues.append(pvalue_i)
+    Permuted pass.
 
-#     return np.array(scores), np.array(pvalues)
+    >>> idx = revelio.chi2.get_path(img, seed=12345)
+    """
+    # sequential path
+    perm = np.arange(spatial.size)
+    # permutative straddling
+    if seed is not None:
+        # set generator
+        if generator is None:  # default
+            rng = np.random.default_rng(seed)
+        elif generator == 'MT19937':  # Matlab
+            rng = np.random.RandomState(seed)
+        else:
+            raise NotImplementedError(f'unsupported generator {generator}')
+        # permute
+        perm = rng.permutation(perm)
+    # permutation to indices
+    idx = []
+    for dim in reversed(spatial.shape):
+        idx.append(perm % dim)
+        perm //= dim
+    if order == 'F':
+        return tuple(idx)
+    elif order == 'C':
+        return tuple(reversed(idx))
+    else:
+        raise NotImplementedError(f'Given order {order} is not implemented')
+
+
+def attack_along_path(
+    spatial: np.ndarray,
+    grid: typing.Union[int, typing.Sequence],
+    *,
+    order: str = 'C',
+    generator: str = None,
+    seed: int = None,
+) -> typing.Tuple[np.ndarray]:
+    """Chi2 test for testing a specific path.
+
+    Calls `attack()` with subsets of image along certain path.
+    Returns scores in a compact way.
+    This way, one can test
+
+    Coded based on discussion with Jan Butora,
+    inspired by Remi Cogranne's implementation.
+
+    :param spatial: image pixels
+    :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param grid: Number of message length to test, or a sequence with grid.
+    :type grid: int | list
+    :param order: order of changes,
+        'C' (C-order, column-row) or 'F' (F-order, row-column).
+    :type order: str
+    :param generator: random number generator to choose,
+        None (numpy default) or 'MT19937' (used by Matlab)
+    :type generator: str
+    :param seed: random seed for embedding simulator, sequential if None
+    :type seed: int
+    :return: Tuple of three arrays,
+        grid of message lengths,
+        test scores of chi2 test, and
+        p-value of the chi2 test
+    :rtype: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+
+    :Example:
+    >>> # TODO
+    """
+    # select path
+    path_permutation = get_path(
+        spatial=spatial,
+        order=order,
+        generator=generator,
+        seed=seed,
+    )
+
+    #
+    if isinstance(grid, int):
+        grid = np.linspace(1, spatial.size, grid, dtype='int', endpoint=True)
+
+    # scores per message length
+    scores, pvalues = [], []
+    for message_length in grid:
+        logging.info(f'running chi2 along {seed} for {message_length}')
+
+        # attack first m_i image pixels
+        path_permutation_i = tuple([p[:message_length] for p in path_permutation])
+        score_i, pvalue_i = attack(spatial[path_permutation_i])
+        # print(message_length, pvalue_i)
+        scores.append(score_i)
+        pvalues.append(pvalue_i)
+
+    return grid, np.array(scores), np.array(pvalues)

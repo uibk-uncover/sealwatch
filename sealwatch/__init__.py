@@ -3,6 +3,7 @@ import pkg_resources
 
 # attacks
 from . import chi2
+from . import ws
 
 # features
 
@@ -17,6 +18,7 @@ except pkg_resources.DistributionNotFound:
 
 __all__ = [
     'chi2',
+    'ws',
     'tools',
     '__version__',
 ]
