@@ -4,6 +4,7 @@ import pkg_resources
 # attacks
 from . import chi2
 from . import rjca
+from . import spa
 from . import ws
 
 # features

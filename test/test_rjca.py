@@ -35,7 +35,6 @@ class TestRJCA(unittest.TestCase):
         self._logger.info(f'TestRJCA.test_attack_stego({fname}, {alpha})')
         # compress precover image
         x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
-        # x = np.array(Image.open(f'img/{fname}.png').convert('L'))  # grayscale
         jpeglib.from_spatial(x[..., None]).write_spatial(self.tmp.name, qt=100)
 
         # load cover image
@@ -54,9 +53,7 @@ class TestRJCA(unittest.TestCase):
         # test
         var_threshold = np.abs(var_hat - 1/12)
         self.assertLess(var_threshold, .015)
-        # np.testing.a(var_hat, var_threshold, rtol=1)  # relative error
 
-    # @parameterized.expand([['lizard'], ['mountain'], ['nuclear']])
     @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
     def test_attack_cover(self, fname:str):
         self._logger.info(f'TestRJCA.test_attack_cover({fname})')
@@ -73,4 +70,3 @@ class TestRJCA(unittest.TestCase):
         # test
         var_threshold = np.abs(var_hat - 1/12)
         self.assertGreater(var_threshold, .015)
-        # self.assertLess(var_hat, .065)

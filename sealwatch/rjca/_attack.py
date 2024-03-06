@@ -39,7 +39,7 @@ def attack(
     ... 	dct_coeffs=jpeg.Y,
     ...		quantization_table=jpeg.qt[0],
 	... )
-    >>> assert np.abs(var - 1/12.) < .005
+    >>> assert np.abs(var - 1/12.) > .005
     """
     # check QT
     if (quantization_table != 1).any():
