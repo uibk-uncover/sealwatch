@@ -49,7 +49,8 @@ Source = "https://github.com/uibk-uncover/sealwatch/"
 dev = [
     "flake8",
     "parameterized",
-    "jpeglib"
+    "jpeglib",
+    "pillow"
 ]
 deploy = []
 
