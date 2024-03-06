@@ -4,8 +4,10 @@ From Dumitrescu, Wu, Memon:
 On Steganalysis of Random LSB Embedding in Continuous-tone Images.
 https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=540b2431fa24e8602dddbc3f48eda262950c466e
 
+Inspired by implementation of Remi Cogranne.
+
 Author: Martin Benes
-Affiliation: Universitaet Innsbruck
+Affiliation: University of Innsbruck
 """
 
 import numpy as np
