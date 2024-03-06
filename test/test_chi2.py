@@ -6,7 +6,6 @@ import os
 from parameterized import parameterized
 from PIL import Image
 import sealwatch as sw
-import stegolab2 as sl2
 import sys
 import tempfile
 import unittest

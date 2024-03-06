@@ -6,7 +6,6 @@ import os
 from parameterized import parameterized
 from PIL import Image
 import sealwatch as sw
-import stegolab2 as sl2
 import sys
 import tempfile
 import unittest
@@ -54,7 +53,7 @@ class TestWS(unittest.TestCase):
         x = x[..., None]
 
         # embed lsb replacement
-        y = sl2.lsb.simulate(x, alpha, modify='replacement', permute=True, seed=12345)
+        y = cl.lsb.simulate(x, alpha, modify='replacement', permute=True, seed=12345)
 
         # estimate alpha with WS
         beta_hat = sw.ws.attack(y)
