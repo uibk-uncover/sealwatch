@@ -33,9 +33,8 @@ jobs:
         run: |
           pwd
           ls
-          cd test/assets/cover
-          pwd
-          cd ../../..
+          ls test
+          ls test/assets
           python -m unittest
       - name: Print log
         shell: bash
