@@ -1,6 +1,7 @@
 import pathlib
 
-ASSETS_DIR = pathlib.Path('test/assets')
+ASSETS_DIR = pathlib.Path('test/assets').absolute()
+print(pathlib.Path.cwd(), ASSETS_DIR)
 COVER_DIR = ASSETS_DIR / 'cover'
 COVER_UG_DIR = COVER_DIR / 'uncompressed_gray'
 COVER_UC_DIR = COVER_DIR / 'uncompressed_color'

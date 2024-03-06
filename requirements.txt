@@ -1,4 +1,0 @@
-numpy
-jpeglib
-h5py
-scipy
