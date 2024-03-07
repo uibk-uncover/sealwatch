@@ -1,10 +1,9 @@
 import numpy as np
 from collections import OrderedDict
-from sealwatch.features.jrm.jrm import extract_cc_jrm_features_from_filepath, extract_jrm_features_from_filepath
-from sealwatch.features.gfr.gfr import extract_gfr_features_from_file
-from sealwatch.features.pharm.pharm_original import extract_pharm_original_features
-from sealwatch.features.pharm.pharm_revisited import extract_pharm_revisited_features
-from sealwatch.features.spam.spam import extract_spam686_features, extract_spam686_features_from_filepath
+from sealwatch.features.jrm import extract_cc_jrm_features_from_file, extract_jrm_features_from_file
+from sealwatch.features.gfr import extract_gfr_features_from_file
+from sealwatch.features.pharm import extract_pharm_original_features_from_file, extract_pharm_revisited_features_from_file
+from sealwatch.features.spam import extract_spam686_features_from_file
 from sealwatch.utils.constants import JRM, CC_JRM, GFR, PHARM_ORIGINAL, PHARM_REVISITED, SPAM
 import tempfile
 import jpeglib
@@ -17,22 +16,22 @@ def generate_groups(feature_type):
         jpeglib.from_spatial(img).write_spatial(f.name, qt=75)
 
         if JRM == feature_type:
-            dummy_features = extract_jrm_features_from_filepath(f.name)
+            dummy_features = extract_jrm_features_from_file(f.name)
 
         elif CC_JRM == feature_type:
-            dummy_features = extract_cc_jrm_features_from_filepath(f.name)
+            dummy_features = extract_cc_jrm_features_from_file(f.name)
 
         elif GFR == feature_type:
             dummy_features = extract_gfr_features_from_file(f.name, num_rotations=32, qf=75)
 
         elif PHARM_ORIGINAL == feature_type:
-            dummy_features = extract_pharm_original_features(f.name)
+            dummy_features = extract_pharm_original_features_from_file(f.name)
 
         elif PHARM_REVISITED == feature_type:
-            dummy_features = extract_pharm_revisited_features(f.name)
+            dummy_features = extract_pharm_revisited_features_from_file(f.name)
 
         elif SPAM == feature_type:
-            dummy_features = extract_spam686_features_from_filepath(f.name)
+            dummy_features = extract_spam686_features_from_file(f.name)
 
         else:
             raise ValueError("Unknown feature type")
