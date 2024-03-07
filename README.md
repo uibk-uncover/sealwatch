@@ -7,12 +7,12 @@ TODOs:
 The following steganalysis feature implementations are provided:
 
 | Abbreviation | Full name                                   | Dimensionality | Reference                                                   | Output format |
-|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|---------------|
-| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://doi.org/10.1109/TIFS.2010.2045842)      | ordered dict  |
-| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              | ordered dict  |
-| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://doi.org/10.1109/TIFS.2014.2364918)      | 1D ndarray    |
-| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             | ordered dict  |
-| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D ndarray    |
+|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|-------------|
+| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://doi.org/10.1109/TIFS.2010.2045842)      | ordered dict |
+| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              | ordered dict |
+| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://doi.org/10.1109/TIFS.2014.2364918)      | 1D array    |
+| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             | ordered dict |
+| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array  |
 
 These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
 
