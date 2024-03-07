@@ -6,13 +6,13 @@ TODOs:
 
 The following steganalysis feature implementations are provided:
 
-| Abbreviation | Full name                                   | Dimensionality | Reference                                                   |
-|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|
-| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://doi.org/10.1109/TIFS.2010.2045842)      | 
-| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              |
-| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://doi.org/10.1109/TIFS.2014.2364918)      |
-| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             |
-| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) |
+| Abbreviation | Full name                                   | Dimensionality | Reference                                                   | Output format |
+|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|---------------|
+| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://doi.org/10.1109/TIFS.2010.2045842)      | ordered dict  |
+| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              | ordered dict  |
+| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://doi.org/10.1109/TIFS.2014.2364918)      | 1D ndarray    |
+| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             | ordered dict  |
+| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D ndarray    |
 
 These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
 
@@ -78,6 +78,28 @@ y_test = np.concatenate((
 
 # Calculate test accuracy
 test_accuracy = trained_ensemble.score(cover_features_test, y_test)
+```
+
+## Feature formats
+
+Note that the feature extractors return different formats: 1D arrays, multi-dimensional arrays, or ordered dicts.
+The reason is that some feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel.
+The following snippet shows how to obtain 1D array. 
+
+```python
+from sealwatch.utils.grouping import flatten_single
+
+# PHARM feature extraction returns an ordered dict
+features_grouped = extract_pharm_original_features_from_file(**kwargs)
+
+# Flatten dict to a 1D ndarray
+features = flatten_single(features_grouped)
+
+# GFR feature extraction returns a 5D ndarray
+features_5d = extract_gfr_features_from_file(**kwargs)
+
+# Simply flatten the array
+features = features.flatten()
 ```
 
 # Unit tests
