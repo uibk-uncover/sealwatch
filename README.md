@@ -1,7 +1,3 @@
-TODOs:
-- Consistent flattening/grouping of features
-- Add license headers
-
 # Contents
 
 The following steganalysis feature implementations are provided:
