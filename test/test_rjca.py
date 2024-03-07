@@ -1,4 +1,3 @@
-
 import conseal as cl
 import jpeglib
 import logging
@@ -7,7 +6,6 @@ import os
 from parameterized import parameterized
 from PIL import Image
 import sealwatch as sw
-import sys
 import tempfile
 import unittest
 
@@ -34,7 +32,7 @@ class TestRJCA(unittest.TestCase):
     def test_attack_stego(self, fname:str, alpha:float):
         self._logger.info(f'TestRJCA.test_attack_stego({fname}, {alpha})')
         # compress precover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         jpeglib.from_spatial(x[..., None]).write_spatial(self.tmp.name, qt=100)
 
         # load cover image
@@ -58,7 +56,7 @@ class TestRJCA(unittest.TestCase):
     def test_attack_cover(self, fname:str):
         self._logger.info(f'TestRJCA.test_attack_cover({fname})')
         # compress precover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         jpeglib.from_spatial(x[..., None]).write_spatial(self.tmp.name, qt=100)
 
         # load cover image

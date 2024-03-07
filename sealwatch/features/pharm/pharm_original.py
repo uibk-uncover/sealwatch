@@ -1,4 +1,23 @@
-from sealwatch.utils.jpeg import decompress_luminance_from_filepath
+"""
+Implementation of the PHARM features as described in
+
+Vojtěch Holub and Jessica Fridrich 
+"Phase-aware projection model for steganalysis of JPEG images"
+IS&T/SPIE Electronic Imaging, 2015
+https://doi.org/10.1117/12.2075239
+
+Author: Benedikt Lorch
+Affiliation: University of Innsbruck
+
+This implementation builds on the original Matlab implementation provided by the paper authors. Please find the license of the original implementation below.
+-------------------------------------------------------------------------
+Copyright (c) 2015 DDE Lab, Binghamton University, NY. All Rights Reserved.
+Permission to use, copy, modify, and distribute this software for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that this copyright notice appears in all copies. The program is supplied "as is," without any accompanying services from DDE Lab. DDE Lab does not warrant the operation of the program will be uninterrupted or error-free. The end-user understands that the program was developed for research purposes and is advised not to rely exclusively on the program for any reason. In no event shall Binghamton University or DDE Lab be liable to any party for direct, indirect, special, incidental, or consequential damages, including lost profits, arising out of the use of this software. DDE Lab disclaims any warranties, and has no obligations to provide maintenance, support, updates, enhancements or modifications.
+-------------------------------------------------------------------------
+"""  # noqa: E501
+
+
+from sealwatch.utils.jpeg import decompress_luminance_from_file
 from sealwatch.utils.quantization_table import identify_qf
 from sealwatch.utils.matlab import randi, randn
 from sealwatch.utils.convolution import strided_convolution
@@ -9,9 +28,9 @@ import numpy as np
 class PharmOriginalFeatureExtractor(object):
     def __init__(
             self,
-            num_projections=100,
-            quantization_step=5,
+            q=5,
             T=2,
+            num_projections=100,
             maximum_projection_size=8,
             first_order_residuals=True,
             second_order_residuals=True,
@@ -26,9 +45,9 @@ class PharmOriginalFeatureExtractor(object):
         [1] V. Holub and J. Fridrich, Phase-Aware Projection Model for Steganalysis of JPEG Images, Proc. SPIE, Electronic Imaging, Media Watermarking, Security, and Forensics XVII, vol. 9409, San Francisco, CA, February 8–12, 2015.
         http://dde.binghamton.edu/vholub/pdf/SPIE15_Phase-Aware_Projection_Model_for_Steganalysis_of_JPEG_Images.pdf
 
-        :param num_projections: number of random projection matrices. The original code defaults to 900, but we reduce the default to 100 for speed reasons.
-        :param quantization_step: quantization step
+        :param q: quantization step
         :param T: histogram truncation threshold
+        :param num_projections: number of random projection matrices. The original code defaults to 900, but we reduce the default to 100 for speed reasons.
         :param maximum_projection_size: maximum spatial size of each projection matrix
         :param first_order_residuals: If True, include first order residuals. If False, skip first order residuals.
         :param second_order_residuals: If True, include second order residuals. If False, skip second order residuals.
@@ -39,7 +58,7 @@ class PharmOriginalFeatureExtractor(object):
         """
 
         self.num_projections = num_projections
-        self.quantization_step = quantization_step
+        self.q = q
         self.T = T
         self.maximum_projection_size = maximum_projection_size
         self.first_order_residuals = first_order_residuals
@@ -66,7 +85,7 @@ class PharmOriginalFeatureExtractor(object):
         # Set up bin edges from [0, T]
         bin_edges = np.arange(0, self.T + 1)
         # Shift bin edges to [0, 1 * q, 2 * q, ..., T * q]
-        bin_edges = bin_edges * self.quantization_step
+        bin_edges = bin_edges * self.q
 
         # (1) Original orientation
         proj = strided_convolution(
@@ -193,19 +212,27 @@ class PharmOriginalFeatureExtractor(object):
 
         return h
 
-    def extract_features(self, img_filepath):
+    def extract_features_from_file(self, img_filepath):
+        """
+        Extract phase-aware projection rich model (PHARM) features from a given JPEG image file.
+        :param img_filepath: image flepath
+        :return: ordered dict with individual submodels
+        """
+
+        # Decompress image without rounding
+        img = decompress_luminance_from_file(img_filepath)
+
+        return self.extract_features_from_img(img)
+
+    def extract_features_from_img(self, img):
         """
         Extract phase-aware projection rich model (PHARM) features.
 
         The total number of features is: 7 filter kernels * T histogram values * num_random_projections = 7 * 2 * 900 = 12600
 
-        :param img_filepath: path to JPEG image
+        :param img: decompressed JPEG image
         :return: ordered dict with individual submodels. The keys are the submodel names and the values are the features of shape [num_projections, T]. Note that the submodels are not normalized.
         """
-
-        # Decompress image without rounding
-        img = decompress_luminance_from_filepath(img_filepath)
-
         next_seed = self.initial_seed
 
         features = OrderedDict()
@@ -329,12 +356,11 @@ class PharmOriginalFeatureExtractor(object):
         qf = identify_qf(img_filepath)
         return PharmOriginalFeatureExtractor.qf_to_quantization_step(qf)
 
-
-def extract_pharm_original_features(
-    img_filepath,
-    quantization_step=5,
-    num_projections=100,
+def extract_pharm_original_features_from_img(
+    img,
+    q=5,
     T=2,
+    num_projections=100,
     maximum_projection_size=8,
     first_order_residuals=True,
     second_order_residuals=True,
@@ -343,16 +369,17 @@ def extract_pharm_original_features(
     normalize=False,
 ):
     """
+
     Reference implementation of the PHARM features described in [1].
     This implementation matches the Matlab implementation.
 
     [1] V. Holub and J. Fridrich, Phase-Aware Projection Model for Steganalysis of JPEG Images, Proc. SPIE, Electronic Imaging, Media Watermarking, Security, and Forensics XVII, vol. 9409, San Francisco, CA, February 8–12, 2015.
     http://dde.binghamton.edu/vholub/pdf/SPIE15_Phase-Aware_Projection_Model_for_Steganalysis_of_JPEG_Images.pdf
 
-    :param img_filepath: path to JPEG image
-    :param quantization_step: quantization step
+    :param img: decompressed JPEG image
+    :param q: quantization step
+    :param T: truncation threshold
     :param num_projections: number of random projection matrices. The original implementation defaults to 900, but we use 100 for speed reasons.
-    :param T: histogram truncation threshold
     :param maximum_projection_size: maximum spatial size of each projection matrix
     :param first_order_residuals: If True, include first order residuals. If False, skip first order residuals.
     :param second_order_residuals: If True, include second order residuals. If False, skip second order residuals.
@@ -362,9 +389,9 @@ def extract_pharm_original_features(
     :return: features as ordered dictionary, where the keys are the submodel names and the values are the features of shape [num_projections, T]. Note that the features are not normalized.
     """
     feature_extractor = PharmOriginalFeatureExtractor(
-        num_projections=num_projections,
-        quantization_step=quantization_step,
+        q=q,
         T=T,
+        num_projections=num_projections,
         maximum_projection_size=maximum_projection_size,
         first_order_residuals=first_order_residuals,
         second_order_residuals=second_order_residuals,
@@ -372,4 +399,50 @@ def extract_pharm_original_features(
         symmetrize=symmetrize,
         normalize=normalize,
     )
-    return feature_extractor.extract_features(img_filepath)
+    return feature_extractor.extract_features_from_img(img)
+
+
+def extract_pharm_original_features_from_file(
+    img_filepath,
+    q=5,
+    T=2,
+    num_projections=100,
+    maximum_projection_size=8,
+    first_order_residuals=True,
+    second_order_residuals=True,
+    third_order_residuals=True,
+    symmetrize=True,
+    normalize=False,
+):
+    """
+
+    Reference implementation of the PHARM features described in [1].
+    This implementation matches the Matlab implementation.
+
+    [1] V. Holub and J. Fridrich, Phase-Aware Projection Model for Steganalysis of JPEG Images, Proc. SPIE, Electronic Imaging, Media Watermarking, Security, and Forensics XVII, vol. 9409, San Francisco, CA, February 8–12, 2015.
+    http://dde.binghamton.edu/vholub/pdf/SPIE15_Phase-Aware_Projection_Model_for_Steganalysis_of_JPEG_Images.pdf
+
+    :param img_filepath: path to JPEG image
+    :param q: quantization step
+    :param T: truncation threshold
+    :param num_projections: number of random projection matrices. The original implementation defaults to 900, but we use 100 for speed reasons.
+    :param maximum_projection_size: maximum spatial size of each projection matrix
+    :param first_order_residuals: If True, include first order residuals. If False, skip first order residuals.
+    :param second_order_residuals: If True, include second order residuals. If False, skip second order residuals.
+    :param third_order_residuals: If True, include third order residuals. If False, skip third order residuals.
+    :param symmetrize: If True, merge histograms with horizontally and vertically flipped versions of the image. If False, skip symmetrization.
+    :param normalize: If True, normalize the histogram counts.
+    :return: features as ordered dictionary, where the keys are the submodel names and the values are the features of shape [num_projections, T]. Note that the features are not normalized.
+    """
+    feature_extractor = PharmOriginalFeatureExtractor(
+        q=q,
+        T=T,
+        num_projections=num_projections,
+        maximum_projection_size=maximum_projection_size,
+        first_order_residuals=first_order_residuals,
+        second_order_residuals=second_order_residuals,
+        third_order_residuals=third_order_residuals,
+        symmetrize=symmetrize,
+        normalize=normalize,
+    )
+    return feature_extractor.extract_features_from_file(img_filepath)

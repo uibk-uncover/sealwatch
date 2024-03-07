@@ -1,3 +1,21 @@
+"""
+Implementation of the JRM features as described in
+
+Jan Kodovský and Jessica Fridrich
+"Steganalysis of JPEG images using rich models"
+IS&T/SPIE Electronic Imaging, 2012
+https://doi.org/10.1117/12.907495
+
+Author: Benedikt Lorch
+Affiliation: University of Innsbruck
+
+This implementation builds on the original Matlab implementation provided by the paper authors. Please find the license of the original implementation below.
+-------------------------------------------------------------------------
+Copyright (c) 2011 DDE Lab, Binghamton University, NY. All Rights Reserved.
+Permission to use, copy, modify, and distribute this software for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that this copyright notice appears in all copies. The program is supplied "as is," without any accompanying services from DDE Lab. DDE Lab does not warrant the operation of the program will be uninterrupted or error-free. The end-user understands that the program was developed for research purposes and is advised not to rely exclusively on the program for any reason. In no event shall Binghamton University or DDE Lab be liable to any party for direct, indirect, special, incidental, or consequential damages, including lost profits, arising out of the use of this software. DDE Lab disclaims any warranties, and has no obligations to provide maintenance, support, updates, enhancements or modifications.
+-------------------------------------------------------------------------
+"""  # noqa: E501
+
 import tempfile
 import jpeglib
 import numpy as np
@@ -10,7 +28,7 @@ from sealwatch.utils.dict import append_features
 from collections import OrderedDict
 
 
-def extract_cc_jrm_features_from_filepath(img_filepath):
+def extract_cc_jrm_features_from_file(img_filepath):
     """
     Compute JPEG rich model (JRM) features including reference features from a cartesian-calibrated variant of the input image.
     Uses only the luminance channel
@@ -20,14 +38,14 @@ def extract_cc_jrm_features_from_filepath(img_filepath):
     """
 
     # Compute JRM features from given image
-    jrm_features = extract_jrm_features_from_filepath(img_filepath)
+    jrm_features = extract_jrm_features_from_file(img_filepath)
 
     # Cartesian calibration
     with tempfile.NamedTemporaryFile(suffix=".jpg") as f:
         decompress_crop_recompress(img_filepath, f.name)
 
         # Extract JRM features from reference image
-        cc_features = extract_jrm_features_from_filepath(f.name)
+        cc_features = extract_jrm_features_from_file(f.name)
 
     # Copy features to the JRM features dict, but append the suffix "_ref" to the submodel names
     for name, submodel in cc_features.items():
@@ -37,9 +55,9 @@ def extract_cc_jrm_features_from_filepath(img_filepath):
     return jrm_features
 
 
-def extract_jrm_features_from_filepath(img_filepath):
+def extract_jrm_features_from_file(img_filepath):
     """
-    Compute the JPEG rich models (JRM) feature descriptor from the given image's luminance channel
+    Compute the JPEG rich models (JRM) feature descriptor from the given image's luminance channel.
 
     The mode-specific submodels give the rich model a fine "granularity" at the price of utilizing only a small portion of the DCT plane.
     To cover a larger range of DCT coefficients, the mode-specific submodels are complemented by co-occurrence matrices integrated over all DCT modes.
@@ -55,10 +73,10 @@ def extract_jrm_features_from_filepath(img_filepath):
     im = jpeglib.read_dct(img_filepath)
     luminance_dct_coeffs = im.Y
 
-    return extract_jrm_features(dct_coeffs=luminance_dct_coeffs)
+    return extract_jrm_features_from_img(dct_coeffs=luminance_dct_coeffs)
 
 
-def extract_jrm_features(dct_coeffs):
+def extract_jrm_features_from_img(dct_coeffs):
     """
     Compute the JPEG rich models (JRM) feature descriptor from the given DCT coefficients
 

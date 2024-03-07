@@ -1,4 +1,3 @@
-
 import conseal as cl
 import logging
 import numpy as np
@@ -6,7 +5,6 @@ import os
 from parameterized import parameterized
 from PIL import Image
 import sealwatch as sw
-import sys
 import tempfile
 import unittest
 
@@ -33,7 +31,7 @@ class TestSPA(unittest.TestCase):
     def test_spa_cover(self, fname):
         self._logger.info(f'TestSPA.test_spa_cover({fname})')
         # load image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
 
         # run attack
         q = sw.spa.attack(x)
@@ -50,7 +48,7 @@ class TestSPA(unittest.TestCase):
     def test_spa_stego(self, fname:str, alpha:float):
         self._logger.info(f'TestSPA.test_spa_stego({fname})')
         # load cover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
 
         # embed lsb
         y = cl.lsb.simulate(x, alpha, seed=12345)

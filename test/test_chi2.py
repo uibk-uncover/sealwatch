@@ -1,4 +1,3 @@
-
 import conseal as cl
 import logging
 import numpy as np
@@ -33,7 +32,7 @@ class TestChi2(unittest.TestCase):
     def test_chi2_cover(self, fname: str):
         self._logger.info(f'TestChi2.test_chi2_cover({fname})')
         # load cover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         # run attack
         score, p_stego = sw.chi2.attack(x)
         # test
@@ -41,7 +40,7 @@ class TestChi2(unittest.TestCase):
 
     def run_lsbr_chi2(self, fname: str, alpha: float) -> float:
         # load cover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         x = x[..., None]
         # embed lsb
         y = cl.lsb.simulate(x, alpha, permute=True, seed=12345)

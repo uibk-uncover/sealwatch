@@ -1,16 +1,13 @@
 import unittest
 from parameterized import parameterized
-from sealwatch.features.jrm.jrm import extract_jrm_features_from_filepath
+from sealwatch.features.jrm.jrm import extract_jrm_features_from_file
 from scipy.io import loadmat
 import numpy as np
 import re
-import os
-
 from . import defs
 
-FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'jrm'
 
-# BASE_DIR = "assets"
+FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'jrm'
 
 
 class TestJRM(unittest.TestCase):
@@ -24,7 +21,7 @@ class TestJRM(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_compare_matlab(self, fname):
-        npy_jrm_features = extract_jrm_features_from_filepath(defs.COVER_CG_DIR / f'{fname}.jpg')
+        npy_jrm_features = extract_jrm_features_from_file(defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg')
         matlab_jrm_features = loadmat(FEATURES_DIR / f'{fname}.mat')
 
         matlab_submodel_names = matlab_jrm_features["features"].dtype.names

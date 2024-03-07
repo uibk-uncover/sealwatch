@@ -3,9 +3,9 @@ from parameterized import parameterized
 from sealwatch.ensemble_classifier.fld_ensemble_trainer import FldEnsembleTrainer
 from scipy.io import loadmat
 import numpy as np
-import os
-
 from . import defs
+
+
 FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'spam'
 
 
@@ -26,7 +26,6 @@ class TestFldEnsembleClassifier(unittest.TestCase):
             Xc=Xc_train,
             Xs=Xs_train,
             seed=seed,
-            # verbose=1,
             verbose=0,
         )
 

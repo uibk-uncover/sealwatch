@@ -1,14 +1,25 @@
 """
-% Copyright (c) 2014 DDE Lab, Binghamton University, NY.
-% All Rights Reserved.
-% Original author: Vojtech Holub
-% -------------------------------------------------------------------------
-% Permission to use, copy, modify, and distribute this software for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that this copyright notice appears in all copies. The program is supplied "as is," without any accompanying services from DDE Lab. DDE Lab does not warrant the operation of the program will be uninterrupted or error-free. The end-user understands that the program was developed for research purposes and is advised not to rely exclusively on the program for any reason. In no event shall Binghamton University or DDE Lab be liable to any party for direct, indirect, special, incidental, or consequential damages, including lost profits, arising out of the use of this software. DDE Lab disclaims any warranties, and has no obligations to provide maintenance, support, updates, enhancements or modifications.
-"""
+Implementation of the DCTR features as described in
+
+V. Holub and J. Fridrich
+"Low-Complexity Features for JPEG Steganalysis Using Undecimated DCT"
+IEEE Transactions on Information Forensics and Security
+Vol. 10, No. 2, pp. 219-228, Feb. 2015
+https://doi.org/10.1109/TIFS.2014.2364918
+
+Author: Benedikt Lorch
+Affiliation: University of Innsbruck
+
+This implementation builds on the original Matlab implementation provided by the paper authors. Please find the license of the original implementation below.
+-------------------------------------------------------------------------
+Copyright (c) 2014 DDE Lab, Binghamton University, NY. All Rights Reserved.
+Permission to use, copy, modify, and distribute this software for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that this copyright notice appears in all copies. The program is supplied "as is," without any accompanying services from DDE Lab. DDE Lab does not warrant the operation of the program will be uninterrupted or error-free. The end-user understands that the program was developed for research purposes and is advised not to rely exclusively on the program for any reason. In no event shall Binghamton University or DDE Lab be liable to any party for direct, indirect, special, incidental, or consequential damages, including lost profits, arising out of the use of this software. DDE Lab disclaims any warranties, and has no obligations to provide maintenance, support, updates, enhancements or modifications.
+-------------------------------------------------------------------------
+"""  # noqa: E501
 
 import numpy as np
 from scipy.signal import convolve2d
-from sealwatch.utils.jpeg import decompress_luminance_from_filepath
+from sealwatch.utils.jpeg import decompress_luminance_from_file
 from sealwatch.utils.dct import compute_dct_mat
 from sealwatch.utils.matlab import matlab_round
 from collections import OrderedDict
@@ -21,6 +32,7 @@ def get_symmetric_histogram_coordinates():
     - The distribution of each individual mode is approximately symmetrical and centered at 0. Under this assumption, we can take the absolute value.
     - Exploiting the absolute values and the symmetry of projection vectors, the histograms can be merged.
     :return: list of lists of coordinates which modes of each undecimated DCT plane can be merged. The entries are as follows:
+
         [a] = (0, 0)
         [b] = (0, 1), (0, 7)
         [c] = (0, 2), (0, 6)
@@ -87,16 +99,19 @@ def get_symmetric_histogram_coordinates():
     return merged_coordinates
 
 
-def extract_dctr_features(img_filepath, qf):
+def extract_dctr_features_from_file(img_filepath, qf):
     """
-    Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
+    Extract DCTR features from the luminance channel of JPEG image given by its filepath
     :param img_filepath: path to JPEG image
-    :param qf: quality factor used to determine quantization step
-    :return: features array of length 8000
+    :param qf: JPEG quality factor used to determine the quantization step
+    :return: DCTR features of length 8000
     """
 
-    # Number of histogram bins
-    T = 4
+    # Decompress image to spatial domain
+    img = decompress_luminance_from_file(img_filepath)
+
+    # Undo level shift, in line with the Matlab implementation
+    img -= 128
 
     # Compute quantization step based on quality factor
     if qf < 50:
@@ -105,20 +120,26 @@ def extract_dctr_features(img_filepath, qf):
         # See Eq. 10
         q = max(8 * (2 - (qf / 50)), 0.2)
 
+    return extract_dctr_features_from_img(img=img, q=q)
+
+
+def extract_dctr_features_from_img(img, q, T=4):
+    """
+    Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
+    :param img: grayscale image with intensities in range [-128, 127]
+    :param q: quantization step
+    :param T: truncation threshold. The number of histogram bins is T + 1.
+    :return: DCTR features array of length 8000
+    """
+
     # Compute 2D DCT basis patterns as in Eq. 2
     dct_mat = compute_dct_mat()
 
     # Compute DCTR locations to be merged, see Table 1.
     merged_coordinates = get_symmetric_histogram_coordinates()
 
-    # Decompress image to spatial domain
-    img = decompress_luminance_from_filepath(img_filepath)
-
-    # Undo level shift, in line with the Matlab implementation
-    img -= 128
-
     # Allocate space for features
-    features = np.zeros((64, len(merged_coordinates), T + 1))
+    features = np.zeros((64, len(merged_coordinates), T + 1,))
 
     # The bins correspond to values [0, ..., T]
     # np.histogram requires bin edges

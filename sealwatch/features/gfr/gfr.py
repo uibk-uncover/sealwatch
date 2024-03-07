@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import fftconvolve
 from sealwatch.features.dctr.dctr import get_symmetric_histogram_coordinates
-from sealwatch.utils.jpeg import decompress_luminance_from_filepath
+from sealwatch.utils.jpeg import decompress_luminance_from_file
 from sealwatch.utils.matlab import matlab_round
 
 
@@ -208,7 +208,7 @@ def extract_gfr_features_from_file(img_filepath, num_rotations=32, qf=None, quan
             raise ValueError("Supported quality factors are 75 and 95")
 
     # Decompress image without rounding
-    img = decompress_luminance_from_filepath(img_filepath)
+    img = decompress_luminance_from_file(img_filepath)
 
     return extract_gfr_features_from_img(img, num_rotations=num_rotations, quantization_steps=quantization_steps, T=truncation_threshold)
 

@@ -1,4 +1,3 @@
-
 import conseal as cl
 import logging
 import numpy as np
@@ -6,10 +5,8 @@ import os
 from parameterized import parameterized
 from PIL import Image
 import sealwatch as sw
-import sys
 import tempfile
 import unittest
-
 from . import defs
 
 
@@ -29,7 +26,7 @@ class TestWS(unittest.TestCase):
     def test_attack_cover(self, fname: str):
         self._logger.info(f'TestWS.test_attack_cover({fname})')
         # load cover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         x = x[..., None]
 
         # estimate alpha with WS
@@ -46,7 +43,7 @@ class TestWS(unittest.TestCase):
     def test_attack_stego(self, fname: str, alpha: float):
         self._logger.info(f'TestWS.test_attack_stego({fname}, {alpha})')
         # load cover image
-        x = np.array(Image.open(defs.COVER_UG_DIR / f'{fname}.png'))
+        x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         x = x[..., None]
 
         # embed lsb replacement

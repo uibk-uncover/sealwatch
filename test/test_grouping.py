@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 from parameterized import parameterized
-from sealwatch.features.jrm.jrm import extract_cc_jrm_features_from_filepath
-from sealwatch.features.pharm.pharm_revisited import extract_pharm_revisited_features, PharmRevisitedFeatureExtractor
+from sealwatch.features.jrm import extract_cc_jrm_features_from_file
+from sealwatch.features.pharm.pharm_revisited import extract_pharm_revisited_features_from_file, PharmRevisitedFeatureExtractor
 from sealwatch.utils.grouping import group_batch, flatten_batch, group_single, flatten_single
 from sealwatch.utils.constants import CC_JRM, PHARM_REVISITED
 import jpeglib
@@ -34,7 +34,7 @@ class TestGrouping(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile(suffix=".jpeg") as f:
             jpeglib.from_spatial(img).write_spatial(f.name, qt=75)
-            features_grouped = extract_cc_jrm_features_from_filepath(f.name)
+            features_grouped = extract_cc_jrm_features_from_file(f.name)
 
         features_flat = flatten_single(features_grouped)
         features_regrouped = group_single(features_flat, feature_type=CC_JRM)
@@ -49,7 +49,7 @@ class TestGrouping(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix=".jpeg") as f:
             qf = 75
             jpeglib.from_spatial(img).write_spatial(f.name, qt=qf)
-            features_grouped = extract_pharm_revisited_features(f.name, quantization_step=PharmRevisitedFeatureExtractor.qf_to_quantization_step(qf))
+            features_grouped = extract_pharm_revisited_features_from_file(f.name, q=PharmRevisitedFeatureExtractor.qf_to_quantization_step(qf))
 
         features_flat = flatten_single(features_grouped)
         features_regrouped = group_single(features_flat, feature_type=PHARM_REVISITED)

@@ -37,7 +37,7 @@ def decompress_channel(dct_coeffs, quantization_table=None, dct_mat=None):
     return spatial
 
 
-def decompress_luminance_from_filepath(filepath, dct_mat=None):
+def decompress_luminance_from_file(filepath, dct_mat=None):
     """
     Decompress only the luminance channel from the given JPEG image
     :param filepath: path to JPEG image
