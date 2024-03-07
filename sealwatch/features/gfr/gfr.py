@@ -1,15 +1,34 @@
+"""
+Implementation of the GFR features as described in
+
+Xiaofeng Song, Fenlin Liu, Chunfang Yang, Xiangyang Luo, and Yi Zhang
+"Steganalysis of Adaptive JPEG Steganography Using 2D Gabor Filters"
+ACM Workshop on Information Hiding and Multimedia Security 2015
+https://doi.org/10.1145/2756601.2756608
+
+Author: Benedikt Lorch
+Affiliation: University of Innsbruck
+
+This implementation builds on the Matlab implementation provided by the DDE lab. Please find the license of their implementation below.
+-------------------------------------------------------------------------
+Copyright (c) 2015 DDE Lab, Binghamton University, NY. All Rights Reserved.
+Permission to use, copy, modify, and distribute this software for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that this copyright notice appears in all copies. The program is supplied "as is," without any accompanying services from DDE Lab. DDE Lab does not warrant the operation of the program will be uninterrupted or error-free. The end-user understands that the program was developed for research purposes and is advised not to rely exclusively on the program for any reason. In no event shall Binghamton University or DDE Lab be liable to any party for direct, indirect, special, incidental, or consequential damages, including lost profits, arising out of the use of this software. DDE Lab disclaims any warranties, and has no obligations to provide maintenance, support, updates, enhancements or modifications.
+-------------------------------------------------------------------------
+"""  # noqa: E501
+
+
 import numpy as np
 from scipy.signal import fftconvolve
-from sealwatch.features.dctr.dctr import get_symmetric_histogram_coordinates
 from sealwatch.utils.jpeg import decompress_luminance_from_file
+from sealwatch.features.dctr.dctr import get_symmetric_histogram_coordinates
 from sealwatch.utils.matlab import matlab_round
+import os
 
 
 def compute_gabor_kernel(sigma, theta, phi, gamma, lambda_=None):
     """
     Compute Gabor filter kernel according to Eq. 2.
     Gabor filters are a set of differently oriented sinusoidal patterns modulated by a Gaussian kernel
-
     :param sigma: scale parameter.
         A small sigma means high spatial resolution so that the filtered coefficients reflect local properties in fine scale.
         A large sigma means low spatial resolution so that the coefficients reflect local properties in coarse scale.
@@ -39,10 +58,11 @@ def compute_gabor_kernel(sigma, theta, phi, gamma, lambda_=None):
     # Normalization
     # The original paper states that the kernel is zero-meaned by subtracting the kernel mean.
     # We copy the normalization from the DDE lab, although it seems to miss parentheses.
+    # TODO: Missing parentheses?
     kernel = kernel - np.sum(kernel) / np.sum(np.abs(kernel)) * np.abs(kernel)
     # In a related publication, the DDE lab normalizes their Gabor kernels to zero mean by subtracting the kernel mean from all its elements.
-    # http://dde.binghamton.edu/tomasD/pdf/WIFS2014_Selection-Channel-Aware_Rich_Model_for_Steganalysis_of_Digital_Images.pdf
     # kernel = kernel - np.mean(kernel)
+    # http://dde.binghamton.edu/tomasD/pdf/WIFS2014_Selection-Channel-Aware_Rich_Model_for_Steganalysis_of_Digital_Images.pdf
 
     return kernel
 
@@ -77,7 +97,7 @@ def extract_gfr_features_from_img(img, num_rotations, quantization_steps, T=4):
     # The number of scales is denoted as L in the paper.
     num_scales = len(sigmas)
 
-    # The [reference paper](https://ieeexplore.ieee.org/document/1042386) actually uses -pi/2
+    # The [original paper](https://ieeexplore.ieee.org/document/1042386) actually uses -pi/2
     phase_shifts = [0, np.pi / 2]
     num_phase_shifts = len(phase_shifts)
 
