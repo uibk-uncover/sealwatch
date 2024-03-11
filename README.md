@@ -73,7 +73,7 @@ y_test = np.concatenate((
 ), axis=0)
 
 # Calculate test accuracy
-test_accuracy = trained_ensemble.score(cover_features_test, y_test)
+test_accuracy = trained_ensemble.score(X_test, y_test)
 ```
 
 ## Feature formats
