@@ -79,23 +79,51 @@ test_accuracy = trained_ensemble.score(X_test, y_test)
 ## Feature formats
 
 Note that the feature extractors return different formats: 1D arrays, multi-dimensional arrays, or ordered dicts.
-The reason is that some feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel.
-The following snippet shows how to obtain 1D array. 
+The reason is that feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel. The following snippets show how to flatten the features to a 1D array.
 
+
+**Multi-dimensional array**
 ```python
+from sealwatch.features.gfr import extract_gfr_features_from_file
+
+# The GFR feature extraction returns a 5-dimensional array:
+# - Dimension 0: Phase shifts
+# - Dimension 1: Scales
+# - Dimension 2: Rotations/Orientations
+# - Dimension 3: Number of histograms
+# - Dimension 4: Co-occurrences
+features = extract_gfr_features_from_file("seal1.jpg")
+
+# Simply flatten to a 1D array
+features = features.flatten()
+```
+
+**Ordered dict**
+```python
+from sealwatch.features.pharm import extract_pharm_revisited_features_from_file
 from sealwatch.utils.grouping import flatten_single
 
-# PHARM feature extraction returns an ordered dict
-features_grouped = extract_pharm_original_features_from_file(**kwargs)
+# The PHARM feature extraction returns an ordered dict
+features_grouped = extract_pharm_revisited_features_from_file("seal1.jpg")
 
-# Flatten dict to a 1D ndarray
+# Flatten dict to a 1D array
 features = flatten_single(features_grouped)
+```
 
-# GFR feature extraction returns a 5D ndarray
-features_5d = extract_gfr_features_from_file(**kwargs)
+After saving a batch of flattened features to an HDF5 file, you can also re-group them.
+```python
+from sealwatch.utils.grouping import group_batch
+from sealwatch.utils.constants import PHARM_REVISITED
+import h5py
 
-# Simply flatten the array
-features = features.flatten()
+# Load the flattened features
+with h5py.File("pharm_features.h5", "r") as f:
+  features_flat = f["features"][()]
+
+# Re-group the flat features
+features_grouped = group_batch(features_flat, feature_type=PHARM_REVISITED)
+
+# features_grouped is an ordered dict. The keys are the submodel names. Each value is an array with the shape [num_samples, submodel_size].
 ```
 
 # Unit tests
