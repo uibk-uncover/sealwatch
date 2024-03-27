@@ -104,7 +104,7 @@ def extract_dctr_features_from_file(img_filepath, qf):
     Extract DCTR features from the luminance channel of JPEG image given by its filepath
     :param img_filepath: path to JPEG image
     :param qf: JPEG quality factor used to determine the quantization step
-    :return: DCTR features of length 8000
+    :return: DCTR features array of shape [64, 25, 5]
     """
 
     # Decompress image to spatial domain
@@ -129,7 +129,7 @@ def extract_dctr_features_from_img(img, q, T=4):
     :param img: grayscale image with intensities in range [-128, 127]
     :param q: quantization step
     :param T: truncation threshold. The number of histogram bins is T + 1.
-    :return: DCTR features array of length 8000
+    :return: DCTR features array of shape [64, 25, 5]
     """
 
     # Compute 2D DCT basis patterns as in Eq. 2
@@ -179,8 +179,5 @@ def extract_dctr_features_from_img(img, q, T=4):
 
                 # Assign to output features array
                 features[mode_idx, hist_idx, :] = sub_features / np.sum(sub_features)
-
-    # Flatten features
-    features = features.flatten()
 
     return features

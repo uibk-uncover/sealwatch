@@ -3,15 +3,16 @@ import jpeglib
 from tqdm import tqdm
 import numpy as np
 from sealwatch.utils.logger import setup_custom_logger
-from sealwatch.features.jrm.jrm import extract_cc_jrm_features_from_filepath, extract_jrm_features_from_filepath
+from sealwatch.features.jrm.jrm import extract_cc_jrm_features_from_file, extract_jrm_features_from_file
 from sealwatch.features.gfr.gfr import extract_gfr_features_from_file
-from sealwatch.features.pharm.pharm_original import extract_pharm_original_features
-from sealwatch.features.pharm.pharm_revisited import extract_pharm_revisited_features
-from sealwatch.features.spam.spam import extract_spam686_features_from_filepath
+from sealwatch.features.pharm.pharm_original import extract_pharm_original_features_from_file
+from sealwatch.features.pharm.pharm_revisited import extract_pharm_revisited_features_from_file
+from sealwatch.features.spam import extract_spam686_features_from_file
+from sealwatch.features.dctr import extract_dctr_features_from_file
 from sealwatch.utils.grouping import flatten_single
 from sealwatch.utils.writer import BufferedWriter
 from sealwatch.utils.quantization_table import identify_qf, create_qt_to_qf_mapping
-from sealwatch.utils.constants import JRM, CC_JRM, GFR, PHARM_ORIGINAL, PHARM_REVISITED, SPAM
+from sealwatch.utils.constants import JRM, CC_JRM, GFR, PHARM_ORIGINAL, PHARM_REVISITED, SPAM, DCTR
 from glob import glob
 import os
 
@@ -24,7 +25,7 @@ def extract_features(input_files, output_file, feature_type, feature_args):
 
     # Set up mapping from quantization table to quality factor
     qt_to_qf_map = None
-    if feature_type in {GFR}:
+    if feature_type in {GFR, DCTR}:
         # Peek into the first file to switch between color and grayscale
         im = jpeglib.read_dct(input_files[0])
         grayscale = im.num_components == 1
@@ -41,16 +42,27 @@ def extract_features(input_files, output_file, feature_type, feature_args):
 
         try:
             if JRM == feature_type:
-                features_grouped = extract_jrm_features_from_filepath(input_file)
+                features_grouped = extract_jrm_features_from_file(input_file)
 
                 # Flatten grouped features
                 features = flatten_single(features_grouped)
 
             elif CC_JRM == feature_type:
-                features_grouped = extract_cc_jrm_features_from_filepath(input_file)
+                features_grouped = extract_cc_jrm_features_from_file(input_file)
 
                 # Flatten grouped features
                 features = flatten_single(features_grouped)
+
+            elif DCTR == feature_type:
+                # Select quantization steps based on quality factor
+                # Identify QF from the input file
+                qf = identify_qf(input_file, qt_to_qf_map=qt_to_qf_map)
+                if qf is None:
+                    log.warning("Unknown JPEG quality. Setting quality factor to 75.")
+                    qf = 75
+
+                features = extract_dctr_features_from_file(input_file, qf=qf)
+                features = features.flatten()
 
             elif GFR == feature_type:
                 kwargs = {
@@ -108,15 +120,15 @@ def extract_features(input_files, output_file, feature_type, feature_args):
                     kwargs["T"] = feature_args["pharm_T"]
 
                 if PHARM_ORIGINAL == feature_type:
-                    features_grouped = extract_pharm_original_features(**kwargs)
+                    features_grouped = extract_pharm_original_features_from_file(**kwargs)
 
                 elif PHARM_REVISITED == feature_type:
-                    features_grouped = extract_pharm_revisited_features(**kwargs)
+                    features_grouped = extract_pharm_revisited_features_from_file(**kwargs)
 
                 features = flatten_single(features_grouped)
 
             elif SPAM == feature_type:
-                features_grouped = extract_spam686_features_from_filepath(input_file)
+                features_grouped = extract_spam686_features_from_file(input_file)
                 features = flatten_single(features_grouped)
 
             else:
@@ -139,7 +151,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", required=True, type=str, help="Input directory containing the JPEG images")
     parser.add_argument("--output_dir", required=False, type=str, help="Where to store resulting features")
-    parser.add_argument("--feature_type", required=True, type=str, choices=[JRM, CC_JRM, GFR, PHARM_ORIGINAL, PHARM_REVISITED, SPAM], help="Type of features to extract")
+    parser.add_argument("--feature_type", required=True, type=str, choices=[DCTR, JRM, CC_JRM, GFR, PHARM_ORIGINAL, PHARM_REVISITED, SPAM], help="Type of features to extract")
 
     # Distribution of work
     parser.add_argument("--skip_num_images", type=int, help="Skip given number of images")
