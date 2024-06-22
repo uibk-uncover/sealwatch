@@ -57,7 +57,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          path: ./wheelhouse/conseal*.whl
+          path: ./wheelhouse/sealwatch*.whl
 
   make_sdist:
     name: Make source distribution
@@ -93,7 +93,7 @@ jobs:
       - name: Install wheel
         run: |
           pip install jpeglib numpy scipy parameterized
-          pip install --find-links ./dist conseal --no-index
+          pip install --find-links ./dist sealwatch --no-index
       - name: Run unittests
         shell: bash
         run: |
