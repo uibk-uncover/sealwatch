@@ -28,8 +28,7 @@ For JPEG steganalysis, load the DCT coefficients using our sister project `jpegl
 
 >>> import jpeglib
 >>> im_dct = jpeglib.read_dct("cover.jpeg")
->>> im_spatial = jpeglib.read_spatial(  # for J-UNIWARD
-...   "cover.jpeg")
+>>> im_spatial = jpeglib.read_spatial("cover.jpeg")
 
 
 .. note::

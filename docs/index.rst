@@ -16,7 +16,7 @@ Catching steganography has never been easier!
 >>>
 >>> # apply WS steganalysis
 >>> import sealwatch as sw
->>> estimated_change_rate = sw.ws.attach(img)
+>>> estimated_change_rate = sw.ws.attack(img)
 >>> print(estimated_change_rate > 0.)
 
 
@@ -27,8 +27,12 @@ Catching steganography has never been easier!
 
    * - Type
      - Algorithms
-   * - LSBR attacks
-     - chi2, WS
+   * - Analytical attacks
+     - chi2, SPA, WS, RJCA
+   * - Features
+     - SPAM, JRM, DCTR, PHARM, GFR
+   * - Detectors
+     - FLD
 
 Contents
 --------

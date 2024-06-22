@@ -17,15 +17,3 @@ Because of its popularity, it is a good target for steganography, typically done
 To read coefficients from JPEG and write them back, we encourage you to use our other project, `jpeglib <https://pypi.org/project/jpeglib/>`__.
 In its `glossary <https://jpeglib.readthedocs.io/en/latest/glossary.html>`__, you can find a lot of details on JPEG specifically.
 
-
-
-Section
--------
-
-*TODO: To be completed*
-
-
-Subsection
-^^^^^^^^^^
-
-*TODO: To be completed*
