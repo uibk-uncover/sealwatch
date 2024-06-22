@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import accuracy_score
+# from sklearn.metrics import accuracy_score
 
 
 class EnsembleClassifier(object):
@@ -69,4 +69,5 @@ class EnsembleClassifier(object):
         }, "Expected input labels with values -1 and +1"
 
         y_pred = self.predict(X)
-        return accuracy_score(y_true, y_pred)
+        return (y_true == y_pred).mean()
+        # return accuracy_score(y_true, y_pred)

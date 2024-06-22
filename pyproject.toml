@@ -10,6 +10,7 @@ dependencies = [
   "scipy",
   "jpeglib",
   "h5py",
+  "pandas"
 ]
 requires-python = ">= 3.8"
 authors = [
