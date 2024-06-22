@@ -10,7 +10,7 @@ Installation and setup
 
 To use ``sealwatch``, first install it using pip:
 
-.. code-block:: sealwatch
+.. code-block:: console
 
    $ pip3 install sealwatch
 
