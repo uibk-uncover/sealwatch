@@ -1,5 +1,5 @@
+
 import numpy as np
-from sklearn.metrics import accuracy_score
 
 
 class FisherLinearDiscriminantLearner(object):
@@ -231,4 +231,4 @@ class FisherLinearDiscriminantLearner(object):
         assert set(np.unique(y_true)) == {-1, +1}, "Expected input labels with values -1 and +1"
 
         y_pred = np.sign(self.predict(X))
-        return accuracy_score(y_true, y_pred)
+        return (y_true == y_pred).mean()
