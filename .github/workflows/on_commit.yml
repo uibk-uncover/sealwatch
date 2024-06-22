@@ -22,7 +22,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          pip install -e '.[main]'
+          pip install -e '.[dev]'
       - name: Evaluate code quality
         shell: bash
         run: |
