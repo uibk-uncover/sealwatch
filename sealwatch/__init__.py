@@ -8,6 +8,10 @@ from . import spa
 from . import ws
 
 # features
+from . import features
+
+# classifier
+from . import ensemble_classifier
 
 #
 from . import utils

@@ -1,1 +1,7 @@
+"""
+
+Authors: Benedikt Lorch
+Affiliation: University of Innsbruck
+"""
+
 from .gfr import extract_gfr_features_from_file, extract_gfr_features_from_img
