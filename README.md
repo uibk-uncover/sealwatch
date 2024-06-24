@@ -38,10 +38,10 @@ pip3 install .
 ## Contents
 
 | Abbreviation | Dimensionality | Domain | Reference | Output format |
-|--------------|----------------|--------|----------:|-------------------------------------------------------------|-------------|
+|--------------|----------------|--------|----------:|---------------|
 | SPAM: subtractive pixel adjacency matrix | 686 | spatial | [Reference](https://doi.org/10.1109/TIFS.2010.2045842) | ordered dict |
 | JRM: JPEG rich model | 11255 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
-| DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | 1D array    |
+| DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | 1D array |
 | PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
 | GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array |
 
