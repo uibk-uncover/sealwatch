@@ -4,6 +4,7 @@ Based on SPIE, 2004 paper:
 Jessica Fridrich, Miroslav Goljan,
 On estimation of secret message length in LSB steganography in spatial domain
 
+Inspired by implementation by Rémi Cogranne.
 
 Author: Martin Benes
 Affiliation: University of Innsbruck
@@ -58,8 +59,6 @@ def attack(
     Runs weighted stego-image (WS) steganalysis on a given image.
 
     The goal of WS steganalysis is to estimate the embedding rate of uniform LSB replacement embedding.
-
-    Heavily inspired by implementation by Remi Cogranne.
 
     :param spatial:
     :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__

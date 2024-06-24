@@ -12,7 +12,7 @@ For more information, see the `glossary <https://conseal.readthedocs.io/en/lates
 Analytical attacks
 ------------------
 
-$\chi^2$-attack
+chi2 attack
 """""""""""""""
 
 .. autofunction:: sealwatch.chi2.attack
@@ -85,7 +85,24 @@ GFR
 .. autofunction:: sealwatch.features.gfr.extract_gfr_features_from_img
 
 
-
 Detectors
 ---------
 
+.. autoclass:: conseal.ensemble_classifier.EnsembleClassifier
+   :members: num_base_learners, d_sub, predict_confidence, predict, score
+
+.. autoclass:: conseal.ensemble_classifier.FldEnsembleTrainer
+   :members: train
+
+Helper functions
+""""""""""""""""
+
+.. autofunction:: sealwatch.ensemble_classifier.helpers.load_hdf5
+
+.. autofunction:: sealwatch.ensemble_classifier.helpers.load_features
+
+.. autofunction:: sealwatch.ensemble_classifier.helpers.remove_file_extension
+
+.. autofunction:: sealwatch.ensemble_classifier.helpers.load_and_split_features
+
+.. autofunction:: sealwatch.ensemble_classifier.helpers.load_features_subset
