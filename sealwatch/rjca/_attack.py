@@ -34,6 +34,7 @@ def attack(
     :rtype: float
 
     :Example:
+
     >>> jpeg = jpeglib.read_dct('suspicious.jpeg')
     >>> var = cl.rjca.attack(
     ... 	dct_coeffs=jpeg.Y,

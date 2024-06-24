@@ -28,8 +28,13 @@ import typing
 def extract_spam686_features_from_file(filepath: str) -> typing.Dict:
     """
     Extract SPAM features from luminance channel of given JPEG image
+
     :param filepath: JPEG image to be analzed
     :return: ordered dict with the feature values
+
+    :Examples:
+
+    >>> # TODO
     """
     luminance = decompress_luminance_from_file(filepath)
 
@@ -40,10 +45,15 @@ def extract_spam686_features_from_img(img, T=3, rounded: bool = True):
     """
     Extract 2nd-order spatial adjacency model (SPAM) features.
     The implementation merges over image directions.
+
     :param img: 2D ndarray
     :param T: truncation threshold
     :param rounded: Whether to round before the coocurrence.
     :return: ordered dict containing 686 feature dimensions in total.
+
+    :Examples:
+
+    >>> # TODO
     """
     features = OrderedDict()
 
@@ -119,6 +129,7 @@ def extract_spam686_features_from_img(img, T=3, rounded: bool = True):
 def get_m3(L, C, R, T, rounded=False):
     """
     Calculate 3-D co-occurrences
+
     :param L: matrix with left pixel values
     :param C: matrix with center pixel values
     :param R: matrix with right pixel values
