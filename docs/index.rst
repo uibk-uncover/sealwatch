@@ -3,7 +3,7 @@ sealwatch
 
 **sealwatch** is a Python package, containing implementations of modern image steganalysis algorithms.
 
-.. note::
+.. warning::
 
    This project is under intensive development. The documentation is being constructed as we speak.
 
