@@ -5,7 +5,7 @@ sealwatch
 
 .. warning::
 
-   This project is under intensive development. The documentation is being constructed as we speak.
+   This project is under intensive development as we speak.
 
 Catching steganography has never been easier!
 
