@@ -88,10 +88,10 @@ GFR
 Detectors
 ---------
 
-.. autoclass:: conseal.ensemble_classifier.EnsembleClassifier
+.. autoclass:: sealwatch.ensemble_classifier.EnsembleClassifier
    :members: num_base_learners, d_sub, predict_confidence, predict, score
 
-.. autoclass:: conseal.ensemble_classifier.FldEnsembleTrainer
+.. autoclass:: sealwatch.ensemble_classifier.FldEnsembleTrainer
    :members: train
 
 Helper functions
