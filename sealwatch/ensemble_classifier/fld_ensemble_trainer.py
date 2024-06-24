@@ -278,8 +278,8 @@ class FldEnsembleTrainer(object):
         """
         Train an ensemble of Fisher linear discriminant classifiers
         :return: (ensemble_classifier, training_records) as 2-tuple
-            ensemble_classifier is an instance of an EnsembleClassifier
-            training_records is a list of dicts
+        ensemble_classifier is an instance of an EnsembleClassifier
+        training_records is a list of dicts
         """
 
         # Initialize the search for d_sub
