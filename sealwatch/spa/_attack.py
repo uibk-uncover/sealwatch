@@ -24,6 +24,7 @@ def attack(
     :rtype: float
 
 	:Example:
+
     >>> spatial = np.array(Image.open('suspicious.png'))
     >>> alpha_hat = sw.spa.attack(spatial)
     >>> assert alpha_hat == 0
