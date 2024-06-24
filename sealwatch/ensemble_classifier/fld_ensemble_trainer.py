@@ -18,13 +18,13 @@ class FldEnsembleTrainer(object):
         Initialize a trainer for creating an ensemble classifier consisting of Fisher linear discriminant base learners.
         This implementation assumes pairs of cover and stego images. Hence, the number of samples in Xc and Xs must be identical.
 
-        Setting the subspace dimensionality `d_sub`:
-        - If d_sub is set too low, the individual base learners will not be able to learn anything.
-        - If d_sub is set too high, the individual base learners will become more dependent, which decreases the chance of learning non-linear classification boundaries. Furthermore, individual base learners may overfit when the number of training examples is relatively low compared to the number of feature dimensions.
+        Setting the subspace dimensionality ``1d_sub``
+        * If ``d_sub`` is set too low, the individual base learners will not be able to learn anything.
+        * If ``d_sub`` is set too high, the individual base learners will become more dependent, which decreases the chance of learning non-linear classification boundaries. Furthermore, individual base learners may overfit when the number of training examples is relatively low compared to the number of feature dimensions.
 
-        Setting the number of base learners `L`:
-        - The ensemble benefits from more base learners until performance starts to saturate.
-        - For automatic selection of L, we observe the progress of the OOB estimate. Training terminates when the last 50 moving averages calculated from 5 consecutive OOB estimates lie in an epsilon-tube.
+        Setting the number of base learners ``L``
+        * The ensemble benefits from more base learners until performance starts to saturate.
+        * For automatic selection of ``L``, we observe the progress of the OOB estimate. Training terminates when the last 50 moving averages calculated from 5 consecutive OOB estimates lie in an epsilon-tube.
 
         Reference:
         J. Kodovský, J. Fridrich, and V. Holub, Ensemble Classifiers for Steganalysis of Digital Media. IEEE Transactions on Information Forensics and Security, Vol. 7, No. 2, pp. 432-444, April 2012.
