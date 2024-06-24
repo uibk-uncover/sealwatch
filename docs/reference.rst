@@ -66,13 +66,13 @@ DCTR
 PHARM
 """"""
 
-.. autofunction:: sealwatch.features.pharm_original.extract_pharm_original_features_from_file
+.. autofunction:: sealwatch.features.pharm.extract_pharm_original_features_from_file
 
-.. autofunction:: sealwatch.features.pharm_original.extract_pharm_original_features_from_img
+.. autofunction:: sealwatch.features.pharm.extract_pharm_original_features_from_img
 
-.. autofunction:: sealwatch.features.pharm_revisited.extract_pharm_revisited_features_from_file
+.. autofunction:: sealwatch.features.pharm.extract_pharm_revisited_features_from_file
 
-.. autofunction:: sealwatch.features.pharm_revisited.extract_pharm_revisited_features_from_img
+.. autofunction:: sealwatch.features.pharm.extract_pharm_revisited_features_from_img
 
 
 
