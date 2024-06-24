@@ -1,18 +1,53 @@
-# Contents
+[![PyPI version](https://badge.fury.io/py/sealwatch.svg)](https://pypi.org/project/sealwatch/)
+[![Commit CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml/badge.svg)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml)
+[![Release CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_release.yml/badge.svg)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_release.yml)
+[![Documentation Status](https://readthedocs.org/projects/sealwatch/badge/?version=latest)](https://sealwatch.readthedocs.io/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/sealwatch)](https://pypi.org/project/sealwatch/)
+[![Stars](https://img.shields.io/github/stars/uibk-uncover/sealwatch.svg)](https://GitHub.com/uibk-uncover/sealwatch)
+[![Contributors](https://img.shields.io/github/contributors/uibk-uncover/sealwatch)](https://GitHub.com/uibk-uncover/sealwatch)
+[![Wheel](https://img.shields.io/pypi/wheel/sealwatch)](https://pypi.org/project/sealwatch/)
+[![Status](https://img.shields.io/pypi/status/sealwatch)](https://pypi.com/project/sealwatch/)
+<!-- [![PyPi license](https://badgen.net/pypi/license/sealwatch/)](https://pypi.com/project/sealwatch/) -->
+[![Last commit](https://img.shields.io/github/last-commit/uibk-uncover/sealwatch)](https://GitHub.com/uibk-uncover/sealwatch)
 
-The following steganalysis feature implementations are provided:
+<img src="https://raw.githubusercontent.com/uibk-uncover/sealwatch/main/docs/static/seal.png" width="300" />
 
-| Abbreviation | Full name                                   | Dimensionality | Reference                                                   | Output format |
-|--------------|---------------------------------------------|---------------:|-------------------------------------------------------------|-------------|
-| SPAM         | Subtractive pixel adjacency matrix          |            686 | [Reference](https://doi.org/10.1109/TIFS.2010.2045842)      | ordered dict |
-| JRM          | JPEG rich model                             |          11255 | [Reference](https://doi.org/10.1117/12.907495)              | ordered dict |
-| DCTR         | Discrete cosine transform residual features |           8000 | [Reference](https://doi.org/10.1109/TIFS.2014.2364918)      | 1D array    |
-| PHARM        | Phase-aware projection rich model           |          12600 | [Reference](https://doi.org/10.1117/12.2075239)             | ordered dict |
-| GFR          | Gabor filter residual features              |          17000 | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array  |
+# sealwatch
+
+Python package, containing implementations of modern image steganalysis algorithms.
+
+> :warning: This project is under intensive development as we speak.
+
+## Installation
+
+Simply install the package with pip3
+
+
+```bash
+pip3 install sealwatch
+```
+
+or using the cloned repository
+
+```bash
+git clone https://github.com/uibk-uncover/sealwatch/
+cd sealwatch
+pip3 install .
+```
+
+## Contents
+
+| Abbreviation | Dimensionality | Domain | Reference | Output format |
+|--------------|----------------|--------|----------:|-------------------------------------------------------------|-------------|
+| SPAM: subtractive pixel adjacency matrix | 686 | spatial | [Reference](https://doi.org/10.1109/TIFS.2010.2045842) | ordered dict |
+| JRM: JPEG rich model | 11255 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
+| DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | 1D array    |
+| PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
+| GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array |
 
 These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
 
-# Usage
+## Usage
 
 Extract features from a single JPEG image
 
@@ -25,18 +60,18 @@ features = extract_gfr_features_from_file("seal1.jpg")
 Extract features for a directory of JPEG images and store them to a HDF5 file in the output directory.
 
 ```bash
-python sealwatch/batch_extraction/extract_features.py \
+python examples/batch_extraction/extract_features.py \
   --input_dir input_dir \
   --output_dir output_dir \
-  --feature_type "gfr"  
+  --feature_type "gfr"
 ```
 
 After having extracted features from cover and stego images, you can train an FLD ensemble as binary classifier.
 
 ```python
 import numpy as np
-from sealwatch.ensemble_classifier.fld_ensemble_trainer import FldEnsembleTrainer
-from sealwatch.ensemble_classifier.load_features import load_and_split_features
+from sealwatch.ensemble_classifier import FldEnsembleTrainer
+from sealwatch.ensemble_classifier.helpers import load_and_split_features
 
 cover_features = "cover_features.h5"
 stego_features = "stego_features.h5"
@@ -76,7 +111,7 @@ y_test = np.concatenate((
 test_accuracy = trained_ensemble.score(X_test, y_test)
 ```
 
-## Feature formats
+### Feature formats
 
 Note that the feature extractors return different formats: 1D arrays, multi-dimensional arrays, or ordered dicts.
 The reason is that feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel. The following snippets show how to flatten the features to a 1D array.
@@ -141,6 +176,12 @@ features_5d = extract_gfr_features_from_file(**kwargs)
 features = features.flatten()
 ```
 
-# Unit tests and compatibility
 
+## Acknowledgements and Disclaimer
+
+Developed by [Martin Benes](https://github.com/martinbenes1996) and [Benedikt Lorch](https://github.com/btlorch/), University of Innsbruck, 2023.
+
+The implementations of feature extractors and the detector in this package are based on the original Matlab code provided by the Digital Data Embedding Lab at Binghamton University.
+
+We have made our best effort to ensure that our implementations produce identical results as the original Matlab implementations. However, it is the user's responsibility to verify this.
 For notes on compatibility with previous implementation, see [compatibility.md](compatibility.md).
