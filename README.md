@@ -41,9 +41,12 @@ pip3 install .
 |--------------|----------------|--------|----------:|---------------|
 | SPAM: subtractive pixel adjacency matrix | 686 | spatial | [Reference](https://doi.org/10.1109/TIFS.2010.2045842) | ordered dict |
 | JRM: JPEG rich model | 11255 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
+| CC-JRM: cartesian-calibrated JRM | 22510 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
 | DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | 1D array |
 | PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
 | GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array |
+| SRM: spatial rich models | ? | spatial | [Reference](...) | ordered dict |
+| CRM: color rich models | ? | spatial | [Reference](...) | ordered dict |
 
 These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
 
