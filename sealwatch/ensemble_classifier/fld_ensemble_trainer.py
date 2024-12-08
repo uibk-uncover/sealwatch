@@ -1,15 +1,22 @@
 import numpy as np
-from scipy.signal import convolve
-from sealwatch.utils.logger import setup_custom_logger
-from sealwatch.ensemble_classifier.base_learner import BaseLearner
-from sealwatch.ensemble_classifier.ensemble_classifier import EnsembleClassifier
-from sealwatch.ensemble_classifier.out_of_bag_error_estimates import OutOfBagErrorEstimates
-from sealwatch.ensemble_classifier.subspace_dimensionality_search import SubspaceDimensionalitySearch, FixedDimensionalityDummySearch
-from sealwatch.utils.matlab import randperm_naive
 import os
+from scipy.signal import convolve
+
+from .base_learner import BaseLearner
+from .ensemble_classifier import EnsembleClassifier
+from .out_of_bag_error_estimates import OutOfBagErrorEstimates
+from .subspace_dimensionality_search import SubspaceDimensionalitySearch, FixedDimensionalityDummySearch
+from .. import tools
+
+# from sealwatch.utils.logger import setup_custom_logger
+# from sealwatch.ensemble_classifier.base_learner import BaseLearner
+# from sealwatch.ensemble_classifier.ensemble_classifier import EnsembleClassifier
+# from sealwatch.ensemble_classifier.out_of_bag_error_estimates import OutOfBagErrorEstimates
+# from sealwatch.ensemble_classifier.subspace_dimensionality_search import SubspaceDimensionalitySearch, FixedDimensionalityDummySearch
+# from sealwatch.utils.matlab import randperm_naive
 
 
-log = setup_custom_logger(os.path.basename(__file__))
+log = tools.logger.setup_custom_logger(os.path.basename(__file__))
 
 
 class FldEnsembleTrainer(object):
@@ -191,7 +198,7 @@ class FldEnsembleTrainer(object):
         :return: ndarray of length `d_sub`. The array contains the subspace indices in range [0, `max_dim`)
         """
 
-        subspace = randperm_naive(self.rng_subspaces, self.max_dim)
+        subspace = tools.matlab.randperm_naive(self.rng_subspaces, self.max_dim)
         return subspace[:d_sub]
 
     def _regenerate_bootstrap_samples(self):

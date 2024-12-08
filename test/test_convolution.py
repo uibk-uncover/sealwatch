@@ -1,8 +1,11 @@
-import unittest
+
 import numpy as np
-from sealwatch.utils.convolution import strided_convolution
-from scipy.signal import fftconvolve
 from parameterized import parameterized
+import scipy.signal
+# from scipy.signal import fftconvolve
+import sealwatch as sw
+# from sealwatch.utils.convolution import strided_convolution
+import unittest
 
 
 class TestConvolution(unittest.TestCase):
@@ -20,6 +23,6 @@ class TestConvolution(unittest.TestCase):
 
         for offset_y in range(stride):
             for offset_x in range(stride):
-                a = strided_convolution(img, proj_mat, stride=stride, offset_y=offset_y, offset_x=offset_x)
-                b = fftconvolve(img, proj_mat, mode="valid")[offset_y::stride, offset_x::stride]
+                a = sw.tools.convolution.strided_convolution(img, proj_mat, stride=stride, offset_y=offset_y, offset_x=offset_x)
+                b = scipy.signal.fftconvolve(img, proj_mat, mode="valid")[offset_y::stride, offset_x::stride]
                 np.testing.assert_allclose(a, b)

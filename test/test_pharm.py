@@ -1,10 +1,19 @@
-import unittest
-from sealwatch.features.pharm import extract_pharm_original_features_from_file
-from sealwatch.features.pharm.pharm_revisited import PharmRevisitedFeatureExtractor
-from parameterized import parameterized
-from scipy.io import loadmat
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
+
 from itertools import product
 import numpy as np
+from parameterized import parameterized
+import scipy.io
+import sealwatch as sw
+import unittest
+
+# from sealwatch.features.pharm import extract_pharm_original_features_from_file
+# from sealwatch.features.pharm.pharm_revisited import PharmRevisitedFeatureExtractor
+
 from . import defs
 
 
@@ -26,28 +35,25 @@ class TestPharm(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_compare_matlab(self, fname, num_projections=900):
-        pharm_features = extract_pharm_original_features_from_file(
+        f = sw.pharm.extract_from_file(
             defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg',
             q=5,
             T=2,
             num_projections=num_projections,
+            implementation=sw.PHARM_REVISITED,
         )
-        matlab_pharm_features = loadmat(FEATURES_DIR / f'{fname}.mat')
+        f_ref = scipy.io.loadmat(FEATURES_DIR / f'{fname}.mat')
 
-        matlab_submodel_names = matlab_pharm_features["features"].dtype.names
-        for matlab_submodel_name in matlab_submodel_names:
-            # Obtain Matlab submodel features
-            matlab_submodel_features = matlab_pharm_features["features"][matlab_submodel_name][0][0].flatten()
-
-            # Obtain Python submodel features
-            pharm_submodel_features = pharm_features[matlab_submodel_name].flatten()
-
-            # Compare
-            np.testing.assert_allclose(pharm_submodel_features, matlab_submodel_features)
+        #
+        for model in f_ref["features"].dtype.names:
+            np.testing.assert_allclose(
+                f[model].flatten(),
+                f_ref["features"][model][0][0].flatten(),
+            )
 
     @staticmethod
     def _compare_histograms(residual, kernel_height, kernel_width, shift_y, shift_x, proj_mat):
-        extractor = PharmRevisitedFeatureExtractor(num_projections=10, T=3, q=1)
+        extractor = sw.pharm.PharmRevisitedFeatureExtractor(num_projections=10, T=3, q=1)
         h_original, h_vertical_flip, h_horizontal_flip, h_rot180 = extractor._obtain_histograms_to_merge(
             residual=residual,
             kernel_height=kernel_height,

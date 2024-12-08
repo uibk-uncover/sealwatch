@@ -10,13 +10,10 @@ Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
-import argparse
-import logging
 import numpy as np
-from PIL import Image
 import scipy.signal
 import typing
-import os
+
 
 PIXEL_PREDICTORS = {
     'KB': np.array([[

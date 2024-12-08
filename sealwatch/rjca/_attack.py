@@ -12,24 +12,24 @@ Affiliation: University of Innsbruck
 import numpy as np
 import warnings
 
-from .. import utils
+from .. import tools
 
 
 def attack(
-    dct_coeffs: np.ndarray,
-    quantization_table: np.ndarray,
+    y1: np.ndarray,
+    qt: np.ndarray,
 ) -> float:
     """Performs RJCA and returns variance.
 
     Rounding error should be around 0.04-0.07.
     For stego, it grows towards 0.08333 (1/12).
 
-    :param dct_coeffs: quantized cover DCT coefficients
+    :param y1: quantized cover DCT coefficients
         of shape [num_vertical_blocks, num_horizontal_blocks, 8, 8]
-    :type dct_coeffs: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
-    :param quantization_table: quantization table
+    :type y1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param qt: quantization table
         of shape [8, 8]
-    :type quantization_table: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :type qt: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: variance of the rounding error
     :rtype: float
 
@@ -37,19 +37,17 @@ def attack(
 
     >>> jpeg = jpeglib.read_dct('suspicious.jpeg')
     >>> var = cl.rjca.attack(
-    ... 	dct_coeffs=jpeg.Y,
-    ...		quantization_table=jpeg.qt[0],
+    ... 	y1=jpeg.Y,
+    ...		qt=jpeg.qt[0],
 	... )
     >>> assert np.abs(var - 1/12.) > .005
     """
     # check QT
-    if (quantization_table != 1).any():
+    if (qt != 1).any():
         warnings.warn('running RJCA on <QF100 does not work')
 
     # estimate rounding error
-    spatial = utils.dct.block_idct2(
-        dct_coeffs * quantization_table[None, None]
-    )
+    spatial = tools.dct.block_idct2(y1 * qt[None, None])
     err = spatial - np.round(spatial)
 
     # variance

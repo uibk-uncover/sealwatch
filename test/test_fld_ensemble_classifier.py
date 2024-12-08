@@ -1,8 +1,12 @@
-import unittest
+
 from parameterized import parameterized
-from sealwatch.ensemble_classifier.fld_ensemble_trainer import FldEnsembleTrainer
-from scipy.io import loadmat
 import numpy as np
+import scipy.io
+# from scipy.io import loadmat
+import sealwatch as sw
+# from sealwatch.ensemble_classifier.fld_ensemble_trainer import FldEnsembleTrainer
+import unittest
+
 from . import defs
 
 
@@ -17,12 +21,12 @@ class TestFldEnsembleClassifier(unittest.TestCase):
         # ("ensemble_matlab/gfr_qf95.mat", 12345),  # QF95, J-UNIWARD 0.4 bpnzAC stego, GFR features, first 2000 samples
     ])
     def test_tutorial_matlab_seed(self, matlab_trained_ensemble, seed):
-        mat = loadmat(defs.ASSETS_DIR / matlab_trained_ensemble)
+        mat = scipy.io.loadmat(defs.ASSETS_DIR / matlab_trained_ensemble)
 
         Xc_train = np.ascontiguousarray(mat["TRN_cover"])
         Xs_train = np.ascontiguousarray(mat["TRN_stego"])
 
-        trainer = FldEnsembleTrainer(
+        trainer = sw.ensemble_classifier.FldEnsembleTrainer(
             Xc=Xc_train,
             Xs=Xs_train,
             seed=seed,

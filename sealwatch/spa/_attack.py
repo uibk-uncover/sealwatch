@@ -14,7 +14,7 @@ import numpy as np
 
 
 def attack(
-    cover_spatial: np.ndarray,
+    x0: np.ndarray,
 ) -> float:
     """Run sample-pair analysis.
 
@@ -30,8 +30,8 @@ def attack(
     >>> assert alpha_hat == 0
     """
     # get sample pairs
-    u = cover_spatial[:, :-1].flatten().astype('int')
-    v = cover_spatial[:, 1:].flatten().astype('int')
+    u = x0[:, :-1].flatten().astype('int')
+    v = x0[:, 1:].flatten().astype('int')
 
     # construct primary sets
     P = np.ones(u.size)

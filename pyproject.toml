@@ -4,13 +4,15 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sealwatch"
-version = "2024.06"
+version = "2024.12"
 dependencies = [
   "numpy",
   "scipy",
   "jpeglib",
   "h5py",
-  "pandas"
+  "pandas",
+  "pillow",
+  "setuptools"
 ]
 requires-python = ">= 3.8"
 authors = [

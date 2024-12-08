@@ -1,12 +1,20 @@
+"""
+
+Author: Benedikt Lorch, Martin Benes
+Affiliation: University of Innsbruck
+"""
+
 import h5py
-import numpy as np
-import pandas as pd
 from itertools import compress
+import numpy as np
 import os
-from sealwatch.utils.logger import setup_custom_logger
+import pandas as pd
+
+from .. import tools
+# from sealwatch.utils.logger import setup_custom_logger
 
 
-log = setup_custom_logger(os.path.basename(__file__))
+log = tools.logger.setup_custom_logger(os.path.basename(__file__))
 
 
 def load_hdf5(features_filename, max_num_samples=None):

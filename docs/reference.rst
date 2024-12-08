@@ -30,59 +30,90 @@ WS
 .. autofunction:: sealwatch.ws.attack
 
 
+Histogram attack
+""""""""""""""""
+
+.. autofunction:: sealwatch.F5.attack
+
+
 RJCA
 """"
 
 .. autofunction:: sealwatch.rjca.attack
 
+
 Handcrafted features
 --------------------
+
+
+HCF-COM
+"""""""
+
+.. autofunction:: sealwatch.hcfcom.extract
+
+.. autofunction:: sealwatch.hcfcom.extract_from_file
+
 
 SPAM
 """"
 
-.. autofunction:: sealwatch.features.spam.extract_spam686_features_from_img
+.. autofunction:: sealwatch.spam.extract
 
-.. autofunction:: sealwatch.features.spam.extract_spam686_features_from_file
+.. autofunction:: sealwatch.spam.extract_from_file
+
+
+SRM
+""""
+
+.. autofunction:: sealwatch.srm.extract
+
+.. autofunction:: sealwatch.srm.extract_from_file
+
+
+CRM
+""""
+
+.. autofunction:: sealwatch.crm.extract
+
+.. autofunction:: sealwatch.crm.extract_from_file
 
 
 JRM
 """"
 
-.. autofunction:: sealwatch.features.jrm.extract_jrm_features_from_img
+.. autofunction:: sealwatch.jrm.extract
 
-.. autofunction:: sealwatch.features.jrm.extract_jrm_features_from_file
+.. autofunction:: sealwatch.ccjrm.extract_from_file
 
+.. autofunction:: sealwatch.jrm.extract
+
+.. autofunction:: sealwatch.ccjrm.extract_from_file
 
 
 DCTR
 """"
 
-.. autofunction:: sealwatch.features.dctr.extract_dctr_features_from_img
+.. autofunction:: sealwatch.dctr.extract
 
-.. autofunction:: sealwatch.features.dctr.extract_dctr_features_from_file
+.. autofunction:: sealwatch.dctr.extract_from_file
 
 
 PHARM
-""""""
+"""""
 
-.. autofunction:: sealwatch.features.pharm.extract_pharm_original_features_from_file
+.. autofunction:: sealwatch.pharm.extract
 
-.. autofunction:: sealwatch.features.pharm.extract_pharm_original_features_from_img
+.. autofunction:: sealwatch.pharm.extract_from_file
 
-.. autofunction:: sealwatch.features.pharm.extract_pharm_revisited_features_from_file
-
-.. autofunction:: sealwatch.features.pharm.extract_pharm_revisited_features_from_img
-
-
-
+.. autoclass:: conseal.pharm.Implementation
+   :members: PHARM_ORIGINAL, PHARM_REVISITED
 
 GFR
-""""
+"""
 
-.. autofunction:: sealwatch.features.gfr.extract_gfr_features_from_file
+.. autofunction:: sealwatch.gfr.extract
 
-.. autofunction:: sealwatch.features.gfr.extract_gfr_features_from_img
+.. autofunction:: sealwatch.gfr.extract_from_file
 
 
 Detectors
@@ -93,6 +124,7 @@ Detectors
 
 .. autoclass:: sealwatch.ensemble_classifier.FldEnsembleTrainer
    :members: train
+
 
 Helper functions
 """"""""""""""""
