@@ -184,7 +184,7 @@ features = features.flatten()
 
 ## Acknowledgements and Disclaimer
 
-Developed by [Martin Benes](https://github.com/martinbenes1996) and [Benedikt Lorch](https://github.com/btlorch/), University of Innsbruck, 2023.
+Developed by [Martin Benes](https://github.com/martinbenes1996) and [Benedikt Lorch](https://github.com/btlorch/), University of Innsbruck, 2024.
 
 The implementations of feature extractors and the detector in this package are based on the original Matlab code provided by the Digital Data Embedding Lab at Binghamton University.
 

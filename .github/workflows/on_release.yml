@@ -92,7 +92,7 @@ jobs:
           path: dist
       - name: Install wheel
         run: |
-          pip install jpeglib numpy scipy parameterized h5py pillow conseal pandas
+          pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn
           pip install --find-links ./dist sealwatch --no-index
       - name: Run unittests
         shell: bash

@@ -52,8 +52,6 @@ Source = "https://github.com/uibk-uncover/sealwatch/"
 dev = [
     "flake8",
     "parameterized",
-    "jpeglib",
-    "pillow",
     "conseal",
     "scikit-learn",
 ]
