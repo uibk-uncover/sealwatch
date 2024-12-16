@@ -74,6 +74,7 @@ def extract(
 
     >>> # TODO
     """
+    x1 = x1.astype('float32')
     features = OrderedDict()
 
     # horizontal left-right

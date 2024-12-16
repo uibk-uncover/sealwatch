@@ -39,72 +39,72 @@ def compute_absolute_value_features(abs_X, T=3):
     mode_ids = list(range(1, 21))
     # There are 20 modes and the 2D co-occurrence matrix has shape (T + 1) ** 2, resulting in 20 * 16 = 320 feature dimensions.
     Ah = extract_submodels_abs(abs_X, mode_ids, T=T, direction="hor")
-    tools.dict.append_features(features, Ah, prefix=f"Ah_T{T}")
+    tools.features.append(features, Ah, prefix=f"Ah_T{T}")
 
     # G_d: Union of diagonally and minor-diagonally neighboring pairs (320 features)
     # { C(x, y, 1, 1) | 0 <= x <= y; x + y <= 5}
     mode_ids = [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]
     Ad_diag = extract_submodels_abs(abs_X, mode_ids, T=T, direction="diag")
-    tools.dict.append_features(features, Ad_diag, prefix=f"Ad_T{T}_diag")
+    tools.features.append(features, Ad_diag, prefix=f"Ad_T{T}_diag")
 
     # { C(x, y, 1, -1) | 0 <= x <= y; x + y <= 5}
     mode_ids = [6, 7, 8, 9, 10, 12, 13, 14, 17]
     Ad_semidiag = extract_submodels_abs(abs_X, mode_ids, T=T, direction="semidiag")
-    tools.dict.append_features(features, Ad_semidiag, prefix=f"Ad_T{T}_semidiag")
+    tools.features.append(features, Ad_semidiag, prefix=f"Ad_T{T}_semidiag")
 
     # G_oh: "Skip one" horizontally neighboring pairs (224 features)
     # { C(x, y, 0, 2) | 0 <= x; 0 <= y; x + y <= 4}
     mode_ids = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 15, 16, 18]
     Aoh = extract_submodels_abs(abs_X, mode_ids, T=T, direction="hor_skip")
-    tools.dict.append_features(features, Aoh, prefix=f"Aoh_T{T}")
+    tools.features.append(features, Aoh, prefix=f"Aoh_T{T}")
 
     # G_x: pairs symmetrically positioned w.r.t. the 8x8 block diagonal (114 features)
     # { C(x, y, y - x, x - y) | 0 <= x < y; x + y <= 5}
     mode_ids = [1, 2, 3, 4, 5, 8, 9, 10, 14]
     Ax = extract_submodels_abs(abs_X, mode_ids, T=T, direction="sym_8x8")
-    tools.dict.append_features(features, Ax, prefix=f"Ax_T{T}")
+    tools.features.append(features, Ax, prefix=f"Ax_T{T}")
 
     # G_od: "Skip one" diagonal and minor diagonal pairs (272 features)
     # { C(x, y, 2, 2) | 0 <= x <= y; x + y <= 4}
     mode_ids = [1, 2, 3, 4, 7, 8, 9, 13]
     Aod_diag_skip = extract_submodels_abs(abs_X, mode_ids, T=T, direction="diag_skip")
-    tools.dict.append_features(features, Aod_diag_skip, prefix=f"Aod_T{T}_diag_skip")
+    tools.features.append(features, Aod_diag_skip, prefix=f"Aod_T{T}_diag_skip")
 
     # { C(x, y, 2, -2) | 0 <= x < y; x + y <= 5}
     mode_ids = [11, 12, 13, 14, 22, 16, 17, 23, 24]
     Aod_semidiag_skip = extract_submodels_abs(abs_X, mode_ids, T=T, direction="semidiag_skip")
-    tools.dict.append_features(features, Aod_semidiag_skip, prefix=f"Aod_T{T}_semidiag_skip")
+    tools.features.append(features, Aod_semidiag_skip, prefix=f"Aod_T{T}_semidiag_skip")
 
     # G_km: "Knight move" positioned pairs (240 features)
     # { C(x, y, -1, 2) | 1 <= x; 0 <= y; x + y <= 5}
     mode_ids = list(range(6, 21))
     Am = extract_submodels_abs(abs_X, mode_ids, T=T, direction="horse")
-    tools.dict.append_features(features, Am, prefix=f"Am_T{T}")
+    tools.features.append(features, Am, prefix=f"Am_T{T}")
 
     # The next four blocks capture inter-block relationships between coefficients from neighboring blocks (992 features in total)
     # G_ih: horizontal neighbors in the same DCT mode (320 features)
     # { C(x, y, 0, 8) | 0 <= x; 0 <= y; x + y <= 5 }
     mode_ids = list(range(1, 21))
     Aih = extract_submodels_abs(abs_X, mode_ids, T=T, direction="inter_hor")
-    tools.dict.append_features(features, Aih, prefix=f"Aih_T{T}")
+    tools.features.append(features, Aih, prefix=f"Aih_T{T}")
 
     # G_id: Diagonal neighbors in the same mode (176 features)
     # { C(x, y, 8, 8) | 0 <= x <= y; x + y <= 5}
     mode_ids = [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]
     Aid = extract_submodels_abs(abs_X, mode_ids, T=T, direction="inter_diag")
-    tools.dict.append_features(features, Aid, prefix=f"Aid_T{T}")
+    tools.features.append(features, Aid, prefix=f"Aid_T{T}")
 
     # G_im: Minor-diagonal neighbors in the same mode (176 features)
     # { C(x, y, -8, 8) | 0 <= x <= y; x + y <= 5}
     mode_ids = [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]
     Ais = extract_submodels_abs(abs_X, mode_ids, T=T, direction="inter_semidiag")
-    tools.dict.append_features(features, Ais, prefix=f"Ais_T{T}")
+    tools.features.append(features, Ais, prefix=f"Ais_T{T}")
 
     # G_ix: Horizontal neighbors in mode symmetrically positioned w.r.t. the 8x8 block diagonal (320 features)
     # { C(x, y, y - x, x - y + 8) | 0 <= x; 0 <= y; x + y <= 5}
     mode_ids = list(range(1, 21))
     Aix = extract_submodels_abs(abs_X, mode_ids, T=T, direction="inter_symm")
-    tools.dict.append_features(features, Aix, prefix=f"Aix_T{T}")
+    tools.features.append(features, Aix, prefix=f"Aix_T{T}")
 
     return features
 

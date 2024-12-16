@@ -1,13 +1,12 @@
 
+import logging
 import numpy as np
+import os
 from parameterized import parameterized
 import scipy.io
 import sealwatch as sw
+import tempfile
 import unittest
-
-# from sealwatch.features.spam import extract_spam686_features_from_file
-# from sealwatch.utils.grouping import flatten_single
-# from scipy.io import loadmat
 
 from . import defs
 
@@ -16,13 +15,24 @@ FEATURES_DIR = defs.ASSETS_DIR / 'features_matlab' / 'spam'
 
 
 class TestSpam(unittest.TestCase):
+    """Test suite for spam module."""
+    _logger = logging.getLogger(__name__)
+
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(suffix='.jpeg', delete=False)
+        self.tmp.close()
+
+    def tearDown(self):
+        os.remove(self.tmp.name)
+        del self.tmp
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
-    def test_compare_matlab(self, fname):
+    def test_extract(self, fname):
+        self._logger.info(f'TestSpam.test_extract({fname})')
         #
         path = defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg'
         f = sw.spam.extract_from_file(path)
-        f = sw.tools.flatten_single(f)
+        f = sw.tools.flatten(f)
         #
         path = FEATURES_DIR / f'{fname}.mat'
         f_ref = scipy.io.loadmat(path)["features"].flatten()

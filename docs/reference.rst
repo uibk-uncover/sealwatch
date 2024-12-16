@@ -69,6 +69,10 @@ SRM
 
 .. autofunction:: sealwatch.srm.extract_from_file
 
+.. autofunction:: sealwatch.srmq1.extract
+
+.. autofunction:: sealwatch.srmq1.extract_from_file
+
 
 CRM
 """"
@@ -115,6 +119,8 @@ GFR
 
 .. autofunction:: sealwatch.gfr.extract_from_file
 
+.. autoclass:: conseal.gfr.Implementation
+   :members: GFR_ORIGINAL, GFR_FIX
 
 Detectors
 ---------

@@ -98,21 +98,21 @@ def _extract(
     features_diff1 = compute_difference_features(abs_X_Dh, abs_X_Dv, T=2)
 
     # Copy local features to global features buffer
-    tools.dict.append_features(features, features_diff1, prefix="intra_block_hv")
+    tools.features.append(features, features_diff1, prefix="intra_block_hv")
 
     # DCT-mode specific co-occurrences of differences of absolute values (diagonal)
     # G^{south-east arrow}: Intra-block differences (diagonal), 2041 features
     features_diff2 = compute_difference_features(abs_X_Dd, abs_X_Dd, T=2)
 
     # Copy local features to global features buffer
-    tools.dict.append_features(features, features_diff2, prefix="intra_block_diag")
+    tools.features.append(features, features_diff2, prefix="intra_block_diag")
 
     # DCT-mode specific co-occurrences of differences of absolute values (inter-block horizontal/vertical)
     # G^{double arrow east}: Inter-block differences (horizontal/vertical), 2041 features
     features_diff3 = compute_difference_features(abs_X_Dih, abs_X_Div, T=2)
 
     # Copy local features to global features buffer
-    tools.dict.append_features(features, features_diff3, prefix="inter_block_hv")
+    tools.features.append(features, features_diff3, prefix="inter_block_hv")
 
     # Integral features
     # I: 2620 features

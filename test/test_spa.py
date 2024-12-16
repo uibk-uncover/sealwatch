@@ -45,7 +45,7 @@ class TestSPA(unittest.TestCase):
         for alpha in [.25, .5, .75, 1.]
         if fname not in {'seal5', 'seal8'}  # estimate off
     ])
-    def test_spa_stego(self, fname:str, alpha:float):
+    def test_spa_stego(self, fname: str, alpha: float):
         self._logger.info(f'TestSPA.test_spa_stego({fname})')
         # load cover image
         x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))

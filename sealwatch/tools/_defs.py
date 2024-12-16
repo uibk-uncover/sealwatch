@@ -1,11 +1,35 @@
+"""
+
+Author: Benedikt Lorch, Martin Benes
+Affiliation University of Innsbruck
+"""
 
 import h5py
+import logging
 import numpy as np
 import os
+from pathlib import Path
+import sys
+from typing import Union
 
-from .logger import setup_custom_logger
 
-log = setup_custom_logger(os.path.basename(os.path.basename(__file__)))
+EPS = np.finfo(np.float64).eps
+"""small numerical constant"""
+
+
+def setup_custom_logger(
+    name: Union[Path, str],
+) -> logging.Logger:
+    # Borrowed from https://stackoverflow.com/questions/7621897/python-logging-module-globally
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    #
+    logger = logging.getLogger(str(name))
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    return logger
 
 
 class BufferedWriter(object):
@@ -13,8 +37,15 @@ class BufferedWriter(object):
         """
         Initialize buffered writer
         :param output_filename: filepath where to store the results
+        :type output_filename: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
         :param chunk_size: number of samples per chunk
+        :type chunk_size: int
         :param required_keys: keys that must be given in each batch
+        :type required_keys:
+
+        :Example:
+
+        >>> # TODO
         """
 
         if os.path.exists(output_filename):
@@ -32,7 +63,9 @@ class BufferedWriter(object):
         """
         Counts the number of samples for each data buffer in the given dict
         :param buffers_dict: dict with different data sets
+        :type buffers_dict:
         :return: dict containing the dataset names as keys and their sizes as values
+        :rtype:
         """
         if 0 == len(buffers_dict):
             return {}
@@ -43,6 +76,7 @@ class BufferedWriter(object):
         """
         Add given batch to local cache buffer
         :param batch: dict
+        :type batch:
         """
         for key, data in batch.items():
 
@@ -58,7 +92,7 @@ class BufferedWriter(object):
                 elif isinstance(data, np.ndarray):
                     self._cache_buffer[key] = np.concatenate([self._cache_buffer[key], data])
                 else:
-                    log.error("Unexpected buffer type")
+                    logging.error("Unexpected buffer type")
                     raise ValueError("Unexpected buffer type")
 
     def write(self, batch):
@@ -67,6 +101,7 @@ class BufferedWriter(object):
         Once the cache buffer reaches the predefined chunk size, multiples of the chunk size are written to the file.
         The remaining items are kept in the cache buffer.
         :param batch: dictionary with data sets as list or ndarray
+        :type batch:
         """
 
         # Make sure that the batch contains at least all required keys
@@ -103,10 +138,16 @@ class BufferedWriter(object):
         """
         Write chunk to the output file
         :param chunk: data already concatenated and ready to be written
+        :type chunk:
         :return:
+        :rtype:
+
+        :Example:
+
+        >>> # TODO
         """
         if 0 == len(chunk.keys()):
-            log.warning("Given chunk is empty")
+            logging.warning("Given chunk is empty")
             return
 
         # Append to the output file
@@ -149,7 +190,7 @@ class BufferedWriter(object):
                         kwargs["compression"] = "gzip"
                         kwargs["chunks"] = (self._chunk_size,) + data.shape[1:]
                     else:
-                        log.error("Unknown item type")
+                        logging.error("Unknown item type")
 
                     # Set up data set
                     dataset = f.create_dataset(key, shape=shape, maxshape=maxshape, dtype=dtype, **kwargs)

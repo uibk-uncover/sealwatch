@@ -1,3 +1,4 @@
+""""""
 
 import pkg_resources
 
@@ -9,12 +10,15 @@ from . import spa
 from . import ws
 
 # features
+from .jrm import ccjrm
+from .srm import crm
 from . import dctr
 from . import gfr
 from . import hcfcom
 from . import jrm
 from . import pharm
 from . import srm
+from .srm import srmq1
 from . import spam
 
 # classifier
@@ -23,17 +27,26 @@ from . import ensemble_classifier
 #
 from . import tools
 
+
 #
-PHARM_ORIGINAL = pharm.Implementation.PHARM_ORIGINAL
-PHARM_REVISITED = pharm.Implementation.PHARM_REVISITED
+PHARM_ORIGINAL = pharm.PHARM_ORIGINAL
+PHARM_REVISITED = pharm.PHARM_REVISITED
 #
-FEATURES_JRM = tools.grouping.Features.FEATURES_JRM
-FEATURES_CCJRM = tools.grouping.Features.FEATURES_CCJRM
-FEATURES_SRM = tools.grouping.Features.FEATURES_SRM
-FEATURES_CRM = tools.grouping.Features.FEATURES_CRM
-FEATURES_GFR = tools.grouping.Features.FEATURES_GFR
-FEATURES_PHARM = tools.grouping.Features.FEATURES_PHARM
-FEATURES_SPAM = tools.grouping.Features.FEATURES_SPAM
+FEATURES_JRM = tools.FEATURES_JRM
+FEATURES_CCJRM = tools.FEATURES_CCJRM
+FEATURES_SRM = tools.FEATURES_SRM
+FEATURES_SRMQ1 = tools.FEATURES_SRMQ1
+FEATURES_CRM = tools.FEATURES_CRM
+FEATURES_GFR = tools.FEATURES_GFR
+FEATURES_PHARM = tools.FEATURES_PHARM
+FEATURES_DCTR = tools.FEATURES_DCTR
+FEATURES_SPAM = tools.FEATURES_SPAM
+#
+CRM_ORIGINAL = srm.CRM_ORIGINAL
+CRM_FIX_MIN24 = srm.CRM_FIX_MIN24
+#
+GFR_ORIGINAL = gfr.GFR_ORIGINAL
+GFR_FIX = gfr.GFR_FIX
 
 # package version
 try:
@@ -42,6 +55,8 @@ except pkg_resources.DistributionNotFound:
     __version__ = None
 
 __all__ = [
+    'crm',
+    'ccjrm',
     'chi2',
     'rjca',
     'ws',
@@ -52,6 +67,8 @@ __all__ = [
     'hcfcom',
     'jrm',
     'pharm',
+    'srm',
+    'srmq1',
     'spam',
     '__version__',
 ]

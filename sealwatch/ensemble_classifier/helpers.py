@@ -14,7 +14,7 @@ from .. import tools
 # from sealwatch.utils.logger import setup_custom_logger
 
 
-log = tools.logger.setup_custom_logger(os.path.basename(__file__))
+log = tools.setup_custom_logger(os.path.basename(__file__))
 
 
 def load_hdf5(features_filename, max_num_samples=None):

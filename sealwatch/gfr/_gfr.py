@@ -17,9 +17,13 @@ Permission to use, copy, modify, and distribute this software for educational, r
 """  # noqa: E501
 
 
+from collections import OrderedDict
+import enum
 import numpy as np
 import os
+from pathlib import Path
 import scipy.signal
+from typing import Union
 
 from .. import dctr
 from .. import tools
@@ -30,20 +34,49 @@ from .. import tools
 # from sealwatch.utils.matlab import matlab_round
 
 
-def compute_gabor_kernel(sigma, theta, phi, gamma, lambda_=None):
-    """
-    Compute Gabor filter kernel according to Eq. 2.
-    Gabor filters are a set of differently oriented sinusoidal patterns modulated by a Gaussian kernel
+class Implementation(enum.Enum):
+    """GFR implementation to choose from."""
+
+    GFR_ORIGINAL = enum.auto()
+    """Original GFR implementation by DDE."""
+    GFR_FIX = enum.auto()
+    """GFR implementation with fixes."""
+
+
+def compute_gabor_kernel(
+    sigma: float,
+    theta: float,
+    phi: float,
+    gamma: float,
+    *,
+    implementation: Implementation = Implementation.GFR_ORIGINAL,
+    lambda_: float = None,
+) -> np.ndarray:
+    """Compute Gabor filter kernel according to Eq. 2.
+    Gabor filters are a set of differently oriented sinusoidal patterns modulated by a Gaussian kernel.
+
     :param sigma: scale parameter.
         A small sigma means high spatial resolution so that the filtered coefficients reflect local properties in fine scale.
         A large sigma means low spatial resolution so that the coefficients reflect local properties in coarse scale.
+    :type sigma: float
     :param theta: orientation angle of the 2D Gabor filter in radians
+    :type theta: float
     :param phi: phase offset of the cosine factor.
         phi = 0 pi corresponds to symmetric "centre-on" functions.
         phi = -pi / 2, pi / 2 corresponds to anti-symmetric functions
+    :type phi: float
     :param gamma: spatial aspect ratio and specifies the ellipticity of Gaussian factor
+    :type gamma: float
+    :param implementation:
+    :type implementation: `Implementation`
     :param lambda_: wavelength of the cosine factor. If not given, lambda is set to sigma / 0.56.
+    :type lambda_: float
     :return: 2D Gabor filter kernel of size 8x8
+    :rtype:
+
+    :Example:
+
+    >>> # TODO
     """
 
     if lambda_ is None:
@@ -64,7 +97,12 @@ def compute_gabor_kernel(sigma, theta, phi, gamma, lambda_=None):
     # The original paper states that the kernel is zero-meaned by subtracting the kernel mean.
     # We copy the normalization from the DDE lab, although it seems to miss parentheses.
     # TODO: Missing parentheses?
-    kernel = kernel - np.sum(kernel) / np.sum(np.abs(kernel)) * np.abs(kernel)
+    if implementation is Implementation.GFR_ORIGINAL:
+        kernel = kernel - np.sum(kernel) / np.sum(np.abs(kernel)) * np.abs(kernel)
+    elif implementation is Implementation.GFR_FIX:
+        kernel = (kernel - np.sum(kernel)) / np.sum(np.abs(kernel)) * np.abs(kernel)
+    else:
+        raise NotImplementedError(f'unknown implementation {implementation}')
     # In a related publication, the DDE lab normalizes their Gabor kernels to zero mean by subtracting the kernel mean from all its elements.
     # kernel = kernel - np.mean(kernel)
     # http://dde.binghamton.edu/tomasD/pdf/WIFS2014_Selection-Channel-Aware_Rich_Model_for_Steganalysis_of_Digital_Images.pdf
@@ -72,14 +110,27 @@ def compute_gabor_kernel(sigma, theta, phi, gamma, lambda_=None):
     return kernel
 
 
-def extract(img, num_rotations, quantization_steps, T=4):
+def extract(
+    img: np.ndarray,
+    *,
+    num_rotations: int = 32,
+    quantization_steps: int = 75,
+    T: int = 4,
+    implementation: Implementation = Implementation.GFR_ORIGINAL,
+) -> OrderedDict:
     """
     Extract the Gabor filter residual features from a given image.
 
     :param img: grayscale image with values in range [0, 255]
+    :type img:
     :param num_rotations: number of rotations for Gabor kernel
+    :type num_rotations: int
     :param quantization_steps: quantization step for each of the four scales
+    :type quantization_steps: int
     :param T: the highest histogram bin value after quantization. The histogram contains T + 1 bins corresponding to the values [0, ..., T]. Quantized values exceeding T will be clamped to T.
+    :type T: int
+    :param implementation:
+    :type implementation: `Implementation`
     :return: extracted Gabor features as 5D ndarray. The five dimensions denote:
         # Dimension 0: Phase shifts
         # Dimension 1: Scales
@@ -88,6 +139,11 @@ def extract(img, num_rotations, quantization_steps, T=4):
         # Dimension 4: Co-occurrences
 
         Flatten the 5D array to obtain a 1D feature descriptor.
+    :rtype:
+
+    :Example:
+
+    >>> # TODO
     """
     assert len(quantization_steps) == 4, "Expected four quantization steps, one for each scale"
 
@@ -134,7 +190,13 @@ def extract(img, num_rotations, quantization_steps, T=4):
             for rotation_idx, rotation in enumerate(rotations):
 
                 # Compute Gabor kernel
-                kernel = compute_gabor_kernel(sigma, rotation, phase_shift, aspect_ratio)
+                kernel = compute_gabor_kernel(
+                    sigma,
+                    rotation,
+                    phase_shift,
+                    aspect_ratio,
+                    implementation=implementation,
+                )
 
                 # Convolve image with kernel
                 R = scipy.signal.fftconvolve(img, kernel, mode='valid')
@@ -198,7 +260,14 @@ def extract(img, num_rotations, quantization_steps, T=4):
     return features
 
 
-def extract_from_file(path, num_rotations=32, qf=None, quantization_steps=None, truncation_threshold=4):
+def extract_from_file(
+    path: Union[Path, str],
+    num_rotations: int = 32,
+    qf: int = None,
+    quantization_steps: int = None,
+    T: int = 4,
+    implementation: Implementation = Implementation.GFR_ORIGINAL,
+) -> OrderedDict:
     """
     Extract the Gabor filter residual features from a given JPEG image file.
 
@@ -206,7 +275,7 @@ def extract_from_file(path, num_rotations=32, qf=None, quantization_steps=None, 
     :param num_rotations: number of rotations for Gabor kernel
     :param qf: JPEG quality factor; used to select the quantization steps
     :param quantization_steps: list of four quantization steps, one for each scale
-    :param truncation_threshold: truncation threshold
+    :param T: truncation threshold
     :return: extracted Gabor features as 5D ndarray. The five dimensions denote:
         # Dimension 0: Phase shifts
         # Dimension 1: Scales
@@ -215,6 +284,7 @@ def extract_from_file(path, num_rotations=32, qf=None, quantization_steps=None, 
         # Dimension 4: Co-occurrences
 
         Flatten the 5D array to obtain a 1D feature descriptor.
+    :rtype:
     """
     if quantization_steps is not None:
         if not len(quantization_steps) == 4:
@@ -234,8 +304,13 @@ def extract_from_file(path, num_rotations=32, qf=None, quantization_steps=None, 
 
     # Decompress image without rounding
     img = tools.jpeg.decompress_from_file(path)
-
-    return extract(img, num_rotations=num_rotations, quantization_steps=quantization_steps, T=truncation_threshold)
+    return extract(
+        img,
+        num_rotations=num_rotations,
+        quantization_steps=quantization_steps,
+        T=T,
+        implementation=implementation,
+    )
 
 
 def generate_subspace_description(idx, num_rotations=32, T=4):

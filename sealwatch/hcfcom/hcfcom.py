@@ -4,6 +4,7 @@ Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
+from collections import OrderedDict
 import numpy as np
 
 
@@ -32,7 +33,7 @@ def _hcfcom(
     ]) / np.sum(hcf)
 
 
-def extract_hcfcom(
+def extract(
     x1: np.ndarray,
     *,
     order: int = 1,
@@ -40,11 +41,11 @@ def extract_hcfcom(
     """
 
     :param x:
-    :type x:
+    :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param order:
     :type order:
     :return:
-    :rtype:
+    :rtype: `OrderedDict`
 
     :Example:
 
@@ -55,7 +56,7 @@ def extract_hcfcom(
         x1 = x1[..., None]
 
     # calculate HCF-COM per channel
-    return np.array([
-        _hcfcom(x1[..., ch], order=1)
+    return OrderedDict([
+        (str(ch), _hcfcom(x1[..., ch], order=1))
         for ch in range(x1.shape[-1])
     ])

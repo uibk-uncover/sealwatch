@@ -22,17 +22,12 @@ from collections import OrderedDict
 import numpy as np
 from pathlib import Path
 import scipy.signal
-# from scipy.signal import convolve2d
-from typing import Union
+from typing import Union, List
 
 from .. import tools
 
-# from sealwatch.utils.jpeg import decompress_luminance_from_file
-# from sealwatch.utils.dct import compute_dct_mat
-# from sealwatch.utils.matlab import matlab_round
 
-
-def get_symmetric_histogram_coordinates():
+def get_symmetric_histogram_coordinates() -> List[List]:
     """
     Pre-computes the locations which histograms can be merged based on the following symmetry considerations:
     - Convolve the spatial image with each of the 64 DCT basis functions. The result is called undecimated DCT.
@@ -109,15 +104,17 @@ def get_symmetric_histogram_coordinates():
 def extract_from_file(
     path: Union[str, Path],
     qf: int,
-) -> np.ndarray:  # TODO
+# ) -> np.ndarray:  # TODO
+) -> OrderedDict:
     """
     Extract DCTR features from the luminance channel of JPEG image given by its filepath
 
     :param path: path to JPEG image
-    :type path:
+    :type path: str
     :param qf: JPEG quality factor used to determine the quantization step
     :type qf:
-    :return: DCTR features array of shape [64, 25, 5]
+    :return: DCTR features
+        of shape [64x25, 5]
     :rtype:
     """
 
@@ -142,16 +139,18 @@ def extract(
     q: float,
     *,
     T: np.ndarray = 4,
-) -> np.ndarray:  # TODO
+# ) -> np.ndarray:  # TODO
+) -> OrderedDict:
     """
     Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
     :param x1: grayscale image with intensities in range [-128, 127]
     :type x1:
     :param q: quantization step
-    :type q:
+    :type q: float
     :param T: truncation threshold. The number of histogram bins is T + 1.
     :type T:
-    :return: DCTR features array of shape [64, 25, 5]
+    :return: DCTR features
+        of shape [64x25, 5]
     :rtype:
 
     :Example:
@@ -167,6 +166,7 @@ def extract(
 
     # Allocate space for features
     features = np.zeros((64, len(merged_coordinates), T + 1,))
+    features = OrderedDict()
 
     # The bins correspond to values [0, ..., T]
     # np.histogram requires bin edges
@@ -205,6 +205,7 @@ def extract(
                     sub_features += np.histogram(R_sub, bin_edges)[0]
 
                 # Assign to output features array
-                features[mode_idx, hist_idx, :] = sub_features / np.sum(sub_features)
+                features[f'{mode_idx}_{hist_idx}'] = sub_features / np.sum(sub_features)
+                # features[mode_idx, hist_idx, :] = sub_features / np.sum(sub_features)
 
     return features

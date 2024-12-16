@@ -37,10 +37,8 @@ class TestPharm(unittest.TestCase):
     def test_compare_matlab(self, fname, num_projections=900):
         f = sw.pharm.extract_from_file(
             defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg',
-            q=5,
-            T=2,
             num_projections=num_projections,
-            implementation=sw.PHARM_REVISITED,
+            implementation=sw.PHARM_ORIGINAL,
         )
         f_ref = scipy.io.loadmat(FEATURES_DIR / f'{fname}.mat')
 
@@ -53,7 +51,7 @@ class TestPharm(unittest.TestCase):
 
     @staticmethod
     def _compare_histograms(residual, kernel_height, kernel_width, shift_y, shift_x, proj_mat):
-        extractor = sw.pharm.PharmRevisitedFeatureExtractor(num_projections=10, T=3, q=1)
+        extractor = sw.pharm.get_extractor_factory(sw.PHARM_REVISITED)(num_projections=10, T=3, q=1)
         h_original, h_vertical_flip, h_horizontal_flip, h_rot180 = extractor._obtain_histograms_to_merge(
             residual=residual,
             kernel_height=kernel_height,

@@ -1,20 +1,43 @@
+"""
 
-import numpy as np
+Author: Martin Benes, Benedikt Lorch
+Affiliation: University of Innsbruck
+"""
 
 from . import calibration
-from . import constants
-from . import convolution
 from . import dct
-from . import dict
-from . import grouping
+from . import features
 from . import jpeg
-from . import logger
 from . import matlab
-from . import quantization_table
-from . import writer
-
+from . import signal
+#
+from ._defs import setup_custom_logger, BufferedWriter, EPS
+from .features import flatten, group, Features
 from .dct import jpeglib_to_jpegio, jpegio_to_jpeglib
-from .grouping import flatten_single
 
-EPS = np.finfo(np.float64).eps
-"""small numerical constant"""
+#
+FEATURES_JRM = Features.FEATURES_JRM
+FEATURES_CCJRM = Features.FEATURES_CCJRM
+FEATURES_SRM = Features.FEATURES_SRM
+FEATURES_SRMQ1 = Features.FEATURES_SRMQ1
+FEATURES_CRM = Features.FEATURES_CRM
+FEATURES_GFR = Features.FEATURES_GFR
+FEATURES_PHARM = Features.FEATURES_PHARM
+FEATURES_DCTR = Features.FEATURES_DCTR
+FEATURES_SPAM = Features.FEATURES_SPAM
+
+__all__ = [
+    'calibration',
+    'dct',
+    'features',
+    'jpeg',
+    'matlab',
+    'signal',
+    'setup_custom_logger',
+    'BufferedWriter',
+    'EPS',
+    'flatten',
+    'group',
+    'jpeglib_to_jpegio',
+    'jpegio_to_jpeglib',
+]

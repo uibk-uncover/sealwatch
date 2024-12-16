@@ -29,7 +29,7 @@ class TestRJCA(unittest.TestCase):
         for fname in defs.TEST_IMAGES
         for alpha in [.05, .1, .2, .4, .6, .8, 1.]
     ])
-    def test_attack_stego(self, fname:str, alpha:float):
+    def test_attack_stego(self, fname: str, alpha: float):
         self._logger.info(f'TestRJCA.test_attack_stego({fname}, {alpha})')
         # compress precover image
         x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
@@ -53,7 +53,7 @@ class TestRJCA(unittest.TestCase):
         self.assertLess(var_threshold, .015)
 
     @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
-    def test_attack_cover(self, fname:str):
+    def test_attack_cover(self, fname: str):
         self._logger.info(f'TestRJCA.test_attack_cover({fname})')
         # compress precover image
         x = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))

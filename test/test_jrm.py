@@ -62,7 +62,6 @@ class TestJRM(unittest.TestCase):
                 f_ref["features"][submodel][0][0].flatten(),
             )
 
-
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract_from_file(self, fname):
         #

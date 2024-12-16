@@ -38,6 +38,7 @@ def estimate_beta(h0: np.ndarray, h1: np.ndarray) -> float:
 def attack(
     y1: np.ndarray,
     qt: np.ndarray,
+    **kw,
 ) -> float:
     """Runs a histogram attack with cartesian callibration, targetted against F5.
 
@@ -56,7 +57,7 @@ def attack(
     """
 
     # cartesian calibration
-    y2 = tools.calibration.cartesian(y1, qt=qt)
+    y2 = tools.calibration.cartesian(y1, qt=qt, **kw)
 
     # histograms
     h1_01, _ = np.histogram(np.abs(y1[:, :, 0, 1]).flatten(), 3, range=(0, 3))

@@ -45,8 +45,9 @@ pip3 install .
 | DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | 1D array |
 | PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
 | GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array |
-| SRM: spatial rich models | ? | spatial | [Reference](...) | ordered dict |
-| CRM: color rich models | ? | spatial | [Reference](...) | ordered dict |
+| SRM: spatial rich models | 34671 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
+| SRMQ1: SRM with quantization 1 | 12753 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
+| CRM: color rich models | 5404 | spatial | [Reference](https://doi.org/10.1109/WIFS.2014.7084325) | ordered dict |
 
 These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
 
@@ -162,6 +163,7 @@ with h5py.File("pharm_features.h5", "r") as f:
 features_grouped = group_batch(features_flat, feature_type=PHARM_REVISITED)
 
 # features_grouped is an ordered dict. The keys are the submodel names. Each value is an array with the shape [num_samples, submodel_size].
+```
 
 ```python
 from sealwatch.utils.grouping import flatten_single

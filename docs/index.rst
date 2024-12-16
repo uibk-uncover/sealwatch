@@ -3,9 +3,9 @@ sealwatch
 
 **sealwatch** is a Python package, containing implementations of modern image steganalysis algorithms.
 
-.. warning::
+.. note::
 
-   This project is under intensive development as we speak.
+   This project is under active development.
 
 Catching steganography has never been easier!
 
@@ -16,9 +16,18 @@ Catching steganography has never been easier!
 >>>
 >>> # apply WS steganalysis
 >>> import sealwatch as sw
->>> estimated_change_rate = sw.ws.attack(img)
->>> print(estimated_change_rate > 0.)
+>>> beta_hat = sw.ws.attack(img)  # estimate change rate
+>>> print(beta_hat > 0.)
 
+>>> # load suspicious image
+>>> import jpeglib
+>>> jpeg1 = jpeglib.read_dct("suspicious.jpeg")
+>>>
+>>> # extract JRM features
+>>> features = sw.ccjrm.extract(y1=jpeg1.Y, qt=jpeg1.qt[0])
+>>> model = pickle.load(open('model.pickle', 'rb'))  # load trained FLD
+>>> y_hat = model.predict(features[None])  # predict cover/stego label
+>>> assert y_hat != 1
 
 .. list-table:: Available steganalysis algorithms.
    :widths: 25 75
@@ -28,11 +37,11 @@ Catching steganography has never been easier!
    * - Type
      - Algorithms
    * - Analytical attacks
-     - chi2, SPA, WS, RJCA
+     - chi2, F5, SPA, WS, RJCA
    * - Features
-     - SPAM, JRM, DCTR, PHARM, GFR
+     - CRM, cc-JRM, HCF-COM, JRM, DCTR, PHARM, GFR, SPAM, SRM
    * - Detectors
-     - FLD
+     - ensemble of FLD
 
 Contents
 --------

@@ -16,12 +16,12 @@ class TestDctr(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_compare_matlab(self, fname):
-        dctr_features = sw.dctr.extract_from_file(defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg', qf=75)
-        dctr_features = dctr_features.flatten()
+        features = sw.dctr.extract_from_file(defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg', qf=75)
+        features = sw.tools.flatten(features)
 
-        dctr_features_matlab = scipy.io.loadmat(FEATURES_DIR / f'{fname}.mat')["features"].flatten()
+        features_ref = scipy.io.loadmat(FEATURES_DIR / f'{fname}.mat')["features"].flatten()
 
-        np.testing.assert_allclose(dctr_features, dctr_features_matlab)
+        np.testing.assert_allclose(features, features_ref)
 
 
 __all__ = ["TestDctr"]

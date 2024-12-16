@@ -90,9 +90,9 @@ f0, f1 = [], []
 for fname in tqdm(glob(f'{os.environ["DATA"]}/data/alaska2/fabrika-2024-09-23/images_ahd/*.png')[:500]):
 
     # load cover
-    x0 = np.array(Image.open(fname).convert('L')).astype('float32')
+    x0 = np.array(Image.open(fname).convert('L'))#.astype('float32')
     # x0_hcfcom = sw.features.hcfcom.extract_hcfcom(x0, order=1.5)  # extract HCF-COM
-    x0_spam = sw.features.spam.extract_spam686_features_from_img(x0)
+    f0_spam = sw.spam.extract(x0)
     # x0_hcfcom = _hcfcom3d(x0)  # extract HCF-COM
     # #
     # x0c = imageops.scale_image(x0, np.array(x0.shape[:2]) // 2, 'nearest', use_antialiasing=True)
@@ -101,7 +101,7 @@ for fname in tqdm(glob(f'{os.environ["DATA"]}/data/alaska2/fabrika-2024-09-23/im
     # embed
     x1 = cl.lsb.simulate(x0, alpha, modify=cl.LSB_MATCHING, seed=12345)
     # x1_hcfcom = sw.features.hcfcom.extract_hcfcom(x1, order=1.5)  # extract HCF-COM
-    x1_spam = sw.features.spam.extract_spam686_features_from_img(x1)
+    f1_spam = sw.spam.extract(x1)
     # x1_hcfcom = _hcfcom3d(x1)  # extract HCF-COM
     # #
     # x1c = imageops.scale_image(x1, np.array(x1.shape[:2]) // 2, 'nearest', use_antialiasing=True)
@@ -110,8 +110,8 @@ for fname in tqdm(glob(f'{os.environ["DATA"]}/data/alaska2/fabrika-2024-09-23/im
     #
     # f0.append(x0_hcfcom)
     # f1.append(x1_hcfcom)
-    f0.append(sw.utils.grouping.flatten_single(x0_spam))
-    f1.append(sw.utils.grouping.flatten_single(x1_spam))
+    f0.append(sw.tools.flatten(f0_spam))
+    f1.append(sw.tools.flatten(f1_spam))
     df.append({
         'fname': fname,
         'alpha': alpha,
@@ -122,18 +122,47 @@ f0, f1 = np.array(f0), np.array(f1)
 print(df)
 print(f0.shape, f1.shape)
 
-#
 X = np.concat([f0, f1], axis=0)
 y = np.concat([np.zeros(f0.shape[0]), np.ones(f1.shape[0])], axis=0)
-print(X.shape, y.shape)
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=.5, random_state=42)
-print(X_tr.shape, y_tr.shape)
-print(X_te.shape, y_te.shape)
-model = GaussianNB().fit(X_tr, y_tr)
+X_tr, X_te, y_tr, y_te = X[::2], X[1::2], y[::2], y[1::2]
+Xc_train = X_tr[y_tr == 0]
+Xs_train = X_tr[y_tr == +1]
+# X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=.5, random_state=42)
+# Xc_train = X_tr[y_tr == -1]
+# Xs_train = X_tr[y_tr == +1]
+# print(np.unique(y_tr), Xc_train.shape, Xs_train.shape)
+trainer = sw.ensemble_classifier.FldEnsembleTrainer(
+    Xc=Xc_train,
+    Xs=Xs_train,
+    seed=42,
+    verbose=0,
+)
+model, _ = trainer.train()
+import pickle
+with open('model.pickle', 'wb') as fp:
+    pickle.dump(model, fp)
+with open('model.pickle', 'rb') as fp:
+    model = pickle.load(fp)
 y_tr_pred = model.predict(X_tr)
 y_te_pred = model.predict(X_te)
-print('tr accuracy', accuracy_score(y_tr, y_tr_pred))
-print('te accuracy', accuracy_score(y_te, y_te_pred))
+print(y_tr_pred)
+print(y_te_pred)
+print('tr accuracy', accuracy_score(y_tr, (y_tr_pred + 1) / 2))
+print('te accuracy', accuracy_score(y_te, (y_te_pred + 1) / 2))
+
+
+# #
+# X = np.concat([f0, f1], axis=0)
+# y = np.concat([np.zeros(f0.shape[0]), np.ones(f1.shape[0])], axis=0)
+# print(X.shape, y.shape)
+# X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=.5, random_state=42)
+# print(X_tr.shape, y_tr.shape)
+# print(X_te.shape, y_te.shape)
+# model = GaussianNB().fit(X_tr, y_tr)
+# y_tr_pred = model.predict(X_tr)
+# y_te_pred = model.predict(X_te)
+# print('tr accuracy', accuracy_score(y_tr, y_tr_pred))
+# print('te accuracy', accuracy_score(y_te, y_te_pred))
 
 
 # fig, ax = plt.subplots()

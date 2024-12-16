@@ -16,7 +16,7 @@ from .. import tools
 # from sealwatch.utils.matlab import randperm_naive
 
 
-log = tools.logger.setup_custom_logger(os.path.basename(__file__))
+log = tools.setup_custom_logger(os.path.basename(__file__))
 
 
 class FldEnsembleTrainer(object):

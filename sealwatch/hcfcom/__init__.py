@@ -1,2 +1,7 @@
+"""
 
-from .hcfcom import extract_hcfcom
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
+
+from .hcfcom import extract
