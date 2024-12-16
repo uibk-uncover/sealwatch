@@ -117,7 +117,7 @@ def extract(
     quantization_steps: int = 75,
     T: int = 4,
     implementation: Implementation = Implementation.GFR_ORIGINAL,
-) -> OrderedDict:
+) -> np.ndarray:
     """
     Extract the Gabor filter residual features from a given image.
 
@@ -139,6 +139,8 @@ def extract(
         # Dimension 4: Co-occurrences
 
         Flatten the 5D array to obtain a 1D feature descriptor.
+
+        Will be changed in the future to OrderedDict to match the common interface.
     :rtype:
 
     :Example:

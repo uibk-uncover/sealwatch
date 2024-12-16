@@ -104,7 +104,6 @@ def get_symmetric_histogram_coordinates() -> List[List]:
 def extract_from_file(
     path: Union[str, Path],
     qf: int,
-# ) -> np.ndarray:  # TODO
 ) -> OrderedDict:
     """
     Extract DCTR features from the luminance channel of JPEG image given by its filepath
@@ -139,7 +138,6 @@ def extract(
     q: float,
     *,
     T: np.ndarray = 4,
-# ) -> np.ndarray:  # TODO
 ) -> OrderedDict:
     """
     Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
