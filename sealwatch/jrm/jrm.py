@@ -20,32 +20,17 @@ from collections import OrderedDict
 import jpeglib
 import numpy as np
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict
 
-# from ... import to
-
-# from sealwatch.utils.jpeg import jpeglib_to_jpegio
 from .absolute_value_features import compute_absolute_value_features
 from .difference_features import compute_difference_features
 from .integral_features import compute_integral_features
-
 from .. import tools
-# from sealwatch.utils.calibration import decompress_crop_recompress
-# from sealwatch.utils.dict import append_features
-
-# def extract_cc_jrm_features_from_file():
-#     """
-#     Compute JPEG rich model (JRM) features including reference features from a cartesian-calibrated variant of the input image.
-#     Uses only the luminance channel
-
-#     :param img_filepath: path to JPEG image
-#     :return: ccJRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 22510.
-#     """
 
 
 def _extract_features(
     y: np.ndarray,
-) -> np.ndarray:
+) -> Dict[str, np.ndarray]:
     """Extracts JPEG rich models (JRM) for the given DCT coefficients.
 
     The mode-specific submodels give the rich model a fine "granularity" at the price of utilizing only a small portion of the DCT plane.
@@ -136,7 +121,7 @@ def extract(
     *,
     calibrated: bool = False,
     qt: np.ndarray = None,
-) -> np.ndarray:
+) -> Dict[str, np.ndarray]:
     """Extracts JPEG rich models (JRM) for the given DCT coefficients.
 
     :param y1: DCT coefficients,
@@ -170,14 +155,14 @@ def extract(
 def extract_from_file(
     path: Union[Path, str],
     calibrated: bool = False,
-) -> OrderedDict:
+) -> Dict[str, np.ndarray]:
     """
     Compute the JPEG rich models (JRM) feature descriptor from the given image's luminance channel.
 
     The mode-specific submodels give the rich model a fine "granularity" at the price of utilizing only a small portion of the DCT plane.
     To cover a larger range of DCT coefficients, the mode-specific submodels are complemented by co-occurrence matrices integrated over all DCT modes.
 
-    J. Kodovsky, J. Fridrich, Steganalysis of JPEG Images Using Rich Models, Proc. SPIE, Electronic Imaging, Media Watermarking, Security, and Forensics XIV, San Francisco, CA, January 23–25, 2012.
+    J. Kodovsky, J. Fridrich, Steganalysis of JPEG Images Using Rich Models, SPIE, Electronic Imaging, Media Watermarking, Security, and Forensics, 2012.
     http://dde.binghamton.edu/kodovsky/pdf/SPIE2012_Kodovsky_Steganalysis_of_JPEG_Images_Using_Rich_Models_paper.pdf
 
     :param path: path to JPEG image

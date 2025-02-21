@@ -10,16 +10,16 @@ from . import spa
 from . import ws
 
 # features
-from .jrm import ccjrm
-from .srm import crm
 from . import dctr
 from . import gfr
 from . import hcfcom
 from . import jrm
 from . import pharm
 from . import srm
-from .srm import srmq1
 from . import spam
+from .jrm import ccjrm
+from .srm import crm
+from .srm import srmq1
 
 # classifier
 from . import ensemble_classifier
