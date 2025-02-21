@@ -3,7 +3,7 @@ Reference
 
 *to be completed*
 
-For more information, see the `glossary <https://conseal.readthedocs.io/en/latest/glossary.html#steganographic-design>`__.
+For more information, see the `glossary <https://sealwatch.readthedocs.io/en/latest/glossary.html#steganographic-design>`__.
 
 .. contents:: Table of Contents
    :local:
@@ -109,7 +109,7 @@ PHARM
 
 .. autofunction:: sealwatch.pharm.extract_from_file
 
-.. autoclass:: conseal.pharm.Implementation
+.. autoclass:: sealwatch.pharm.Implementation
    :members: PHARM_ORIGINAL, PHARM_REVISITED
 
 GFR
@@ -119,7 +119,7 @@ GFR
 
 .. autofunction:: sealwatch.gfr.extract_from_file
 
-.. autoclass:: conseal.gfr.Implementation
+.. autoclass:: sealwatch.gfr.Implementation
    :members: GFR_ORIGINAL, GFR_FIX
 
 Detectors

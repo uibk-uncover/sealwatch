@@ -139,16 +139,17 @@ def extract(
     *,
     T: np.ndarray = 4,
 ) -> OrderedDict:
-    """
+    """Extracts DCTR features from the provided image.
+
     Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
+
     :param x1: grayscale image with intensities in range [-128, 127]
     :type x1:
     :param q: quantization step
     :type q: float
     :param T: truncation threshold. The number of histogram bins is T + 1.
     :type T:
-    :return: DCTR features
-        of shape [64x25, 5]
+    :return: DCTR features of shape [64x25, 5]
     :rtype:
 
     :Example:
