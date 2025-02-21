@@ -175,7 +175,6 @@ def extract_from_file(
     # read file
     jpeg1 = jpeglib.read_dct(path)
     y1 = jpeg1.Y
-    qt = jpeg1.qt[jpeg1.quant_tbl_no[0]]
 
     # extract features
-    return _extract_features(y=y1, qt=qt, calibrated=calibrated)
+    return extract(y=y1, calibrated=calibrated)
