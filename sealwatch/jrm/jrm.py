@@ -178,4 +178,4 @@ def extract_from_file(
     qt = jpeg1.qt[jpeg1.quant_tbl_no[0]]
 
     # extract features
-    return _extract_features(y1=y1, qt=qt, calibrated=calibrated)
+    return _extract_features(y=y1, qt=qt, calibrated=calibrated)
