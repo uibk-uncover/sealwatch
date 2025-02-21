@@ -87,9 +87,9 @@ JRM
 
 .. autofunction:: sealwatch.jrm.extract
 
-.. autofunction:: sealwatch.ccjrm.extract_from_file
+.. autofunction:: sealwatch.jrm.extract_from_file
 
-.. autofunction:: sealwatch.jrm.extract
+.. autofunction:: sealwatch.ccjrm.extract
 
 .. autofunction:: sealwatch.ccjrm.extract_from_file
 
