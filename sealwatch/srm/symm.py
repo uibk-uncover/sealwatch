@@ -18,7 +18,7 @@ from typing import Dict
 #     input_features: OrderedDict,
 #     prefix: str,
 #     suffix: str,
-# ) -> OrderedDict[str, np.ndarray]:
+# ) -> Dict[str, np.ndarray]:
 #     """
 #     :param input_features: ordered dict
 #     :param prefix
@@ -80,7 +80,7 @@ def post_process(
     result: OrderedDict = None,
     Tc: int = 3,
     name_mapper: Dict[str, str] = {},
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """"""
     if result is None:
         result = OrderedDict()

@@ -127,7 +127,7 @@ def all1st(
     T: int = 2,
     CoocN: typing.Callable = cooccurrence4,
     directional: bool = True,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Co-occurrences of all 1st-order residuals.
 
     Outputted features:
@@ -343,7 +343,7 @@ def all2nd(
     T: int = 2,
     CoocN: typing.Callable = cooccurrence4,
     directional: bool = True,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Co-occurrences of all 2nd-order residuals.
 
     Outputted features:
@@ -443,7 +443,7 @@ def all3rd(
     CoocN: typing.Callable = cooccurrence4,
     directional: bool = True,
     implementation: Implementation = Implementation.CRM_ORIGINAL,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Co-occurrences of all 3rd-order residuals.
 
     Outputted features:
@@ -633,7 +633,7 @@ def all3x3(
     T: int = 2,
     CoocN: typing.Callable = cooccurrence4,
     directional: bool = True,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Co-occurrences of residuals based on KB kernel and its halfes (EDGE residuals)."""
     g = OrderedDict()
 
@@ -725,7 +725,7 @@ def all5x5(
     T: int = 2,
     CoocN: typing.Callable = cooccurrence4,
     directional: bool = True,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Co-occurrences of residuals based on KV kernel and its halfes (EDGE residuals)."""
     #
     g = OrderedDict()

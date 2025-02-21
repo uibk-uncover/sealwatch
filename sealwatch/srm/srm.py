@@ -3,7 +3,7 @@ from collections import OrderedDict
 import numpy as np
 from pathlib import Path
 from PIL import Image
-from typing import Union, List
+from typing import Union, List, Dict
 
 from .cooccurrence import all1st, all2nd, all3x3, all3rd, all5x5
 from . import symm
@@ -12,7 +12,7 @@ from . import symm
 def extract_from_file(
     path: Union[str, Path],
     **kw,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     # load
     img = np.array(Image.open(path))
     return extract(img, **kw)
@@ -23,7 +23,7 @@ def extract(
     *,
     qs: List[List[int]] = [[1, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2]],
     directional: bool = True,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Extracts spatial rich model for steganalysis.
 
     :param x: 2D input image

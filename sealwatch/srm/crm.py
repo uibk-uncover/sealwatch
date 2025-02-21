@@ -28,7 +28,7 @@ from . import srm
 def extract_from_file(
     path: Union[str, Path],
     **kw,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     img = np.array(Image.open(path))
     return extract(img, **kw)
 
@@ -39,7 +39,7 @@ def extract(
     q: int = 1,
     Tc: int = 2,
     implementation: Implementation = Implementation.CRM_FIX_MIN24,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Extracts color rich model for steganalysis.
 
     :param x: 2D input image
@@ -158,7 +158,7 @@ def post_process(
     result: collections.OrderedDict = None,
     Tc: int = 3,
     name_mapper: Dict[str, str] = {},
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """"""
     if result is None:
         result = collections.OrderedDict()

@@ -2,7 +2,7 @@
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict
 
 from . import srm
 
@@ -10,14 +10,14 @@ from . import srm
 def extract_from_file(
     path: Union[str, Path],
     **kw,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     return srm.extract_from_file(path=path, **kw, qs=[[1]]*5)
 
 
 def extract(
     x: np.ndarray,
     **kw,
-) -> OrderedDict[str, np.ndarray]:
+) -> Dict[str, np.ndarray]:
     """Extracts spatial rich model for steganalysis.
 
     :param x: 2D input image
