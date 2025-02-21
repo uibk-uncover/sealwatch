@@ -2,8 +2,7 @@
 from collections import OrderedDict
 import enum
 import numpy as np
-import re
-import typing
+from typing import Dict, Callable
 
 from ..tools import matlab
 
@@ -125,7 +124,7 @@ def all1st(
     q: int,
     *,
     T: int = 2,
-    CoocN: typing.Callable = cooccurrence4,
+    CoocN: Callable = cooccurrence4,
     directional: bool = True,
 ) -> Dict[str, np.ndarray]:
     """Co-occurrences of all 1st-order residuals.
@@ -341,7 +340,7 @@ def all2nd(
     X: np.ndarray,
     q: int,
     T: int = 2,
-    CoocN: typing.Callable = cooccurrence4,
+    CoocN: Callable = cooccurrence4,
     directional: bool = True,
 ) -> Dict[str, np.ndarray]:
     """Co-occurrences of all 2nd-order residuals.
@@ -440,7 +439,7 @@ def all3rd(
     q: int,
     *,
     T: int = 2,
-    CoocN: typing.Callable = cooccurrence4,
+    CoocN: Callable = cooccurrence4,
     directional: bool = True,
     implementation: Implementation = Implementation.CRM_ORIGINAL,
 ) -> Dict[str, np.ndarray]:
@@ -631,7 +630,7 @@ def all3x3(
     X: np.ndarray,
     q: int,
     T: int = 2,
-    CoocN: typing.Callable = cooccurrence4,
+    CoocN: Callable = cooccurrence4,
     directional: bool = True,
 ) -> Dict[str, np.ndarray]:
     """Co-occurrences of residuals based on KB kernel and its halfes (EDGE residuals)."""
@@ -723,7 +722,7 @@ def all5x5(
     X: np.ndarray,
     q: int,
     T: int = 2,
-    CoocN: typing.Callable = cooccurrence4,
+    CoocN: Callable = cooccurrence4,
     directional: bool = True,
 ) -> Dict[str, np.ndarray]:
     """Co-occurrences of residuals based on KV kernel and its halfes (EDGE residuals)."""
