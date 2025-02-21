@@ -6,6 +6,9 @@ Affiliation: University of Innsbruck
 
 from collections import OrderedDict
 import numpy as np
+from pathlib import Path
+from PIL import Image
+from typing import Union, Dict
 
 
 def _hcfcom(
@@ -31,6 +34,15 @@ def _hcfcom(
         (k/256)**order * hcf[k]
         for k in range(128)
     ]) / np.sum(hcf)
+
+
+def extract_from_file(
+    path: Union[str, Path],
+    **kw,
+) -> Dict[str, np.ndarray]:
+    # load
+    img = np.array(Image.open(path))
+    return extract(img, **kw)
 
 
 def extract(
