@@ -43,7 +43,7 @@ from .. import tools
 #     """
 
 
-def _extract(
+def _extract_features(
     y: np.ndarray,
 ) -> np.ndarray:
     """Extracts JPEG rich models (JRM) for the given DCT coefficients.
@@ -151,7 +151,7 @@ def extract(
     """
 
     # extract features
-    f = _extract(y=y1)
+    f = _extract_features(y=y1)
 
     # extract calibrated features
     if calibrated:
@@ -159,7 +159,7 @@ def extract(
             y1=y1,
             qt=qt,
         )
-        f_y2 = _extract(y=y2)
+        f_y2 = _extract_features(y=y2)
         for name, submodel in f_y2.items():
             f[f'{name}_ref'] = submodel
 
@@ -193,4 +193,4 @@ def extract_from_file(
     qt = jpeg1.qt[jpeg1.quant_tbl_no[0]]
 
     # extract features
-    return extract(y1=y1, qt=qt, calibrated=calibrated)
+    return _extract_features(y1=y1, qt=qt, calibrated=calibrated)
