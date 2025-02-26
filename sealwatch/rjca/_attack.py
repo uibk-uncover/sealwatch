@@ -53,3 +53,4 @@ def attack(
 
     # variance
     return np.var(err)
+

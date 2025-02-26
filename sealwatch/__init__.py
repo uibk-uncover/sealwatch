@@ -8,6 +8,7 @@ from . import spa
 from . import ws
 
 # features
+from . import lrt
 
 #
 from . import utils
