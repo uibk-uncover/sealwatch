@@ -15,7 +15,6 @@ dependencies = [
   "scipy",
   "jpeglib",
   "h5py",
-  "maturin",
   "pandas",
   "pillow",
   "setuptools",
@@ -63,6 +62,7 @@ dev = [
     "parameterized",
     "conseal",
     "scikit-learn",
+    "maturin"
 ]
 deploy = []
 
