@@ -12,19 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-24.04
-            target: x86_64
-          - os: ubuntu-24.04
-            target: i686
-          - os: windows-2019
-            target: x86_64
-          - os: windows-2019
-            target: i686
-          - os: macos-13
-            target: x86_64
-          - os: macos-13
-            target: aarch64
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Set Github Workspace
         uses: actions/checkout@v2
@@ -38,7 +26,7 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release --out dist --target ${{ matrix.target }}
+          args: --release --out dist
           manylinux: auto
 
       - name: Upload artifact
@@ -55,8 +43,16 @@ jobs:
         with:
           fetch-depth: 0  # Optional, use if you use setuptools_scm
           submodules: true  # Optional, use if you have submodules
-      - name: Build SDist
-        run: pipx run build --sdist
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ strategy.job-index }}-source
