@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ strategy.job-index }}-binary
-          path: ./wheelhouse/sealwatch*.whl
+          path: ./dist/sealwatch*.whl
 
   make_sdist:
     name: Make source distribution
@@ -73,13 +73,14 @@ jobs:
       - name: Downloads artifact
         uses: actions/download-artifact@v4
         with:
-          pattern: artifact-*
+          pattern: artifact-*-binary
           merge-multiple: true
-          path: wheelhouse
+          path: dist
       - name: Install wheel
         run: |
-          pip install numpy scipy jpeglib h5py maturin pandas pillow setuptools parameterized conseal scikit-learn tqdm
-          pip install --find-links ./wheelhouse sealwatch --no-index
+          pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn tqdm
+          ls ./dist
+          pip install --find-links ./dist sealwatch --no-index
       - name: Run unittests
         shell: bash
         run: |
