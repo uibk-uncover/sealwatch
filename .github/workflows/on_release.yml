@@ -63,6 +63,8 @@ jobs:
     runs-on: ubuntu-latest # runner
     needs: [build_wheels, make_sdist]
     steps: # tasks
+      - name: Set Github Workspace # access Github Workspace
+        uses: actions/checkout@v2
       - name: Set up Python 3.10 # set architecture and Python3
         uses: actions/setup-python@v2
         with:
@@ -77,10 +79,9 @@ jobs:
       - name: Install wheel
         run: |
           pip install numpy scipy jpeglib h5py pandas pillow torch torchvision tqdm parameterized conseal scikit-learn
-          ls ./dist
-          unzip -l dist/sealwatch-2025.4.1-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
           pip install --find-links ./dist sealwatch --no-index --prefer-binary
-
+      - name: Remove local sealwatch to test installed wheel
+        run: rm -rf sealwatch
       - name: Run unittests
         shell: bash
         run: |
