@@ -1,26 +1,4 @@
 
-# from glob import glob
-# import numpy as np
-# from PIL import Image
-# import sealwatch as sw
-# import time
-
-# files = glob('test/assets/cover/uncompressed_gray/*.png') * 10
-# start = time.perf_counter()
-# for fname in files:
-#     x = np.array(Image.open(fname)).astype('int16')
-#     f = sw.spam_rs.extract(x)
-# end = time.perf_counter()
-# print(f'Extracting from {len(files)} images in Rust took {end - start} s')
-
-# start = time.perf_counter()
-# for fname in files:
-#     x = np.array(Image.open(fname)).astype('int16')
-#     f = sw.spam.extract(x)
-# end = time.perf_counter()
-# print(f'Extracting from {len(files)} images in Python took {end - start} s')
-# exit()
-
 import conseal as cl
 from glob import glob
 import logging
