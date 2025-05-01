@@ -78,7 +78,7 @@ jobs:
           path: dist
       - name: Install wheel
         run: |
-          pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn tqdm
+          pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn torch torchvision tqdm
           ls ./dist
           pip install --find-links ./dist sealwatch --no-index --prefer-binary
       - name: Run unittests
