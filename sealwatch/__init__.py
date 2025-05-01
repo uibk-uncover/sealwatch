@@ -17,6 +17,8 @@ from . import jrm
 from . import pharm
 from . import srm
 from . import spam
+from ._sealwatch import spam_rs # Rust-accellerated
+# from . import spam_rs
 from .jrm import ccjrm
 from .srm import crm
 from .srm import srmq1
@@ -70,5 +72,7 @@ __all__ = [
     'srm',
     'srmq1',
     'spam',
+    'spam_rs',
+    'ensemble_classifier',
     '__version__',
 ]

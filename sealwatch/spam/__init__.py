@@ -1,6 +1,6 @@
 """
 
-Authors: Benedikt Lorch
+Authors: Martin Benes, Benedikt Lorch
 Affiliation: University of Innsbruck
 """
 

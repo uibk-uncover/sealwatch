@@ -1,4 +1,78 @@
 
+from glob import glob
+import numpy as np
+from PIL import Image
+import sealwatch as sw
+import time
+
+files = glob('test/assets/cover/uncompressed_gray/*.png') * 10
+start = time.perf_counter()
+for fname in files:
+    x = np.array(Image.open(fname)).astype('int16')
+    f = sw.spam_rs.extract(x)
+end = time.perf_counter()
+print(f'Extracting from {len(files)} images in Rust took {end - start} s')
+
+start = time.perf_counter()
+for fname in files:
+    x = np.array(Image.open(fname)).astype('int16')
+    f = sw.spam.extract(x)
+end = time.perf_counter()
+print(f'Extracting from {len(files)} images in Python took {end - start} s')
+
+
+exit()
+
+import conseal as cl
+from glob import glob
+import logging
+import numpy as np
+from PIL import Image
+import sealwatch as sw
+
+logging.basicConfig(level=logging.INFO)
+
+pixel_predictor = sw.ws.unet_estimator()
+
+print(pixel_predictor)
+
+rng = np.random.default_rng(12345)
+# exit()
+
+for fname in glob('test/assets/cover/uncompressed_gray/*.png'):
+    x0 = np.array(Image.open(fname))
+
+    seed = rng.integers(0, 2**31-1, dtype='uint32')
+    x1 = cl.lsb.simulate(x0, alpha=.4, modify=cl.LSB_REPLACEMENT, seed=seed)
+
+    beta_hat = sw.ws.attack(
+        x1=x1,
+        # pixel_predictor='KB',
+        pixel_predictor=pixel_predictor,
+    )
+    print(fname, x0.shape, (x0 != x1).mean(), beta_hat)
+
+
+exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import conseal as cl
 from glob import glob
 import imageops
@@ -12,6 +86,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 import sealwatch as sw
 from tqdm import tqdm
+
 
 
 def hcfm(hcf, order: int = 1) -> float:

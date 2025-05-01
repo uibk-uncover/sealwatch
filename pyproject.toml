@@ -1,18 +1,26 @@
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "pyo3"
+module-name = "sealwatch._sealwatch"
 
 [project]
 name = "sealwatch"
-version = "2024.12"
+version = "2025.04"
 dependencies = [
   "numpy",
   "scipy",
   "jpeglib",
   "h5py",
+  "maturin",
   "pandas",
   "pillow",
-  "setuptools"
+  "setuptools",
+  "torch",
+  "torchvision"
 ]
 requires-python = ">= 3.8"
 authors = [
@@ -56,6 +64,12 @@ dev = [
     "scikit-learn",
 ]
 deploy = []
+
+[tool.setuptools]
+packages = ["sealwatch"]
+
+[tool.setuptools.package-data]
+hello = ['assets/*']
 
 [tool.coverage.report]
 fail_under = 80
