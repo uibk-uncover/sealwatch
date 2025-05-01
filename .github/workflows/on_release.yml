@@ -75,7 +75,7 @@ jobs:
         with:
           pattern: artifact-*
           merge-multiple: true
-          path: dist
+          path: wheelhouse
       - name: Install wheel
         run: |
           pip install numpy scipy jpeglib h5py maturin pandas pillow setuptools parameterized conseal scikit-learn tqdm
