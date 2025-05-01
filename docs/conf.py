@@ -2,11 +2,11 @@
 
 # -- Project information
 project = 'sealwatch'
-copyright = '2024, Martin Benes & Benedikt Lorch, University of Innsbruck'
+copyright = '2025, Martin Benes & Benedikt Lorch, University of Innsbruck'
 author = 'Martin Benes, Benedikt Lorch'
 
-release = '2025.04.1'
-version = '2024.04.1'
+release = '2025.05'
+version = '2024.05'
 
 # -- General configuration
 

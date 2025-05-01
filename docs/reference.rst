@@ -59,6 +59,8 @@ SPAM
 
 .. autofunction:: sealwatch.spam.extract
 
+.. autofunction:: sealwatch.spam.extract_rs
+
 .. autofunction:: sealwatch.spam.extract_from_file
 
 
