@@ -26,7 +26,7 @@ jobs:
       - uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release --out dist
+          args: --release --out dist --compatibility abi3
           manylinux: auto
 
       - name: Upload artifact
@@ -80,7 +80,7 @@ jobs:
         run: |
           pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn tqdm
           ls ./dist
-          pip install --find-links ./dist sealwatch --no-index
+          pip install --find-links ./dist sealwatch --no-index --prefer-binary
       - name: Run unittests
         shell: bash
         run: |
