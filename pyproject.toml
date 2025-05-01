@@ -17,7 +17,6 @@ dependencies = [
   "h5py",
   "pandas",
   "pillow",
-  "setuptools",
   "torch",
   "torchvision",
   "tqdm"
@@ -65,9 +64,6 @@ dev = [
     "maturin"
 ]
 deploy = []
-
-[tool.setuptools]
-packages = ["sealwatch"]
 
 [tool.coverage.report]
 fail_under = 80

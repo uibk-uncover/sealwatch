@@ -81,7 +81,10 @@ jobs:
           pip install numpy scipy jpeglib h5py pandas pillow setuptools parameterized conseal scikit-learn torch torchvision tqdm
           ls ./dist
           pip install --find-links ./dist sealwatch --no-index --prefer-binary
-          ls $(python -c "import sealwatch, os; print(os.path.dirname(sealwatch.__file__) + '/sealwatch')")
+          ls
+          python -c "import sealwatch, os; print('__file__:', os.path.dirname(sealwatch.__file__))"
+          ls sealwatch
+          python -c "import sealwatch, os; print(os.listdir(sealwatch.__file__ + '/sealwatch'))"
 
       - name: Run unittests
         shell: bash
