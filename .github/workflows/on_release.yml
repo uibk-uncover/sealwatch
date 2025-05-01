@@ -63,8 +63,6 @@ jobs:
     runs-on: ubuntu-latest # runner
     needs: [build_wheels, make_sdist]
     steps: # tasks
-      - name: Set Github Workspace # access Github Workspace
-        uses: actions/checkout@v2
       - name: Set up Python 3.10 # set architecture and Python3
         uses: actions/setup-python@v2
         with:
