@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "spam_rs"  # This is the module name, matching what Python will import
+name = "_sealwatch"  # This is the module name, matching what Python will import
 crate-type = ["cdylib"]
 path = "src/lib.rs"
 
