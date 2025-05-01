@@ -80,7 +80,8 @@ jobs:
         run: |
           pip install numpy scipy jpeglib h5py pandas pillow torch torchvision tqdm parameterized conseal scikit-learn
           ls ./dist
-          pip install --find-links ./dist sealwatch --no-index --prefer-binary
+          pip install ./dist/sealwatch-*.whl
+          unzip -l dist/sealwatch-*.whl
           ls
           ls sealwatch
           python -c "import sealwatch, os; print('__file__:', os.path.dirname(sealwatch.__file__))"
