@@ -9,7 +9,7 @@ module-name = "sealwatch._sealwatch"
 
 [project]
 name = "sealwatch"
-version = "2025.04"
+version = "2025.04.1"
 dependencies = [
   "numpy",
   "scipy",
@@ -20,7 +20,8 @@ dependencies = [
   "pillow",
   "setuptools",
   "torch",
-  "torchvision"
+  "torchvision",
+  "tqdm"
 ]
 requires-python = ">= 3.8"
 authors = [
@@ -67,9 +68,6 @@ deploy = []
 
 [tool.setuptools]
 packages = ["sealwatch"]
-
-[tool.setuptools.package-data]
-hello = ['assets/*']
 
 [tool.coverage.report]
 fail_under = 80
