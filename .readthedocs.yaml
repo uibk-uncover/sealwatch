@@ -11,9 +11,6 @@ build:
   tools:
     python: "3.8"
     rust: "latest"
-  commands:
-    - python -m pip install --upgrade pip
-    - pip install -e '.[dev]'
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
@@ -34,3 +31,5 @@ python:
   - requirements: docs/requirements.txt
   - method: pip
     path: .
+    extra_requirements:
+    - dev
