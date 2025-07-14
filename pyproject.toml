@@ -61,8 +61,7 @@ dev = [
     "parameterized",
     "conseal",
     "scikit-learn",
-    "maturin",
-    "puccinialin"
+    "maturin"
 ]
 deploy = []
 
