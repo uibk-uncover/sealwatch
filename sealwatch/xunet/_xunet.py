@@ -52,7 +52,7 @@ class HPF(nn.Module):
         return self
 
 
-class ConvBlock(nn.Module):
+class ConvGroup(nn.Module):
     """This class returns a building block for XuNet."""
 
     def __init__(
@@ -109,8 +109,7 @@ class XuNet(nn.Module):
 
     Architecture:
     - Preprocessing with high pass filter
-    - 5 convolutional layers with batch normalization and activation
-    - Global average pooling
+    - 5 convolutional groups with batch normalization, activation, and pooling
     - Fully connected layers with softmax output
 
     Intended for binary classification of stego and cover images.
@@ -120,23 +119,14 @@ class XuNet(nn.Module):
         super().__init__()
         # HPF layer
         self.hpf = HPF()
-        # Group 1
-        self.group1 = ConvBlock(1, 8, kernel_size=5, activation='tanh', use_abs=True)
-        # Group 2
-        self.group2 = ConvBlock(8, 16, kernel_size=5, activation='tanh')
-        # Group 3
-        self.group3 = ConvBlock(16, 32, kernel_size=1)
-        # Group 4
-        self.group4 = ConvBlock(32, 64, kernel_size=1)
-        # Group 5
-        self.group5 = ConvBlock(64, 128, kernel_size=1, global_pool=True)
-        #
-        self.fc = nn.Sequential(
-            # nn.Linear(128, 128),
-            # nn.ReLU(inplace=True),
-            nn.Linear(128, 2),
-            # nn.LogSoftmax(dim=1),
-        )
+        # Convolutional groups
+        self.group1 = ConvGroup(1, 8, kernel_size=5, activation='tanh', use_abs=True)
+        self.group2 = ConvGroup(8, 16, kernel_size=5, activation='tanh')
+        self.group3 = ConvGroup(16, 32, kernel_size=1)
+        self.group4 = ConvGroup(32, 64, kernel_size=1)
+        self.group5 = ConvGroup(64, 128, kernel_size=1, global_pool=True)
+        # Fully connected layer
+        self.fc = nn.Linear(128, 2)
 
     def forward(self, image: Tensor) -> Tensor:
         """Forward pass"""

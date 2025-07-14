@@ -26,6 +26,7 @@ class TestXuNet(unittest.TestCase):
         del self.tmp
 
     def test_initialize(self):
+        """Checks the shapes against the Fig. 1 in the paper."""
         self._logger.info('TestXuNet.test_initialize()')
         model = sw.xunet.XuNet()
         #
@@ -57,6 +58,10 @@ class TestXuNet(unittest.TestCase):
         self.assertEqual(tuple(x_conv5.size()), (1, 128, 32, 32))
         x_group5 = model.group5(x_group4)
         self.assertEqual(tuple(x_group5.size()), (1, 128, 1, 1))
+        #
+        x_xunet = model(x)
+        self.assertEqual(tuple(x_xunet.size()), (1, 2))
+
 
 
     # def test_pretrained(self):
