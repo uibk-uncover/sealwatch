@@ -20,6 +20,7 @@ use numpy::{PyArray1, PyReadonlyArray2};
 ///     - "straight": 1D NumPy array of straight co-occurrences
 ///     - "diagonal": 1D NumPy array of diagonal co-occurrences
 #[pyfunction]
+#[pyo3(signature = (array, t = 3))]
 fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i16>) -> PyResult<PyObject> {
     let input = array.as_array();
     let t = t.unwrap_or(3);
