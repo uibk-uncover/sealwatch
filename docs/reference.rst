@@ -29,6 +29,8 @@ WS
 
 .. autofunction:: sealwatch.ws.attack
 
+.. autofunction:: sealwatch.ws.unet_estimator
+
 
 Histogram attack
 """"""""""""""""
@@ -133,6 +135,13 @@ Detectors
 .. autoclass:: sealwatch.ensemble_classifier.FldEnsembleTrainer
    :members: train
 
+
+.. autoclass:: sealwatch.xunet.XuNet
+   :members: forward
+
+.. autofunction:: sealwatch.xunet.pretrained
+
+.. autofunction:: sealwatch.xunet.infere_single
 
 Helper functions
 """"""""""""""""

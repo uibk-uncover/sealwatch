@@ -1,7 +1,5 @@
 """"""
 
-import pkg_resources
-
 # attacks
 from . import chi2
 from . import F5
@@ -51,9 +49,10 @@ GFR_ORIGINAL = gfr.GFR_ORIGINAL
 GFR_FIX = gfr.GFR_FIX
 
 # package version
+import importlib.metadata
 try:
-    __version__ = pkg_resources.get_distribution("sealwatch").version
-except pkg_resources.DistributionNotFound:
+    __version__ = importlib.metadata.version("sealwatch")
+except importlib.metadata.PackageNotFoundError:
     __version__ = None
 
 __all__ = [
@@ -76,5 +75,6 @@ __all__ = [
     'spam',
     'spam_rs',
     'ensemble_classifier',
+    'xunet',
     '__version__',
 ]

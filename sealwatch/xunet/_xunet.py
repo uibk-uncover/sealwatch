@@ -128,9 +128,9 @@ class XuNet(nn.Module):
         # Fully connected layer
         self.fc = nn.Linear(128, 2)
 
-    def forward(self, image: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass"""
-        x = self.hpf(image)
+        x = self.hpf(x)
 
         # Pass through convolutional layers
         x = self.group1(x)
@@ -158,7 +158,7 @@ class XuNet(nn.Module):
 
 def pretrained(
     model_path: str = None,
-    model_name: str = 'xunet_lsbm_01.pt',
+    model_name: str = 'XuNet-LSBM_0.4_lsb-250714133836.pt',
     *,
     device: torch.nn.Module = torch.device('cpu'),
     strict: bool = True,
@@ -179,15 +179,16 @@ def pretrained(
 
     # download if needed
     if model_path is None:
-        raise NotImplementedError('pretrained architectures are not yet available')
-        # model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/2025.07/{model_name}'
-        # cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
-        # resume_model_file = tools.networks.download_if_missing(model_url, cache_dir / model_name)
+        # raise NotImplementedError('pretrained architectures are not yet available')
+        model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/2025.07/{model_name}'
+        cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
+        resume_model_file = tools.networks.download_if_missing(model_url, cache_dir / model_name)
     else:
         resume_model_file = Path(model_path) / model_name
 
     # load weights
     state_dict = torch.load(resume_model_file, map_location=device, weights_only=False)
+    # state_dict = torch.load(resume_model_file, weights_only=True)
     model.load_state_dict(state_dict, strict=strict)
     model.eval()
     logging.info(f'model {model_name} loaded from {resume_model_file}')

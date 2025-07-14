@@ -62,26 +62,22 @@ class TestXuNet(unittest.TestCase):
         x_xunet = model(x)
         self.assertEqual(tuple(x_xunet.size()), (1, 2))
 
+    def test_pretrained(self):
+        self._logger.info('TestXuNet.test_pretrained()')
+        sw.xunet.pretrained()
 
+    @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
+    def test_infere_xunet(self, fname: str):
+        self._logger.info(f'TestXuNet.test_load_xunet({fname=})')
+        #
+        DEVICE = torch.device('cpu')
+        model = sw.xunet.pretrained(device=DEVICE)
 
-    # def test_pretrained(self):
-    #     self._logger.info('TestXuNet.test_pretrained()')
-    #     model = sw.xunet.pretrained()
-    #     model = sw.xunet.pretrained('xunet_hill_04.pt')
-    #     model = sw.xunet.pretrained('xunet_hill_01.pt')
-    #     model = sw.xunet.pretrained('xunet_lsbm_04.pt')
-    #     model = sw.xunet.pretrained('xunet_lsbm_01.pt')
-
-    # @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
-    # def test_infere_xunet(self, fname: str):
-    #     self._logger.info(f'TestXuNet.test_load_xunet({fname=})')
-    #     #
-    #     DEVICE = torch.device('cpu')
-    #     model = sw.xunet.pretrained('..', 'xunet_lsbm_04.pt', device=DEVICE)
-    #     #
-    #     x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
-    #     y0 = sw.xunet.infere_single(x0, model=model, device=DEVICE)
-    #     #
-    #     x1 = cl.lsb.simulate(x0, alpha=.4, modify=cl.LSB_MATCHING, seed=12345)
-    #     y1 = sw.xunet.infere_single(x1, model=model, device=DEVICE)
-    #     print(fname, y0, y1)
+        #
+        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
+        y0 = sw.xunet.infere_single(x0, model=model, device=DEVICE)
+        #
+        x1 = cl.lsb.simulate(x0, alpha=.4, modify=cl.LSB_MATCHING, seed=12345)
+        y1 = sw.xunet.infere_single(x1, model=model, device=DEVICE)
+        self.assertLess(y0, y1)
+        # print(fname, y0, y1)

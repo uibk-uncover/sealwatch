@@ -9,7 +9,7 @@ bindings = "pyo3"
 
 [project]
 name = "sealwatch"
-version = "2025.05"
+version = "2025.07"
 dependencies = [
   "numpy",
   "scipy",
@@ -61,7 +61,8 @@ dev = [
     "parameterized",
     "conseal",
     "scikit-learn",
-    "maturin"
+    "maturin",
+    "puccinialin"
 ]
 deploy = []
 
