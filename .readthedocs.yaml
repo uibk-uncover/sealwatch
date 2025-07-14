@@ -13,7 +13,6 @@ build:
     rust: "latest"
   commands:
     - python -m pip install --upgrade pip
-    - pip install maturin
     - pip install -e '.[dev]'
 
 # Build documentation in the "docs/" directory with Sphinx

@@ -5,8 +5,8 @@ project = 'sealwatch'
 copyright = '2025, Martin Benes & Benedikt Lorch, University of Innsbruck'
 author = 'Martin Benes, Benedikt Lorch'
 
-release = '2025.05'
-version = '2024.05'
+release = '2025.07'
+version = '2025.07'
 
 # -- General configuration
 
@@ -19,13 +19,13 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autosectionlabel',
 ]
-
+autodoc_typehints = "description"
+autosummary_generate = True
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
 }
 intersphinx_disabled_domains = ['std']
-
 templates_path = ['templates']
 
 # -- Options for HTML output

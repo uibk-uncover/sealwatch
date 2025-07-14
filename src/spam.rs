@@ -3,6 +3,22 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use numpy::{PyArray1, PyReadonlyArray2};
 
+
+/// Extract co-occurrence features from a 2D array of i16 values.
+///
+/// Parameters
+/// ----------
+/// array : np.ndarray
+///     A 2D NumPy array of signed 16-bit integers representing the image.
+/// t : int, optional
+///     Truncation threshold. Defaults to 3.
+///
+/// Returns
+/// -------
+/// dict
+///     Dictionary with normalized co-occurrence features:
+///     - "straight": 1D NumPy array of straight co-occurrences
+///     - "diagonal": 1D NumPy array of diagonal co-occurrences
 #[pyfunction]
 fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i16>) -> PyResult<PyObject> {
     let input = array.as_array();
