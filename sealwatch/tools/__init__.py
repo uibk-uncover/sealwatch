@@ -9,6 +9,7 @@ from . import dct
 from . import features
 from . import jpeg
 from . import matlab
+from . import networks
 from . import signal
 #
 from ._defs import setup_custom_logger, BufferedWriter, EPS
@@ -32,6 +33,7 @@ __all__ = [
     'features',
     'jpeg',
     'matlab',
+    'networks',
     'signal',
     'setup_custom_logger',
     'BufferedWriter',

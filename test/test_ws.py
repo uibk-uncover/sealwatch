@@ -1,3 +1,4 @@
+
 import conseal as cl
 import logging
 import numpy as np
@@ -54,3 +55,8 @@ class TestWS(unittest.TestCase):
 
         # test
         np.testing.assert_allclose(beta_hat, alpha/2, atol=.1)
+
+    def test_unet_estimator(self):
+        self._logger.info('TestWS.test_unet_estimator()')
+        #
+        estimator = sw.ws.unet_estimator()
