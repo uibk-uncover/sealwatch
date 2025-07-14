@@ -25,20 +25,54 @@ class TestXuNet(unittest.TestCase):
         os.remove(self.tmp.name)
         del self.tmp
 
-    def test_pretrained(self):
-        self._logger.info('TestXuNet.test_pretrained()')
-        model = sw.xunet.pretrained()
-        model = sw.xunet.pretrained('xunet_hill_04.pt')
-        model = sw.xunet.pretrained('xunet_hill_01.pt')
-        model = sw.xunet.pretrained('xunet_lsbm_04.pt')
-        model = sw.xunet.pretrained('xunet_lsbm_01.pt')
+    def test_initialize(self):
+        self._logger.info('TestXuNet.test_initialize()')
+        model = sw.xunet.XuNet()
+        #
+        x = torch.ones((1, 1, 512, 512), dtype=torch.float32)
+        x_hpf = model.hpf(x)
+        self.assertEqual(tuple(x_hpf.size()), (1, 1, 512, 512))
+        #
+        x_conv1 = model.group1.convolutional(x_hpf)
+        self.assertEqual(tuple(x_conv1.size()), (1, 8, 512, 512))
+        x_group1 = model.group1(x_hpf)
+        self.assertEqual(tuple(x_group1.size()), (1, 8, 256, 256))
+        #
+        x_conv2 = model.group2.convolutional(x_group1)
+        self.assertEqual(tuple(x_conv2.size()), (1, 16, 256, 256))
+        x_group2 = model.group2(x_group1)
+        self.assertEqual(tuple(x_group2.size()), (1, 16, 128, 128))
+        #
+        x_conv3 = model.group3.convolutional(x_group2)
+        self.assertEqual(tuple(x_conv3.size()), (1, 32, 128, 128))
+        x_group3 = model.group3(x_group2)
+        self.assertEqual(tuple(x_group3.size()), (1, 32, 64, 64))
+        #
+        x_conv4 = model.group4.convolutional(x_group3)
+        self.assertEqual(tuple(x_conv4.size()), (1, 64, 64, 64))
+        x_group4 = model.group4(x_group3)
+        self.assertEqual(tuple(x_group4.size()), (1, 64, 32, 32))
+        #
+        x_conv5 = model.group5.convolutional(x_group4)
+        self.assertEqual(tuple(x_conv5.size()), (1, 128, 32, 32))
+        x_group5 = model.group5(x_group4)
+        self.assertEqual(tuple(x_group5.size()), (1, 128, 1, 1))
+
+
+    # def test_pretrained(self):
+    #     self._logger.info('TestXuNet.test_pretrained()')
+    #     model = sw.xunet.pretrained()
+    #     model = sw.xunet.pretrained('xunet_hill_04.pt')
+    #     model = sw.xunet.pretrained('xunet_hill_01.pt')
+    #     model = sw.xunet.pretrained('xunet_lsbm_04.pt')
+    #     model = sw.xunet.pretrained('xunet_lsbm_01.pt')
 
     # @parameterized.expand([[fname] for fname in defs.TEST_IMAGES])
     # def test_infere_xunet(self, fname: str):
     #     self._logger.info(f'TestXuNet.test_load_xunet({fname=})')
     #     #
     #     DEVICE = torch.device('cpu')
-    #     model = sw.xunet.pretrained('..', device=DEVICE)  # 'XuNet-LSBM_0.4_optimal-250530132417.pt'
+    #     model = sw.xunet.pretrained('..', 'xunet_lsbm_04.pt', device=DEVICE)
     #     #
     #     x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
     #     y0 = sw.xunet.infere_single(x0, model=model, device=DEVICE)
