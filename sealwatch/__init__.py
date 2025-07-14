@@ -18,13 +18,13 @@ from . import pharm
 from . import srm
 from . import spam
 from ._sealwatch import spam_rs # Rust-accellerated
-# from . import spam_rs
 from .jrm import ccjrm
 from .srm import crm
 from .srm import srmq1
 
 # classifier
 from . import ensemble_classifier
+from . import xunet
 
 #
 from . import tools

@@ -11,6 +11,8 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 from typing import Callable
 
+from .. import tools
+
 
 class UNet(nn.Module):
     def __init__(
@@ -140,16 +142,6 @@ class UNet(nn.Module):
         return F.sigmoid(self.outconv(x))
 
 
-class Grayscale(transforms.Grayscale):
-    def forward(self, img):
-        if img.shape[0] == 1:
-            return img
-        elif img.shape[0] == 4:
-            return img[3:]
-        else:
-            return super().forward(img)
-
-
 def infere_single(
     x: np.ndarray,
     model: Callable,
@@ -160,7 +152,7 @@ def infere_single(
     transform = transforms.Compose([
         transforms.ToTensor(),  # to torch tensor
         transforms.CenterCrop(512),  # reduce large images to 512x512
-        Grayscale(),  # convert to grayscale
+        tools.networks.Grayscale(),  # convert to grayscale
     ])
     x_ = transform(x / 255.)[None].to(device)
 
@@ -172,21 +164,7 @@ def infere_single(
     return y[..., None]
 
 
-class DownloadProgressBar(tqdm):
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
-
-def download_if_missing(url: str, dest: Path) -> Path:
-    if not dest.exists():
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc=dest.name) as t:
-            urllib.request.urlretrieve(url, filename=dest, reporthook=t.update_to)
-    return dest
-
-
-def get_pretrained(
+def pretrained(
     model_path: str = None,
     *,
     model_name: str = '240222160214-2804736-unet_2-alpha_0.400_grayscale_l1ws_0.25_lr_0.0001_.pt.tar',
@@ -199,7 +177,7 @@ def get_pretrained(
     if model_path is None:
         model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/2025.05/{model_name}'
         cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
-        resume_model_file = download_if_missing(model_url, cache_dir / model_name)
+        resume_model_file = tools.networks.download_if_missing(model_url, cache_dir / model_name)
     else:
         resume_model_file = Path(model_path) / model_name
 
@@ -209,57 +187,10 @@ def get_pretrained(
     logging.info(f'model {model_name} loaded from {resume_model_file}')
     return model
 
-# def get_pretrained(
-#     model_path: str = None,
-#     *,
-#     model_name: str = '240222160214-2804736-unet_2-alpha_0.400_grayscale_l1ws_0.25_lr_0.0001_.pt.tar',
-#     device: torch.nn.Module = torch.device('cpu')
-# ):
-#     # model
-#     model = UNet(
-#         in_channels=1,
-#         out_channels=1,
-#         nsteps=2,
-#     ).to(device)
-
-#     if model_path is None:
-#         cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
-#         model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/v0.1-model/{model_name}'
-#         model_file = download_if_missing(model_url, cache_dir / model_name)
-#     else:
-#         model_file = Path(model_path) / model_name
-
-#     checkpoint = torch.load(model_file, map_location=device, weights_only=True)
-#     model.load_state_dict(checkpoint['state_dict'])
-#     logging.info(f'Model {model_name} loaded from {model_file}')
-#     return model
-
-# def get_pretrained(
-#     model_path: str = 'assets/unet',
-#     *,
-#     model_name: str = '240222160214-2804736-unet_2-alpha_0.400_grayscale_l1ws_0.25_lr_0.0001_.pt.tar',
-#     device: torch.nn.Module = torch.device('cpu')
-# ):
-#     # model
-#     model = UNet(
-#         in_channels=1,
-#         out_channels=1,
-#         nsteps=2,
-#         # drop_channel=[0],
-#         # drop_rate=0.,
-#     ).to(device)
-
-#     # load
-#     resume_model_file = Path(model_path)  / model_name
-#     checkpoint = torch.load(resume_model_file, map_location=device, weights_only=True)
-#     model.load_state_dict(checkpoint['state_dict'])
-#     logging.info(f'model {model_name} loaded')
-#     return model
-
 
 def unet_estimator(*args, **kw):
     # load model
-    model = get_pretrained(*args, **kw)
+    model = pretrained(*args, **kw)
     device = torch.device('cpu')
 
     def predict(x):
@@ -267,10 +198,3 @@ def unet_estimator(*args, **kw):
         return y
 
     return predict
-
-
-        # pixel_estimator = unet.get_unet_estimator(
-        #     model_path=model_path,
-        #     model_name=model_name,
-        #     channels=channels,
-        # )

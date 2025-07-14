@@ -9,9 +9,17 @@ Inspired by implementation by Brijesh Singh.
 Author: Max Ninow
 Affiliation: University of Innsbruck
 """
+
+import logging
+import numpy as np
+from pathlib import Path
 import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
+import torchvision.transforms as transforms
+from typing import Callable
+
+from .. import tools
 
 
 class ImageProcessing(nn.Module):
@@ -21,7 +29,7 @@ class ImageProcessing(nn.Module):
         """Constructor"""
         super().__init__()
         self.kv_filter = (
-            torch.tensor(
+            torch.FloatTensor(
                 [
                     [-1.0, 2.0, -2.0, 2.0, -1.0],
                     [2.0, -6.0, 8.0, -6.0, 2.0],
@@ -35,8 +43,12 @@ class ImageProcessing(nn.Module):
 
     def forward(self, inp: Tensor) -> Tensor:
         """Returns tensor convolved with KV filter"""
-        kv_filter = self.kv_filter.to(inp.device)
-        return F.conv2d(inp, kv_filter, stride=1, padding=2)
+        return F.conv2d(inp, self.kv_filter, stride=1, padding=2)
+
+    def to(self, *args, **kw):
+        super().to(*args, **kw)
+        self.kv_filter = self.kv_filter.to(*args, **kw)
+        return self
 
 
 class ConvBlock(nn.Module):
@@ -79,6 +91,12 @@ class ConvBlock(nn.Module):
         x = self.pool(x)
         return x
 
+    def to(self, *args, **kw):
+        super().to(*args, **kw)
+        self.conv = self.conv.to(*args, **kw)
+        self.batch_norm = self.batch_norm.to(*args, **kw)
+        return self
+
 
 class XuNet(nn.Module):
     """
@@ -106,7 +124,7 @@ class XuNet(nn.Module):
             nn.Linear(128, 128),
             nn.ReLU(inplace=True),
             nn.Linear(128, 2),
-            nn.LogSoftmax(dim=1),
+            # nn.LogSoftmax(dim=1),
         )
 
     def forward(self, image: Tensor) -> Tensor:
@@ -127,3 +145,83 @@ class XuNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
+
+    def to(self, *args, **kw):
+        super().to(*args, **kw)
+        self.image_processing = self.image_processing.to(*args, **kw)
+        self.layer1 = self.layer1.to(*args, **kw)
+        self.layer2 = self.layer2.to(*args, **kw)
+        self.layer3 = self.layer3.to(*args, **kw)
+        self.layer4 = self.layer4.to(*args, **kw)
+        self.layer5 = self.layer5.to(*args, **kw)
+        self.fc.to(*args, **kw)
+        return self
+
+
+def pretrained(
+    model_path: str = None,
+    model_name: str = 'xunet_lsbm_01.pt',
+    *,
+    device: torch.nn.Module = torch.device('cpu'),
+    strict: bool = True,
+) -> torch.nn.Module:
+    """Loads pretrained model. Downloads if missing.
+
+    :param model_path: local path to the model
+    :type model_path: str
+    :param model_name: filename of the model
+    :type model_name: str
+    :param device: torch device
+    :type device: torch.nn.Module
+    :return: loaded XuNet Model
+    :rtype: torch.nn.Module
+    """
+    # model
+    model = XuNet().to(dtype=torch.float32, device=device)
+
+    # download if needed
+    if model_path is None:
+        model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/2025.07/{model_name}'
+        cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
+        resume_model_file = tools.networks.download_if_missing(model_url, cache_dir / model_name)
+    else:
+        resume_model_file = Path(model_path) / model_name
+
+    # load weights
+    state_dict = torch.load(resume_model_file, map_location=device, weights_only=False)
+    model.load_state_dict(state_dict, strict=strict)
+    logging.info(f'model {model_name} loaded from {resume_model_file}')
+    return model
+
+
+def infere_single(
+    x: np.ndarray,
+    model: Callable = None,
+    *,
+    device: torch.nn.Module = torch.device('cpu'),
+) -> np.ndarray:
+    """Runs inference for a single image.
+
+    :param x: image
+    :type x:
+    :param model:
+    :type model:
+    :param device:
+    :type device:
+    :return:
+    :rtype:
+    """
+    # prepare data
+    x = (x / 255.)[None, None]
+    x_ = torch.from_numpy(x).to(dtype=torch.float32, device=device)
+
+    # get model
+    model = model.to(dtype=torch.float32, device=device)
+
+    # infere
+    logit = model(x_)
+    y_ = torch.nn.functional.softmax(logit, dim=1)[0, 1]
+
+    # convert back to numpy
+    y = y_.detach().cpu().numpy()
+    return y
