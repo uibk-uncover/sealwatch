@@ -30,7 +30,6 @@ backend = Backend.BACKEND_PYTHON
 
 
 def get_backend() -> Backend:
-    global backend
     return backend
 
 
