@@ -44,19 +44,23 @@ def extract(
     >>>     features = sw.spam.extract(x1)
     """
     # choose implementation
-    if tools.get_backend() == tools.BACKEND_RUST:
+    backend = tools.get_backend()
+    if backend == tools.BACKEND_RUST:
         # check types
         if x1.dtype != np.uint8:
             raise TypeError('parameter x1 must be uint8')
         #
         features = rs.extract(x1=x1, T=T, rounded=rounded)
 
-    elif tools.get_backend() == tools.BACKEND_PYTHON:
+    elif backend == tools.BACKEND_PYTHON:
         # check types
         if x1.dtype != np.uint8 and not rounded:
             raise TypeError('parameter x1 must be uint8 or rounding must be on')
         #
         features = py.extract(x1=x1, T=T, rounded=rounded)
+
+    else:
+        raise NotImplementedError(f'unknown backend {backend}')
 
     #
     return features
@@ -82,8 +86,9 @@ def extract_from_file(
 
     This function can only work with Python backend.
     """
-    if tools.get_backend() == tools.BACKEND_RUST:
-        warnings.warn('Rust backend not supported for extract_from_file(), falling back to Python')
+    backend = tools.get_backend()
+    if backend != tools.BACKEND_PYTHON:
+        warnings.warn(f'backend {backend} not supported for extract_from_file(), falling back to Python')
     #
     x1 = tools.jpeg.decompress_from_file(path)
     #
