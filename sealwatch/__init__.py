@@ -15,7 +15,7 @@ from . import jrm
 from . import pharm
 from . import srm
 from . import spam
-from ._sealwatch import spam_rs # Rust-accellerated
+# from ._sealwatch import spam # Rust-accellerated
 from .jrm import ccjrm
 from .srm import crm
 from .srm import srmq1
@@ -26,6 +26,11 @@ from . import xunet
 
 #
 from . import tools
+
+# backend to choose
+from .tools import get_backend, set_backend
+BACKEND_PYTHON = tools.BACKEND_PYTHON
+BACKEND_RUST = tools.BACKEND_RUST
 
 
 #
@@ -73,7 +78,6 @@ __all__ = [
     'srm',
     'srmq1',
     'spam',
-    'spam_rs',
     'ensemble_classifier',
     'xunet',
     '__version__',

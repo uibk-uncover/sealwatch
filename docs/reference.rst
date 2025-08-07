@@ -63,8 +63,6 @@ SPAM
 
 .. autofunction:: sealwatch.spam.extract_from_file
 
-.. autofunction:: sealwatch.spam_rs.extract
-
 SRM
 """"
 

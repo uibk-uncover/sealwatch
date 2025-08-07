@@ -4,6 +4,7 @@ Author: Martin Benes, Benedikt Lorch
 Affiliation: University of Innsbruck
 """
 
+from . import _backend
 from . import calibration
 from . import dct
 from . import features
@@ -13,9 +14,13 @@ from . import networks
 from . import signal
 #
 from ._defs import setup_custom_logger, BufferedWriter, EPS
+from ._backend import Backend, set_backend, get_backend
 from .features import flatten, group, Features
 from .dct import jpeglib_to_jpegio, jpegio_to_jpeglib
 
+#
+BACKEND_PYTHON = Backend.BACKEND_PYTHON
+BACKEND_RUST = Backend.BACKEND_RUST
 #
 FEATURES_JRM = Features.FEATURES_JRM
 FEATURES_CCJRM = Features.FEATURES_CCJRM
@@ -28,6 +33,8 @@ FEATURES_DCTR = Features.FEATURES_DCTR
 FEATURES_SPAM = Features.FEATURES_SPAM
 
 __all__ = [
+    'backend',
+    'Backend',
     'calibration',
     'dct',
     'features',

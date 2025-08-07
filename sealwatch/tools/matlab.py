@@ -2,8 +2,8 @@ import numpy as np
 from scipy.stats import norm
 
 
-def round(x):
-    """ Helper method to mimic Matlab rounding
+def round(x: np.ndarray) -> np.ndarray:
+    """Helper method to mimic Matlab rounding
 
     |x| >= 0.5 => round away from zero
 

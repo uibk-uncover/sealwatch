@@ -46,29 +46,49 @@ class TestSpam(unittest.TestCase):
         self._logger.info(f'TestSpam.test_extract_rs({fname})')
         #
         path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
-        x0 = np.array(Image.open(path)).astype(np.int16)
+        x0 = np.array(Image.open(path))
         #
-        f = sw.tools.flatten(sw.spam_rs.extract(x0))
         f_ref = sw.tools.flatten(sw.spam.extract(x0))
+        with sw.BACKEND_RUST:
+            f = sw.tools.flatten(sw.spam.extract(x0))
         np.testing.assert_allclose(f, f_ref)
 
     def test_speedup(self):
-        self._logger.info(f'TestSpam.test_speedup()')
+        self._logger.info('TestSpam.test_speedup()')
         #
-        start = time.perf_counter()
-        for fname in defs.TEST_IMAGES:
-            path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
-            x0 = np.array(Image.open(path)).astype(np.int16)
-            f = sw.tools.flatten(sw.spam_rs.extract(x0))
-        end = time.perf_counter()
-        print('rust:', end - start, 's')
+        with sw.BACKEND_RUST:
+            start = time.perf_counter()
+            for fname in defs.TEST_IMAGES:
+                path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
+                x0 = np.array(Image.open(path))
+                f = sw.tools.flatten(sw.spam.extract(x0))
+            end = time.perf_counter()
+            print('rust:', end - start, 's')
         #
-        start = time.perf_counter()
-        for fname in defs.TEST_IMAGES:
-            path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
-            x0 = np.array(Image.open(path)).astype(np.int16)
-            f = sw.tools.flatten(sw.spam.extract(x0))
-        end = time.perf_counter()
-        print('python:', end - start, 's')
+        with sw.BACKEND_PYTHON:
+            start = time.perf_counter()
+            for fname in defs.TEST_IMAGES:
+                path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
+                x0 = np.array(Image.open(path))
+                f = sw.tools.flatten(sw.spam.extract(x0))
+            end = time.perf_counter()
+            print('python:', end - start, 's')
+
+    def test_type(self):
+        self._logger.info('TestSpam.test_extract_rs()')
+        #
+        path = defs.COVER_UNCOMPRESSED_GRAY_DIR / 'seal1.png'
+        with sw.BACKEND_RUST:
+            x0 = np.array(Image.open(path)).astype('float32')
+            try:
+                sw.tools.flatten(sw.spam.extract(x0))
+            except TypeError:
+                raised = True
+            else:
+                raised = False
+        #
+        self.assertTrue(raised)
+
+
 
 __all__ = ["TestSpam"]

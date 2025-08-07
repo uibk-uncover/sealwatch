@@ -8,9 +8,9 @@ use numpy::{PyArray1, PyReadonlyArray2};
 ///
 /// Parameters
 /// ----------
-/// array : np.ndarray
+/// x1 : np.ndarray
 ///     A 2D NumPy array of signed 16-bit integers representing the image.
-/// t : int, optional
+/// T : int, optional
 ///     Truncation threshold. Defaults to 3.
 ///
 /// Returns
@@ -20,10 +20,10 @@ use numpy::{PyArray1, PyReadonlyArray2};
 ///     - "straight": 1D NumPy array of straight co-occurrences
 ///     - "diagonal": 1D NumPy array of diagonal co-occurrences
 #[pyfunction]
-#[pyo3(signature = (array, t = 3))]
-fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i16>) -> PyResult<PyObject> {
-    let input = array.as_array();
-    let t = t.unwrap_or(3);
+#[pyo3(signature = (x1, T = 3, rounded = false))]
+fn extract<'py>(py: Python<'py>, x1: PyReadonlyArray2<'py, u8>, T: Option<i16>, rounded: bool) -> PyResult<PyObject> {
+    let input = x1.as_array().mapv(|x| x as i16);
+    let t = T.unwrap_or(3);
 
     // Collect coocurrences
     let D = (2 * t + 1) as usize;
@@ -38,6 +38,12 @@ fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i1
             let l = (input[[row, col+1]] - input[[row, col+2]]).clamp(-t, t);
             let c = (input[[row, col]] - input[[row, col+1]]).clamp(-t, t);
             let r = (input[[row, col-1]] - input[[row, col]]).clamp(-t, t);
+            // //
+            // if (rounded) {
+            //     l = matlab_round(l as f32) as i16;
+            //     c = matlab_round(c as f32) as i16;
+            //     r = matlab_round(r as f32) as i16;
+            // }
             //
             let x_idx = (l + t) as usize;
             let y_idx = (c + t) as usize;
@@ -53,6 +59,12 @@ fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i1
             let l = (input[[row+1, col]] - input[[row+2, col]]).clamp(-t, t);
             let c = (input[[row, col]] - input[[row+1, col]]).clamp(-t, t);
             let r = (input[[row-1, col]] - input[[row, col]]).clamp(-t, t);
+            // //
+            // if (rounded) {
+            //     l = matlab_round(l as f32) as i16;
+            //     c = matlab_round(c as f32) as i16;
+            //     r = matlab_round(r as f32) as i16;
+            // }
             //
             let x_idx = (l + t) as usize;
             let y_idx = (c + t) as usize;
@@ -68,6 +80,12 @@ fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i1
             let l = (input[[row+1, col+1]] - input[[row+2, col+2]]).clamp(-t, t);
             let c = (input[[row, col]] - input[[row+1, col+1]]).clamp(-t, t);
             let r = (input[[row-1, col-1]] - input[[row, col]]).clamp(-t, t);
+            // //
+            // if (rounded) {
+            //     l = matlab_round(l as f32) as i16;
+            //     c = matlab_round(c as f32) as i16;
+            //     r = matlab_round(r as f32) as i16;
+            // }
             //
             let x_idx = (l + t) as usize;
             let y_idx = (c + t) as usize;
@@ -80,6 +98,12 @@ fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i1
             let l = (input[[row, col+1]] - input[[row-1, col+2]]).clamp(-t, t);
             let c = (input[[row+1, col]] - input[[row, col+1]]).clamp(-t, t);
             let r = (input[[row+2, col-1]] - input[[row+1, col]]).clamp(-t, t);
+            // //
+            // if (rounded) {
+            //     l = matlab_round(l as f32) as i16;
+            //     c = matlab_round(c as f32) as i16;
+            //     r = matlab_round(r as f32) as i16;
+            // }
             //
             let x_idx = (l + t) as usize;
             let y_idx = (c + t) as usize;
@@ -118,7 +142,7 @@ fn extract<'py>(py: Python<'py>, array: PyReadonlyArray2<'py, i16>, t: Option<i1
 }
 
 #[pymodule]
-pub fn spam_rs(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+pub fn spam(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(extract, m)?)?;
     Ok(())
 }

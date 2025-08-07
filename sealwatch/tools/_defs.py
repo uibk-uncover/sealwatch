@@ -205,3 +205,5 @@ class BufferedWriter(object):
 
         # After writing all the items, clear the buffer
         self._cache_buffer = dict()
+
+

@@ -17,45 +17,17 @@ Permission to use, copy, modify, and distribute this software for educational, r
 -------------------------------------------------------------------------
 """  # noqa: E501
 
-
 from collections import OrderedDict
 import numpy as np
-from pathlib import Path
-from PIL import Image
-from typing import Union
 
-# from sealwatch.utils.jpeg import decompress_luminance_from_file
 from .. import tools
-# import typing
-
-
-def extract_from_file(
-    path: Union[str, Path],
-    **kw,
-) -> OrderedDict:
-    """
-    Extract SPAM features from luminance channel of given JPEG image
-
-    :param path: JPEG image to be analzed
-    :type path: str or pathlib.Path
-    :return: ordered dict with the feature values
-    :rtype: collections.OrderedDict
-
-    :Example:
-
-    >>> # TODO
-    """
-    # x1 = np.array(Image.open(path).convert('L')).astype('float64')
-    x1 = tools.jpeg.decompress_from_file(path)
-    # np.testing.assert_array_equal(x1, x1_ref)
-    return extract(x1=x1, **kw)
 
 
 def extract(
     x1: np.ndarray,
     *,
     T: int = 3,
-    rounded: bool = True,
+    rounded: bool = False,
 ) -> OrderedDict:
     """
     Extract 2nd-order spatial adjacency model (SPAM) features.
@@ -151,7 +123,7 @@ def get_m3(
     C: np.ndarray,
     R: np.ndarray,
     T: np.ndarray,
-    rounded=False,
+    rounded: bool = False,
 ) -> np.ndarray:
     """
     Calculate 3-D co-occurrences
@@ -176,7 +148,7 @@ def get_m3(
     C = np.clip(C.flatten(order="F"), -T, T)
     R = np.clip(R.flatten(order="F"), -T, T)
 
-    # # Round to integers
+    # Round to integers
     if rounded:
         L = tools.matlab.round(L)
         C = tools.matlab.round(C)
