@@ -3,7 +3,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use numpy::{PyArray1, PyReadonlyArray2};
 
-
 /// Extract co-occurrence features from a 2D array of i16 values.
 ///
 /// Parameters
@@ -21,7 +20,7 @@ use numpy::{PyArray1, PyReadonlyArray2};
 ///     - "diagonal": 1D NumPy array of diagonal co-occurrences
 #[pyfunction]
 #[pyo3(signature = (x1, T = 3, rounded = false))]
-fn extract<'py>(py: Python<'py>, x1: PyReadonlyArray2<'py, u8>, T: Option<i16>, rounded: bool) -> PyResult<PyObject> {
+fn extract<'py>(py: Python<'py>, x1: PyReadonlyArray2<'py, u8>, T: Option<i16>, rounded: bool) -> PyResult<Bound<'py, PyDict>> {
     let input = x1.as_array().mapv(|x| x as i16);
     let t = T.unwrap_or(3);
 
