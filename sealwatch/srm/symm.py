@@ -195,7 +195,7 @@ def symm4(
     T: int,
 ) -> np.ndarray:
     """Symmetry marginalization routine. The purpose is to reduce the feature dimensionality and make the features more populated.
-    It can be applied to 1D -- 5D co-occurrence matrices (order \in {1,2,3,4,5}) with sign and directional symmetries (explained below).
+    It can be applied to 1D -- 5D co-occurrence matrices (order \\in {1,2,3,4,5}) with sign and directional symmetries (explained below).
 
     Marginalization by symmetry pertains to the fact that, fundamentally, the differences between consecutive pixels in a natural image (both cover and stego) d1, d2, d3, ..., have the same probability of occurrence as the triple -d1, -d2, -d3, ...
     Directional marginalization pertains to the fact that the differences d1, d2, d3, ... in a natural (cover and stego) image are as likely to occur as ..., d3, d2, d1.
