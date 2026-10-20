@@ -11,10 +11,9 @@ bindings = "pyo3"
 name = "sealwatch"
 version = "2026.06"
 dependencies = [
-  "opencv-python",
   "numpy",
   "scipy",
-  "jpeglib",
+  "jpeglib>=1.0.2",
   "h5py",
   "pandas",
   "pillow",
@@ -60,9 +59,14 @@ Source = "https://github.com/uibk-uncover/sealwatch/"
 [project.optional-dependencies]
 dev = [
     "flake8",
+    "opencv-python",
     "parameterized",
     "conseal",
     "scikit-learn",
+    # reference metrics of DDELab in tests
+    "lightning-utilities",
+    "torchmetrics",
+    "torcheval",
     "maturin"
 ]
 deploy = []

@@ -8,9 +8,9 @@ from . import _backend
 from . import calibration
 from . import dct
 from . import features
+from . import hpf
 from . import jpeg
 from . import matlab
-from . import networks
 from . import signal
 #
 from ._defs import setup_custom_logger, BufferedWriter, EPS
@@ -38,9 +38,9 @@ __all__ = [
     'calibration',
     'dct',
     'features',
+    'hpf',
     'jpeg',
     'matlab',
-    'networks',
     'signal',
     'setup_custom_logger',
     'BufferedWriter',
@@ -50,3 +50,11 @@ __all__ = [
     'jpeglib_to_jpegio',
     'jpegio_to_jpeglib',
 ]
+
+
+def __getattr__(name: str):
+    """Imports the deprecated networks on first use, as they require torch."""
+    if name == 'networks':
+        import importlib
+        return importlib.import_module('.networks', __name__)
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

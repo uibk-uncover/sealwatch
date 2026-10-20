@@ -1,15 +1,16 @@
-"""
+"""Deprecated, moved to sealwatch.nn.xunet."""
 
-Author: Max Ninow, Martin Benes
-"""
+import sys
+import warnings
 
-#
-from . import _xunet
-#
-from ._xunet import XuNet, pretrained, infere_single
+from ..nn import xunet as _module
 
-__all__ = [
-    'XuNet',
-    'pretrained',
-    'infere_single',
-]
+warnings.warn(
+    'sealwatch.xunet is deprecated, use sealwatch.nn.xunet',
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# old paths refer to the same modules, e.g., for isinstance and unpickling
+sys.modules[__name__] = _module
+sys.modules[__name__ + '._xunet'] = _module._xunet

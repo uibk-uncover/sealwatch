@@ -1,15 +1,16 @@
-"""
+"""Deprecated, moved to sealwatch.nn.ucnet."""
 
-Author: Martin Benes
-"""
+import sys
+import warnings
 
-#
-from . import _ucnet
-#
-from ._ucnet import UcNet, pretrained, infere_single
+from ..nn import ucnet as _module
 
-__all__ = [
-    'UcNet',
-    'pretrained',
-    'infere_single',
-]
+warnings.warn(
+    'sealwatch.ucnet is deprecated, use sealwatch.nn.ucnet',
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# old paths refer to the same modules, e.g., for isinstance and unpickling
+sys.modules[__name__] = _module
+sys.modules[__name__ + '._ucnet'] = _module._ucnet

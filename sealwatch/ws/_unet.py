@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 from typing import Callable
 
-from .. import tools
+from ..nn import _common
 
 
 class UNet(nn.Module):
@@ -152,7 +152,7 @@ def infere_single(
     transform = transforms.Compose([
         transforms.ToTensor(),  # to torch tensor
         transforms.CenterCrop(512),  # reduce large images to 512x512
-        tools.networks.Grayscale(),  # convert to grayscale
+        _common.Grayscale(),  # convert to grayscale
     ])
     x_ = transform(x / 255.)[None].to(device)
 
@@ -177,7 +177,7 @@ def pretrained(
     if model_path is None:
         model_url = f'https://github.com/uibk-uncover/sealwatch/releases/download/2025.05/{model_name}'
         cache_dir = Path(torch.hub.get_dir()) / 'sealwatch'
-        resume_model_file = tools.networks.download_if_missing(model_url, cache_dir / model_name)
+        resume_model_file = _common.download_if_missing(model_url, cache_dir / model_name)
     else:
         resume_model_file = Path(model_path) / model_name
 

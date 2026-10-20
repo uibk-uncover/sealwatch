@@ -134,11 +134,32 @@ Detectors
 
 
 .. autoclass:: sealwatch.xunet.XuNet
-   :members: forward
-
-.. autofunction:: sealwatch.xunet.pretrained
+   :members: forward, pretrained
 
 .. autofunction:: sealwatch.xunet.infere_single
+
+.. autoclass:: sealwatch.srnet.SRNet
+   :members: forward, pretrained
+
+.. autofunction:: sealwatch.srnet.infere_single
+
+.. autoclass:: sealwatch.zhunet.ZhuNet
+   :members: forward
+
+.. autofunction:: sealwatch.zhunet.infere_single
+
+.. autoclass:: sealwatch.ucnet.UcNet
+   :members: forward, pretrained
+
+.. autofunction:: sealwatch.ucnet.infere_single
+
+.. autoclass:: sealwatch.efficientnet.B0
+   :members: pretrained
+
+.. autoclass:: sealwatch.efficientnet.B4
+   :members: pretrained
+
+.. autofunction:: sealwatch.efficientnet.infere_single
 
 Helper functions
 """"""""""""""""

@@ -3,6 +3,7 @@
 # attacks
 from . import chi2
 from . import F5
+from . import mvg
 from . import rjca
 from . import spa
 from . import ws
@@ -21,16 +22,12 @@ from .srm import crm
 from .srm import srmq1
 
 # classifier
-from . import efficientnet
-from .efficientnet import B0, B4
 from . import ensemble_classifier
-from . import ucnet
-from .ucnet import UcNet
-from . import xunet
-from .xunet import XuNet
+# neural networks in sealwatch.nn, imported on first use, see __getattr__
 
 #
 from . import tools
+from . import metrics
 
 # backend to choose
 from .tools import get_backend, set_backend
@@ -57,6 +54,9 @@ CRM_FIX_MIN24 = srm.CRM_FIX_MIN24
 #
 GFR_ORIGINAL = gfr.GFR_ORIGINAL
 GFR_FIX = gfr.GFR_FIX
+#
+WAUC_ALASKA = metrics.WAUC_ALASKA
+WAUC_FIX_DIRECTION = metrics.WAUC_FIX_DIRECTION
 
 # package version
 import importlib.metadata
@@ -70,11 +70,11 @@ __all__ = [
     'ccjrm',
     'chi2',
     'F5',
+    'mvg',
     'rjca',
     'spa',
     'ws',
     'tools',
-    'features',
     'dctr',
     'gfr',
     'hcfcom',
@@ -84,6 +84,30 @@ __all__ = [
     'srmq1',
     'spam',
     'ensemble_classifier',
-    'xunet',
+    'metrics',
     '__version__',
 ]
+
+
+# moved to sealwatch.nn, deprecated
+_NN_MODULES = ('efficientnet', 'srnet', 'ucnet', 'xunet', 'zhunet')
+_NN_CLASSES = ('B0', 'B4', 'SRNet', 'UcNet', 'XuNet', 'ZhuNet')
+
+
+def __getattr__(name: str):
+    """Imports the neural networks on first use, as they require torch."""
+    import importlib
+    if name == 'nn':
+        return importlib.import_module('.nn', __name__)
+    if name in _NN_MODULES:
+        # the module warns about deprecation
+        return importlib.import_module(f'.{name}', __name__)
+    if name in _NN_CLASSES:
+        import warnings
+        warnings.warn(
+            f'sealwatch.{name} is deprecated, use sealwatch.nn.{name}',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(importlib.import_module('.nn', __name__), name)
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

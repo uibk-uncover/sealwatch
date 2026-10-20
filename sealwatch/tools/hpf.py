@@ -1,5 +1,30 @@
+"""High-pass filters of the spatial rich model (SRM).
+
+Used to initialize the preprocessing of steganalysis CNNs.
+
+J. Fridrich, J. Kodovsky.
+Rich models for steganalysis of digital images.
+IEEE TIFS, 2012.
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import numpy as np
+
+
+def center_crop(kernel: np.ndarray, size: int) -> np.ndarray:
+    """Crops the central size x size part of a kernel."""
+    offset = (kernel.shape[0] - size) // 2
+    return kernel[offset:offset+size, offset:offset+size]
+
+
+def center_pad(kernel: np.ndarray, size: int) -> np.ndarray:
+    """Zero-pads a kernel to size x size, keeping it centered."""
+    before = [(size - n) // 2 for n in kernel.shape]
+    after = [size - n - b for n, b in zip(kernel.shape, before)]
+    return np.pad(kernel, pad_width=list(zip(before, after)), mode='constant')
+
 
 filter_class_1 = [
   np.array([
