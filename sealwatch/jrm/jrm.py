@@ -22,10 +22,64 @@ import numpy as np
 from pathlib import Path
 from typing import Union, Dict
 
-from .absolute_value_features import compute_absolute_value_features
-from .difference_features import compute_difference_features
-from .integral_features import compute_integral_features
+from .common import MODES, direction_to_coordinates, normalize, sign_symmetrize
+from .cooccurrence import cooccurrence, stack_columns
+from .integral import compute_integral_features
 from .. import tools
+
+
+# DCT-mode specific submodels, see Section 2.2 of the paper,
+# as (name, suffix, direction, mode ids).
+# C(x, y, dx, dy) denotes the co-occurrence between the DCT modes (x, y) and (x + dx, y + dy).
+SUBMODELS = [
+    # intra-block relationships
+    ('h', '', 'hor', list(range(1, 21))),  # { C(x, y, 0, 1) | x + y <= 5 }, DC omitted
+    ('d', '_diag', 'diag', [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]),  # { C(x, y, 1, 1) | x <= y; x + y <= 5 }
+    ('d', '_semidiag', 'semidiag', [6, 7, 8, 9, 10, 12, 13, 14, 17]),  # { C(x, y, 1, -1) | x <= y; x + y <= 5 }
+    ('oh', '', 'hor_skip', [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 15, 16, 18]),  # { C(x, y, 0, 2) | x + y <= 4 }
+    ('x', '', 'sym_8x8', [1, 2, 3, 4, 5, 8, 9, 10, 14]),  # { C(x, y, y - x, x - y) | x < y; x + y <= 5 }
+    ('od', '_diag_skip', 'diag_skip', [1, 2, 3, 4, 7, 8, 9, 13]),  # { C(x, y, 2, 2) | x <= y; x + y <= 4 }
+    ('od', '_semidiag_skip', 'semidiag_skip', [11, 12, 13, 14, 22, 16, 17, 23, 24]),  # { C(x, y, 2, -2) | x < y; x + y <= 5 }
+    ('m', '', 'horse', list(range(6, 21))),  # { C(x, y, -1, 2) | 1 <= x; x + y <= 5 }, knight move
+    # inter-block relationships
+    ('ih', '', 'inter_hor', list(range(1, 21))),  # { C(x, y, 0, 8) | x + y <= 5 }
+    ('id', '', 'inter_diag', [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]),  # { C(x, y, 8, 8) | x <= y; x + y <= 5 }
+    ('is', '', 'inter_semidiag', [1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14]),  # { C(x, y, -8, 8) | x <= y; x + y <= 5 }
+    ('ix', '', 'inter_symm', list(range(1, 21))),  # { C(x, y, y - x, x - y + 8) | x + y <= 5 }
+]
+
+
+def _mode_specific_features(
+    X1: np.ndarray,
+    X2: np.ndarray,
+    T: int,
+    absolute: bool,
+    prefix: str,
+) -> OrderedDict:
+    """DCT-mode specific submodels.
+
+    Co-occurrences are computed from X1, and in the transposed direction from X2, and averaged.
+
+    :param X1: absolute values or their differences, as 2D DCT plane
+    :param X2: same as X1, used in the transposed direction
+    :param T: truncation threshold
+    :param absolute: absolute values, otherwise differences, which are sign-symmetrized
+    :param prefix: prefix of the submodel names
+    :return: ordered dict with submodels
+    """
+    features = OrderedDict()
+    for name, suffix, direction, mode_ids in SUBMODELS:
+        for mode_id in mode_ids:
+            a, b = MODES[mode_id]
+            targets = direction_to_coordinates(direction, a, b)
+            f1 = normalize(cooccurrence(stack_columns(X1, targets), T, absolute=absolute))
+            f2 = normalize(cooccurrence(stack_columns(X2, targets[:, ::-1]), T, absolute=absolute))
+            if absolute:
+                f = (f1 + f2).flatten(order='F') / 2
+            else:
+                f = normalize(sign_symmetrize(f1 + f2))
+            features[f'{prefix}{name}_T{T}{suffix}_mode_y_{a}_x_{b}'] = f
+    return features
 
 
 def _extract_features(
@@ -46,73 +100,31 @@ def _extract_features(
     :return: JRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 11255.
     :rtype: collections.OrderedDict
     """
-
-    # Save features as ordered dict
-    features = OrderedDict()
-
-    abs_X = np.abs(y)
-
-    # Work with the 2D format
-    abs_X = tools.jpeglib_to_jpegio(abs_X)
+    # absolute values, in the 2D format
+    abs_X = tools.jpeglib_to_jpegio(np.abs(y))
     height, width = abs_X.shape
 
-    # DCT-mode specific co-occurrences of absolute values
-    # G^x: 2512 features
-    features_abs_values = compute_absolute_value_features(abs_X, T=3)
+    # differences of absolute values
+    D = {
+        'H': abs_X[:, :width - 8] - abs_X[:, 1:width - 7],  # horizontal
+        'V': abs_X[:height - 8, :] - abs_X[1:height - 7, :],  # vertical
+        'D': abs_X[:height - 8, :width - 8] - abs_X[1:height - 7, 1:width - 7],  # diagonal
+        'IH': abs_X[:, :width - 8] - abs_X[:, 8:],  # inter-block horizontal
+        'IV': abs_X[:height - 8, :] - abs_X[8:, :],  # inter-block vertical
+    }
 
-    # Copy features
-    features.update(features_abs_values)
-
-    # DCT-mode specific co-occurrences of differences of absolute values (horizontal/vertical)
-    # Horizontal direction
-    abs_X_Dh = abs_X[:, :width - 8] - abs_X[:, 1:width - 7]
-
-    # Vertical direction
-    abs_X_Dv = abs_X[:height - 8, :] - abs_X[1:height - 7, :]
-
-    # Major diagonal
-    abs_X_Dd = abs_X[:height - 8, :width - 8] - abs_X[1:height - 7, 1:width - 7]
-
-    # Inter-block horizontal
-    abs_X_Dih = abs_X[:, :width - 8] - abs_X[:, 8:]
-
-    # Inter-block vertical
-    abs_X_Div = abs_X[:height - 8, :] - abs_X[8:, :]
-
-    # G^{east arrow}: Intra-block differences (horizontal/vertical), 2041 features
-    features_diff1 = compute_difference_features(abs_X_Dh, abs_X_Dv, T=2)
-
-    # Copy local features to global features buffer
-    tools.features.append(features, features_diff1, prefix="intra_block_hv")
-
-    # DCT-mode specific co-occurrences of differences of absolute values (diagonal)
-    # G^{south-east arrow}: Intra-block differences (diagonal), 2041 features
-    features_diff2 = compute_difference_features(abs_X_Dd, abs_X_Dd, T=2)
-
-    # Copy local features to global features buffer
-    tools.features.append(features, features_diff2, prefix="intra_block_diag")
-
-    # DCT-mode specific co-occurrences of differences of absolute values (inter-block horizontal/vertical)
-    # G^{double arrow east}: Inter-block differences (horizontal/vertical), 2041 features
-    features_diff3 = compute_difference_features(abs_X_Dih, abs_X_Div, T=2)
-
-    # Copy local features to global features buffer
-    tools.features.append(features, features_diff3, prefix="inter_block_hv")
-
-    # Integral features
-    # I: 2620 features
-    integral_features = compute_integral_features(
-        abs_X=abs_X,
-        abs_X_Dh=abs_X_Dh,
-        abs_X_Dv=abs_X_Dv,
-        abs_X_Dd=abs_X_Dd,
-        abs_X_Dih=abs_X_Dih,
-        abs_X_Div=abs_X_Div,
-        T=5)
-
-    # Copy local features over into global buffer
-    features.update(integral_features)
-
+    features = OrderedDict()
+    # DCT-mode specific co-occurrences of absolute values, 2512 features
+    features.update(_mode_specific_features(abs_X, abs_X, T=3, absolute=True, prefix='A'))
+    # DCT-mode specific co-occurrences of differences, 3 x 2041 features
+    for prefix, X1, X2 in [
+        ('intra_block_hv_D', D['H'], D['V']),
+        ('intra_block_diag_D', D['D'], D['D']),
+        ('inter_block_hv_D', D['IH'], D['IV']),
+    ]:
+        features.update(_mode_specific_features(X1, X2, T=2, absolute=False, prefix=prefix))
+    # integral features, 2620 features
+    features.update(compute_integral_features(abs_X, D, T=5))
     return features
 
 

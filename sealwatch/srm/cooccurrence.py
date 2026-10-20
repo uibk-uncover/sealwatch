@@ -8,12 +8,12 @@ from ..tools import matlab
 
 
 class Implementation(enum.Enum):
-    """MiPOD implementation to choose from."""
+    """CRM implementation to choose from."""
 
     CRM_ORIGINAL = enum.auto()
-    """Original MiPOD implementation by Remi Cogranne."""
+    """Original CRM implementation by DDE, counting the 3rd-order minmax24 co-occurrence twice."""
     CRM_FIX_MIN24 = enum.auto()
-    """MiPOD implementation with wet-cost fixes."""
+    """CRM implementation counting the 3rd-order minmax24 co-occurrence once, as the other submodels."""
 
 
 def cooccurrence4(

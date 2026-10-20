@@ -26,7 +26,7 @@ class Backend(enum.Enum):
         backend = self._backend_prev
 
 
-backend = Backend.BACKEND_PYTHON
+backend = Backend.BACKEND_RUST
 
 
 def get_backend() -> Backend:

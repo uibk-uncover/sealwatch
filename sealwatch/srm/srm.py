@@ -7,6 +7,43 @@ from typing import Union, List, Dict
 
 from .cooccurrence import all1st, all2nd, all3x3, all3rd, all5x5
 from . import symm
+from .. import tools
+from .._sealwatch import srm as rs
+
+
+# Order of the submodels of each family, as in the original Matlab implementation.
+# The spam11 of 3x3 and 5x5 are merged into s35_spam11, placed with 5x5.
+FAMILIES = ['s1', 's2', 's3', 's3x3', 's5x5']
+SUBMODEL_ORDER = {
+    's1': ['minmax22h', 'minmax34h', 'minmax22v', 'minmax24', 'minmax34v', 'minmax41', 'minmax34', 'minmax48h', 'minmax48v', 'minmax54', 'spam14hv'],
+    's2': ['minmax21', 'minmax41', 'minmax32', 'minmax24h', 'minmax24v', 'spam12hv'],
+    's3': ['minmax22h', 'minmax34h', 'minmax22v', 'minmax24', 'minmax34v', 'minmax41', 'minmax34', 'minmax48h', 'minmax48v', 'minmax54', 'spam14hv'],
+    's3x3': ['minmax24', 'minmax22h', 'minmax22v', 'minmax41', 'spam11', 'spam14hv'],
+    's5x5': ['minmax24', 'minmax22h', 'minmax22v', 'minmax41', 'spam11', 'spam14hv'],
+}
+
+
+def matlab_order(
+    features: Dict[str, np.ndarray],
+    qs: List[List[float]],
+) -> Dict[str, np.ndarray]:
+    """Orders the submodels as the original Matlab implementation.
+
+    By family, then quantization step in the order of qs, then submodel.
+
+    :param features: SRM features
+    :param qs: quantization steps of each family
+    :return: ordered SRM features
+    """
+    def rank(name: str):
+        family, submodel, q = name.split('_')
+        family = 's5x5' if family == 's35' else family
+        f = FAMILIES.index(family)
+        q_names = [f'q{q}'.replace('.', '') for q in qs[f]]
+        order = SUBMODEL_ORDER[family]
+        return (f, q_names.index(q), order.index(submodel) if submodel in order else len(order))
+
+    return OrderedDict(sorted(features.items(), key=lambda item: rank(item[0])))
 
 
 def extract_from_file(
@@ -18,23 +55,11 @@ def extract_from_file(
     return extract(img, **kw)
 
 
-def extract(
+def _extract(
     x: np.ndarray,
-    *,
-    qs: List[List[int]] = [[1, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2]],
-    directional: bool = True,
+    qs: List[List[float]],
 ) -> Dict[str, np.ndarray]:
-    """Extracts spatial rich model for steganalysis.
-
-    :param x: 2D input image
-    :type x: np.ndarray
-    :return: structured SRM features
-    :rtype: OrderedDict
-    """
-    assert len(x.shape) == 2, 'single channel expected'
-    assert len(qs) <= 5, f'invalid quantization steps {qs=}'
-    while len(qs) < 5:
-        qs.append([])
+    """Python implementation of SRM, see extract()."""
     x = x.astype(int)
     result = OrderedDict()
 
@@ -53,8 +78,49 @@ def extract(
     # 5x5
     for q in qs[4]:
         result = symm.post_process(all5x5(x, q*12), 'f5x5', q, result)
-    #
-    return result
+    # deterministic order, as in Matlab
+    return matlab_order(result, qs)
+
+
+def extract(
+    x: np.ndarray,
+    *,
+    qs: List[List[float]] = [[1, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2], [1, 1.5, 2]],
+    directional: bool = True,
+) -> Dict[str, np.ndarray]:
+    """Extracts spatial rich model for steganalysis.
+
+    :param x: 2D input image
+    :type x: np.ndarray
+    :param qs: quantization steps of the five residual families,
+        1st, 2nd, 3rd order, 3x3, 5x5
+    :type qs: list of list of float
+    :return: structured SRM features, ordered as the original Matlab implementation
+    :rtype: OrderedDict
+
+    :Examples:
+
+    By default, this function uses the Python implementation. To use the (substantially faster) Rust implementation, type
+
+    >>> with sw.BACKEND_RUST:
+    >>>     features = sw.srm.extract(x)
+    """
+    assert len(x.shape) == 2, 'single channel expected'
+    assert len(qs) <= 5, f'invalid quantization steps {qs=}'
+    # copy, missing families without quantization steps
+    qs = [list(q) for q in qs] + [[] for _ in range(5 - len(qs))]
+
+    # choose implementation
+    backend = tools.get_backend()
+    if backend == tools.BACKEND_RUST:
+        if x.dtype != np.uint8:
+            raise TypeError('parameter x must be uint8')
+        q_names = [[f'{q}'.replace('.', '') for q in qs_f] for qs_f in qs]
+        return OrderedDict(rs.extract(x1=x, qs=qs, q_names=q_names))
+    elif backend == tools.BACKEND_PYTHON:
+        return _extract(x, qs)
+    else:
+        raise NotImplementedError(f'unknown backend {backend}')
 
 
 

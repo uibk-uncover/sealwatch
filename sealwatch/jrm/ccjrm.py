@@ -17,7 +17,6 @@ Permission to use, copy, modify, and distribute this software for educational, r
 """  # noqa: E501
 
 from collections import OrderedDict
-import jpeglib
 import numpy as np
 from pathlib import Path
 from typing import Union

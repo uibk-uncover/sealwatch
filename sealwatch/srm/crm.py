@@ -5,14 +5,14 @@ CRMs were introduced in
 
     [1] Fridrich, Kodovsky: Rich Models for Steganalysis of Digital Images. TIFS, 2011.
 
-This code produces equivalent results compared to the paper authors' own Matlab implementation.
+With implementation=CRM_ORIGINAL, this code produces equivalent results compared to the paper authors' own Matlab implementation.
+By default, CRM_FIX_MIN24 counts the 3rd-order minmax24 co-occurrence once, see extract().
 
 Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
 from collections import OrderedDict
-import collections
 import numpy as np
 from pathlib import Path
 from PIL import Image
@@ -23,6 +23,8 @@ from .cooccurrence import Implementation
 from .cooccurrence import cooccurrence3_col as Cooc3
 from . import symm
 from . import srm
+from .. import tools
+from .._sealwatch import crm as rs
 
 
 def extract_from_file(
@@ -33,22 +35,15 @@ def extract_from_file(
     return extract(img, **kw)
 
 
-def extract(
+def _extract(
     x: np.ndarray,
-    *,
-    q: int = 1,
-    Tc: int = 2,
-    implementation: Implementation = Implementation.CRM_FIX_MIN24,
+    q: float,
+    Tc: int,
+    implementation: Implementation,
 ) -> Dict[str, np.ndarray]:
-    """Extracts color rich model for steganalysis.
-
-    :param x: 2D input image
-    :type x: np.ndarray
-    :return: structured CRM features
-    :rtype: collections.OrderedDict
-    """
+    """Python implementation of CRM, see extract()."""
     x = x.astype('float32')
-    result = collections.OrderedDict()
+    result = OrderedDict()
     #
     construct_kw = {'T': Tc, 'CoocN': Cooc3, 'directional': False}
     process_kw = {
@@ -83,7 +78,7 @@ def extract(
     )
     # 3rd order
     result = post_process(
-        all3rd(x, q*3, **construct_kw),
+        all3rd(x, q*3, implementation=implementation, **construct_kw),
         f='f3',
         result=result,
         **process_kw,
@@ -104,6 +99,48 @@ def extract(
     )
     #
     return result
+
+
+def extract(
+    x: np.ndarray,
+    *,
+    q: float = 1,
+    Tc: int = 2,
+    implementation: Implementation = Implementation.CRM_FIX_MIN24,
+) -> Dict[str, np.ndarray]:
+    """Extracts color rich model for steganalysis.
+
+    :param x: color input image, of shape [height, width, 3]
+    :type x: np.ndarray
+    :param q: quantization step
+    :type q: float
+    :param Tc: truncation threshold of the color co-occurrences
+    :type Tc: int
+    :param implementation: CRM_FIX_MIN24 counts the 3rd-order minmax24 co-occurrence once,
+        as the other non-directional submodels.
+        CRM_ORIGINAL counts it twice, as the original Matlab implementation by DDE,
+        i.e., the submodel s3_minmax24c is doubled.
+        The Rust backend implements CRM_FIX_MIN24 only.
+    :type implementation: Implementation
+    :return: structured CRM features
+    :rtype: OrderedDict
+
+    :Examples:
+
+    >>> features = sw.tools.flatten(sw.crm.extract(x))
+    """
+    # choose implementation
+    backend = tools.get_backend()
+    if backend == tools.BACKEND_RUST:
+        if x.dtype != np.uint8 or x.ndim != 3 or x.shape[2] != 3:
+            raise TypeError('parameter x must be uint8 of shape [height, width, 3]')
+        if implementation != Implementation.CRM_FIX_MIN24:
+            raise NotImplementedError(f'Rust backend implements CRM_FIX_MIN24 only, got {implementation}')
+        return OrderedDict(rs.extract(x1=x, q=q, q_name=f'{q}'.replace('.', ''), Tc=Tc))
+    elif backend == tools.BACKEND_PYTHON:
+        return _extract(x, q, Tc, implementation)
+    else:
+        raise NotImplementedError(f'unknown backend {backend}')
 
 
 def symm4_dir(  # order = 4
@@ -155,13 +192,13 @@ def post_process(
     DATA: np.ndarray,
     f: str,
     q: int,
-    result: collections.OrderedDict = None,
+    result: OrderedDict = None,
     Tc: int = 3,
     name_mapper: Dict[str, str] = {},
 ) -> Dict[str, np.ndarray]:
     """"""
     if result is None:
-        result = collections.OrderedDict()
+        result = OrderedDict()
     for k in DATA:
         q_str = f'{q}'.replace('.', '')
         result[f'{f}_{name_mapper.get(k, k)}_q{q_str}'] = DATA[k].astype('float32')
@@ -194,7 +231,7 @@ def post_process(
                 result[out] = symm.symm4(result[k], T=2)
 
     # delete result.f*
-    result = collections.OrderedDict([
+    result = OrderedDict([
         (k, v) for k, v in result.items() if not k.startswith('f')
     ])
 

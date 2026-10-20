@@ -121,7 +121,8 @@ def post_process(
     ])
 
     # merge spam features
-    KEYS = set(result.keys())
+    # list, not set, so that the order does not depend on the hash seed
+    KEYS = list(result.keys())
     for k in KEYS:
         T, N, Q = k.split('_')
         if N[:4] != 'spam':
