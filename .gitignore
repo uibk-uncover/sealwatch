@@ -169,3 +169,9 @@ cython_debug/
 *.lock
 .cargo
 assets
+
+# reference
+reference
+
+# claude
+.claude

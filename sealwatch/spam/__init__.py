@@ -7,8 +7,8 @@ Affiliation: University of Innsbruck
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
+from PIL import Image
 from typing import Union
-import warnings
 
 from . import spam as py
 from .._sealwatch import spam as rs
@@ -68,29 +68,20 @@ def extract(
 
 def extract_from_file(
     path: Union[str, Path],
-    *,
-    rounded: bool = True,
     **kw,
 ) -> OrderedDict:
     """
-    Extract SPAM features from luminance channel of given JPEG image
+    Extract SPAM features from a grayscale image file, decoded with PIL.
 
-    :param path: JPEG image to be analzed
+    :param path: grayscale image, e.g., PNG or JPEG
     :type path: str or pathlib.Path
+    :param kw: other parameters of extract()
     :return: ordered dict with the feature values
     :rtype: collections.OrderedDict
 
     :Example:
 
-    >>> # TODO
-
-    This function can only work with Python backend.
+    >>> features = sw.spam.extract_from_file('seal1.png')
     """
-    backend = tools.get_backend()
-    if backend != tools.BACKEND_PYTHON:
-        warnings.warn(f'backend {backend} not supported for extract_from_file(), falling back to Python')
-    #
-    x = tools.jpeg.decompress_from_file(path)
-    #
-    with tools.BACKEND_PYTHON:
-        return extract(x=x, **kw, rounded=rounded)
+    x = np.array(Image.open(path))
+    return extract(x, **kw)

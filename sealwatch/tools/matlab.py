@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import norm
+import scipy.special
 
 
 def round(x: np.ndarray) -> np.ndarray:
@@ -79,8 +79,9 @@ def randn(size, rng):
     :return: ndarray with random numbers from a normal distribution
     """
 
+    # norminv, as scipy.stats.norm.ppf, without its argument checks
     if isinstance(size, int):
         # size is an integer
-        return norm.ppf(rng.rand(size))
+        return scipy.special.ndtri(rng.rand(size))
 
-    return norm.ppf(rng.rand(*size))
+    return scipy.special.ndtri(rng.rand(*size))

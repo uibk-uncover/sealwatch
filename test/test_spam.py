@@ -30,16 +30,20 @@ class TestSpam(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract(self, fname):
+        """Default backend against the reference spam686.m."""
         self._logger.info(f'TestSpam.test_extract({fname})')
-        #
-        path = defs.COVER_COMPRESSED_GRAY_DIR / f'{fname}.jpg'
-        f = sw.spam.extract_from_file(path)
+        f = sw.spam.extract_from_file(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png')
         f = sw.tools.flatten(f)
-        #
-        path = FEATURES_DIR / f'{fname}.mat'
-        f_ref = scipy.io.loadmat(path)["features"].flatten()
-        np.testing.assert_allclose(f, f_ref)
+        f_ref = scipy.io.loadmat(FEATURES_DIR / f'{fname}.mat')["features"].flatten()
+        np.testing.assert_array_equal(f, f_ref)
 
+    def test_extract_python(self):
+        """Python implementation against the reference spam686.m, on a single image."""
+        self._logger.info('TestSpam.test_extract_python()')
+        with sw.BACKEND_PYTHON:
+            f = sw.spam.extract_from_file(defs.COVER_UNCOMPRESSED_GRAY_DIR / 'seal1.png')
+        f_ref = scipy.io.loadmat(FEATURES_DIR / 'seal1.mat')["features"].flatten()
+        np.testing.assert_array_equal(sw.tools.flatten(f), f_ref)
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract_rs(self, fname):
@@ -88,7 +92,7 @@ class TestSpam(unittest.TestCase):
                 x0 = np.array(Image.open(path))
                 f = sw.tools.flatten(sw.spam.extract(x0))
             end = time.perf_counter()
-            print('rust:', end - start, 's')
+            print('SPAM rust:', end - start, 's')
         #
         with sw.BACKEND_PYTHON:
             start = time.perf_counter()
@@ -97,7 +101,7 @@ class TestSpam(unittest.TestCase):
                 x0 = np.array(Image.open(path))
                 f = sw.tools.flatten(sw.spam.extract(x0))
             end = time.perf_counter()
-            print('python:', end - start, 's')
+            print('SPAM python:', end - start, 's')
 
     def test_type(self):
         self._logger.info('TestSpam.test_extract_rs()')

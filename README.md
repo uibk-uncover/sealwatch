@@ -111,7 +111,7 @@ The reason is that feature descriptors are composed of multiple submodels. Retai
 **Ordered dict**
 ```python
 # The PHARM feature extraction returns an ordered dict
-features_grouped = sw.pharm.extract_from_file("seal1.jpg", implementation=sw.PHARM_REVISITED)
+features_grouped = sw.pharm.extract_from_file("seal1.jpg", implementation=sw.PHARM_FIX)
 
 # Flatten dict to a 1D array
 features = sw.tools.flatten(features_grouped)

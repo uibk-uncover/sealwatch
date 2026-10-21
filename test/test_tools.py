@@ -71,7 +71,7 @@ class TestTools(unittest.TestCase):
             features_grouped = sw.pharm.extract_from_file(
                 f.name,
                 q=sw.pharm.qf_to_quantization_step(qf),
-                implementation=sw.PHARM_REVISITED,
+                implementation=sw.PHARM_FIX,
             )
 
         features_flat = sw.tools.flatten(features_grouped)

@@ -111,7 +111,7 @@ PHARM
 .. autofunction:: sealwatch.pharm.extract_from_file
 
 .. autoclass:: sealwatch.pharm.Implementation
-   :members: PHARM_ORIGINAL, PHARM_REVISITED
+   :members: PHARM_ORIGINAL, PHARM_FIX
 
 GFR
 """
