@@ -24,7 +24,7 @@ from .. import tools
 
 
 def extract(
-    x1: np.ndarray,
+    x: np.ndarray,
     *,
     T: int = 3,
     rounded: bool = False,
@@ -35,8 +35,8 @@ def extract(
 
     The final feature set has 686 dimensions.
 
-    :param x1: 2D ndarray
-    :type x1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param x: 2D ndarray
+    :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param T: truncation threshold
     :type T: int
     :return: ordered dict containing 686 feature dimensions in total.
@@ -46,12 +46,12 @@ def extract(
 
     >>> # TODO
     """
-    x1 = x1.astype('float64')
+    x = x.astype('float64')
     features = OrderedDict()
 
     # horizontal left-right
     # Note that the naming is misleading. This actually computes the differences from right to left. But at the end, the left-right and right-left features are averaged anyway.
-    D = x1[:, :-1] - x1[:, 1:]
+    D = x[:, :-1] - x[:, 1:]
     # Left
     L = D[:, 2:]
     # Center
@@ -68,7 +68,7 @@ def extract(
     Mh2 = get_m3(L, C, R, T, rounded=rounded)
 
     # Vertical bottom top
-    D = x1[:-1, :] - x1[1:, :]
+    D = x[:-1, :] - x[1:, :]
     L = D[2:, :]
     C = D[1:-1, :]
     R = D[:-2, :]
@@ -82,7 +82,7 @@ def extract(
     Mv2 = get_m3(L, C, R, T, rounded=rounded)
 
     # diagonal left - right
-    D = x1[:-1, :-1] - x1[1:, 1:]
+    D = x[:-1, :-1] - x[1:, 1:]
     L = D[2:, 2:]
     C = D[1:-1, 1:- 1]
     R = D[:-2, :-2]
@@ -96,7 +96,7 @@ def extract(
     Md2 = get_m3(L, C, R, T, rounded=rounded)
 
     # minor diagonal left - right
-    D = x1[1:, :-1] - x1[:-1, 1:]
+    D = x[1:, :-1] - x[:-1, 1:]
     L = D[:-2, 2:]
     C = D[1:-1, 1:-1]
     R = D[2:, :-2]

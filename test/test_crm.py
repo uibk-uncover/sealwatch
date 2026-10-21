@@ -34,57 +34,11 @@ class TestCRM(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract(self, fname):
+        """Default backend (CRM_FIX_MIN24) against the Matlab reference (CRM_ORIGINAL)."""
         self._logger.info(f'TestCRM.test_extract({fname})')
-
-        # load cover
         x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_COLOR_DIR / f'{fname}.png'))
-
-        # extract CRM
-        start = time.perf_counter()
-        features = sw.crm.extract(x0, Tc=3, implementation=sw.CRM_ORIGINAL)
-        end = time.perf_counter()
-        self._logger.info(f'extracting CRM from {fname}.png took {end - start} s')
+        features = sw.crm.extract(x0, Tc=3)
         self.assertEqual(len(sw.tools.flatten(features)), 5404)  # from DDE page
-
-        # compare to Matlab reference
-        features_ref = scipy.io.loadmat(FEATURE_DIR / f'{fname}.mat', simplify_cells=True)
-        features_ref = {k: v for k, v in features_ref.items() if not k.startswith('_')}
-        # same submodules
-        assert set(features_ref) == set(features)
-        # the submodules have the same values
-        for k in features:
-            # print(k, np.allclose(f[k], f_ref[k]))
-            np.testing.assert_array_equal(features[k], features_ref[k])
-
-        # same after merge
-        features_ref = OrderedDict([(k, features_ref[k]) for k in features.keys()])
-        np.testing.assert_allclose(
-            sw.tools.flatten(features),
-            sw.tools.flatten(features_ref),
-        )
-
-    @parameterized.expand([[f] for f in defs.TEST_IMAGES])
-    def test_extract_crm2(self, fname):
-        self._logger.info(f'TestCRM.test_extract_crm2({fname})')
-
-        # load cover
-        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_COLOR_DIR / f'{fname}.png'))
-
-        # extract CRM
-        start = time.perf_counter()
-        features = sw.crm.extract(x0, Tc=2, implementation=sw.CRM_ORIGINAL)
-        end = time.perf_counter()
-        self._logger.info(f'extracting CRM from {fname}.png took {end - start} s')
-        self.assertEqual(len(sw.tools.flatten(features)), 2073)
-
-    @parameterized.expand([[f] for f in defs.TEST_IMAGES])
-    def test_extract_rs(self, fname):
-        """Rust implementation against the Matlab reference."""
-        self._logger.info(f'TestCRM.test_extract_rs({fname})')
-        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_COLOR_DIR / f'{fname}.png'))
-        with sw.BACKEND_RUST:
-            features = sw.crm.extract(x0, Tc=3)
-        self.assertEqual(len(sw.tools.flatten(features)), 5404)
         features_ref = scipy.io.loadmat(FEATURE_DIR / f'{fname}.mat', simplify_cells=True)
         features_ref = {k: v for k, v in features_ref.items() if not k.startswith('_')}
         self.assertEqual(set(features_ref), set(features))
@@ -94,8 +48,24 @@ class TestCRM(unittest.TestCase):
                 np.testing.assert_array_equal(2 * features[k], features_ref[k])
             else:
                 np.testing.assert_array_equal(features[k], features_ref[k])
-        with sw.BACKEND_RUST:
-            features = sw.crm.extract(x0, Tc=2)
+        features = sw.crm.extract(x0, Tc=2)
+        self.assertEqual(len(sw.tools.flatten(features)), 2073)
+
+    @parameterized.expand([['seal1'], ['seal2']])
+    def test_extract_python(self, fname):
+        """Python implementation (CRM_ORIGINAL) against the Matlab reference."""
+        self._logger.info(f'TestCRM.test_extract_python({fname})')
+        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_COLOR_DIR / f'{fname}.png'))
+        with sw.BACKEND_PYTHON:
+            features = sw.crm.extract(x0, Tc=3, implementation=sw.CRM_ORIGINAL)
+        self.assertEqual(len(sw.tools.flatten(features)), 5404)
+        features_ref = scipy.io.loadmat(FEATURE_DIR / f'{fname}.mat', simplify_cells=True)
+        features_ref = {k: v for k, v in features_ref.items() if not k.startswith('_')}
+        self.assertEqual(set(features_ref), set(features))
+        for k in features:
+            np.testing.assert_array_equal(features[k], features_ref[k])
+        with sw.BACKEND_PYTHON:
+            features = sw.crm.extract(x0, Tc=2, implementation=sw.CRM_ORIGINAL)
         self.assertEqual(len(sw.tools.flatten(features)), 2073)
 
     @parameterized.expand([[2], [3]])
@@ -103,8 +73,10 @@ class TestCRM(unittest.TestCase):
         """CRM_ORIGINAL doubles the 3rd-order minmax24, otherwise it equals CRM_FIX_MIN24."""
         self._logger.info(f'TestCRM.test_implementation({Tc=})')
         x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_COLOR_DIR / 'seal1.png'))
-        f_fix = sw.crm.extract(x0, Tc=Tc)
-        f_orig = sw.crm.extract(x0, Tc=Tc, implementation=sw.CRM_ORIGINAL)
+        # only the Python implementation has CRM_ORIGINAL
+        with sw.BACKEND_PYTHON:
+            f_fix = sw.crm.extract(x0, Tc=Tc)
+            f_orig = sw.crm.extract(x0, Tc=Tc, implementation=sw.CRM_ORIGINAL)
         self.assertEqual(list(f_fix), list(f_orig))
         for k in f_fix:
             if k == 's3_minmax24c_q1':

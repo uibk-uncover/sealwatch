@@ -43,15 +43,40 @@ class TestSpam(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract_rs(self, fname):
+        """Rust implementation is bit-identical to the Python implementation."""
         self._logger.info(f'TestSpam.test_extract_rs({fname})')
         #
         path = defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'
         x0 = np.array(Image.open(path))
         #
-        f_ref = sw.tools.flatten(sw.spam.extract(x0))
+        with sw.BACKEND_PYTHON:
+            f_ref = sw.tools.flatten(sw.spam.extract(x0))
         with sw.BACKEND_RUST:
             f = sw.tools.flatten(sw.spam.extract(x0))
-        np.testing.assert_allclose(f, f_ref)
+        np.testing.assert_array_equal(f, f_ref)
+
+    @parameterized.expand([
+        (shape, T)
+        for shape in ['512x256', '100x400', 'odd']
+        for T in [2, 3, 4]
+    ])
+    def test_extract_rs_nonsquare(self, shape, T):
+        """Rust implementation is bit-identical to the Python implementation, also for non-square images,
+        where the horizontal and vertical directions have different numbers of triplets."""
+        self._logger.info(f'TestSpam.test_extract_rs_nonsquare({shape=}, {T=})')
+        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / 'seal1.png'))
+        x = {
+            '512x256': x0[:, :256],
+            '100x400': x0[:100, :400],
+            'odd': np.random.default_rng(12345).integers(0, 256, (37, 53)).astype(np.uint8),
+        }[shape]
+        with sw.BACKEND_PYTHON:
+            f_py = sw.spam.extract(x, T=T)
+        with sw.BACKEND_RUST:
+            f_rs = sw.spam.extract(x, T=T)
+        self.assertEqual(list(f_py), list(f_rs))
+        for k in f_py:
+            np.testing.assert_array_equal(f_py[k], f_rs[k], err_msg=k)
 
     def test_speedup(self):
         self._logger.info('TestSpam.test_speedup()')

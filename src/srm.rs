@@ -62,7 +62,7 @@ impl Plane {
 }
 
 /// Rounding as in Matlab, as sealwatch.tools.matlab.round, |x| >= 0.5 rounds away from zero.
-fn matlab_round(v: f64) -> f64 {
+pub(crate) fn matlab_round(v: f64) -> f64 {
     let a = v.abs();
     let floor = a.floor();
     let frac = a - floor;

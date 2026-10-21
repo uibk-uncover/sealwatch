@@ -39,9 +39,8 @@ class TestSRM(unittest.TestCase):
         del self.tmp
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
-    # @parameterized.expand([[f] for f in ['00001', '00002', '00003', '00004', '00005']])
-    # @parameterized.expand([[f] for f in ['00001']])  # takes too long
     def test_extract_q1(self, fname):
+        """Default backend against the Matlab reference."""
         #
         x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         start = time.perf_counter()
@@ -72,8 +71,8 @@ class TestSRM(unittest.TestCase):
 
     @parameterized.expand([[f] for f in defs.TEST_IMAGES])
     def test_extract(self, fname):
+        """Default backend against the Matlab reference."""
         self._logger.info(f'TestSRM.test_extract({fname})')
-        # print(defs.COVER_DIR)
         x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
         start = time.perf_counter()
         features = sw.srm.extract(x0)
@@ -137,16 +136,16 @@ class TestSRM(unittest.TestCase):
             return f, [f'q{s}'.replace('.', '') for s in qs[f]].index(q)
         self.assertEqual([position(n) for n in names], sorted(position(n) for n in names))
 
-    @parameterized.expand([[f] for f in defs.TEST_IMAGES])
-    def test_extract_rs(self, fname):
-        """Rust implementation against the Matlab reference."""
-        self._logger.info(f'TestSRM.test_extract_rs({fname})')
-        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / f'{fname}.png'))
-        with sw.BACKEND_RUST:
-            features = sw.srm.extract(x0)
-        self.assertEqual(len(sw.tools.flatten(features)), 34671)
-        features_ref = scipy.io.loadmat(FEATURE_DIR / f'{fname}.mat', simplify_cells=True)
-        features_ref = OrderedDict([(k, v) for k, v in features_ref.items() if not k.startswith('__')])
+    @parameterized.expand([['srm'], ['srmq1']])
+    def test_extract_python(self, model):
+        """Python implementation against the Matlab reference, on a single image."""
+        self._logger.info(f'TestSRM.test_extract_python({model=})')
+        x0 = np.array(Image.open(defs.COVER_UNCOMPRESSED_GRAY_DIR / 'seal1.png'))
+        with sw.BACKEND_PYTHON:
+            features = getattr(sw, model).extract(x0)
+        self.assertEqual(len(sw.tools.flatten(features)), {'srm': 34671, 'srmq1': 12753}[model])
+        features_ref = scipy.io.loadmat(FEATURE_DIR / 'seal1.mat', simplify_cells=True)
+        features_ref = OrderedDict([(k, v) for k, v in features_ref.items() if k in features])
         self.assertEqual(list(features.keys()), list(features_ref.keys()))
         for submodel, f in features.items():
             np.testing.assert_allclose(f, features_ref[submodel].flatten())
@@ -189,12 +188,14 @@ class TestSRM(unittest.TestCase):
             with self.assertRaises(TypeError):
                 sw.srm.extract(np.zeros((32, 32), dtype='float64'))
 
-    def test_order_deterministic(self):
+    @parameterized.expand([['BACKEND_PYTHON'], ['BACKEND_RUST']])
+    def test_order_deterministic(self, backend):
         """The order of the submodels does not depend on the hash seed of the process."""
-        self._logger.info('TestSRM.test_order_deterministic()')
+        self._logger.info(f'TestSRM.test_order_deterministic({backend=})')
         code = (
             'import numpy as np, sealwatch as sw; '
             'x = np.random.default_rng(0).integers(0, 256, (40, 40)).astype(np.uint8); '
+            f'sw.set_backend(sw.{backend}); '
             'print(" ".join(sw.srm.extract(x).keys()))'
         )
         orders = {

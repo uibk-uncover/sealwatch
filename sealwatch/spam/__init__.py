@@ -16,7 +16,7 @@ from .. import tools
 
 
 def extract(
-    x1: np.ndarray,
+    x: np.ndarray,
     *,
     T: int = 3,
     rounded: bool = False,
@@ -27,8 +27,8 @@ def extract(
 
     The final feature set has 686 dimensions.
 
-    :param x1: 2D ndarray
-    :type x1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param x: 2D ndarray
+    :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param T: truncation threshold
     :type T: int
     :return: ordered dict containing 686 feature dimensions in total.
@@ -36,28 +36,28 @@ def extract(
 
     :Examples:
 
-    >>> features = sw.spam.extract(x1)
+    >>> features = sw.spam.extract(x)
 
     By default, this function uses Rust-accelerated backend. To use the (substantially slower) Python implementation, type
 
     >>> with sw.BACKEND_PYTHON:
-    >>>     features = sw.spam.extract(x1)
+    >>>     features = sw.spam.extract(x)
     """
     # choose implementation
     backend = tools.get_backend()
     if backend == tools.BACKEND_RUST:
         # check types
-        if x1.dtype != np.uint8:
-            raise TypeError('parameter x1 must be uint8')
+        if x.dtype != np.uint8:
+            raise TypeError('parameter x must be uint8')
         #
-        features = rs.extract(x1=x1, T=T, rounded=rounded)
+        features = rs.extract(x=x, T=T, rounded=rounded)
 
     elif backend == tools.BACKEND_PYTHON:
         # check types
-        if x1.dtype != np.uint8 and not rounded:
-            raise TypeError('parameter x1 must be uint8 or rounding must be on')
+        if x.dtype != np.uint8 and not rounded:
+            raise TypeError('parameter x must be uint8 or rounding must be on')
         #
-        features = py.extract(x1=x1, T=T, rounded=rounded)
+        features = py.extract(x=x, T=T, rounded=rounded)
 
     else:
         raise NotImplementedError(f'unknown backend {backend}')
@@ -90,7 +90,7 @@ def extract_from_file(
     if backend != tools.BACKEND_PYTHON:
         warnings.warn(f'backend {backend} not supported for extract_from_file(), falling back to Python')
     #
-    x1 = tools.jpeg.decompress_from_file(path)
+    x = tools.jpeg.decompress_from_file(path)
     #
     with tools.BACKEND_PYTHON:
-        return extract(x1=x1, **kw, rounded=rounded)
+        return extract(x=x, **kw, rounded=rounded)

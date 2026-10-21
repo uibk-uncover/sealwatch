@@ -50,7 +50,7 @@ import sealwatch as sw
 | CC-JRM: cartesian-calibrated JRM | 22510 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
 | DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | ordered dict |
 | PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
-| GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | 5D array |
+| GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | ordered dict |
 | SRM: spatial rich models | 34671 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
 | SRMQ1: SRM with quantization 1 | 12753 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
 | CRM: color rich models | 5404 | spatial | [Reference](https://doi.org/10.1109/WIFS.2014.7084325) | ordered dict |
@@ -62,7 +62,7 @@ These implementations are based on the [Matlab reference implementations](https:
 Extract GFR features from a single JPEG image
 
 ```python
-features = sw.gfr.extract("seal1.jpg")
+features = sw.gfr.extract_from_file("seal1.jpg", qf=75)
 ```
 
 After having extracted features from cover and stego images, you can train an FLD ensemble as binary classifier.
@@ -105,8 +105,8 @@ test_accuracy = trained_ensemble.score(X_test, y_test)
 
 ### Feature formats
 
-Note that the feature extractors return different formats: 1D arrays, multi-dimensional arrays, or ordered dicts.
-The reason is that feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel. The following snippets show how to flatten the features to a 1D array.
+The feature extractors return ordered dicts.
+The reason is that feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel. The following snippet shows how to flatten the features to a 1D array.
 
 **Ordered dict**
 ```python
@@ -133,21 +133,6 @@ features_grouped = group_batch(features_flat, feature_type=PHARM_REVISITED)
 
 # features_grouped is an ordered dict. The keys are the submodel names. Each value is an array with the shape [num_samples, submodel_size].
 ``` -->
-
-**Multi-dimensional array**
-```python
-# The GFR feature extraction returns a 5-dimensional array:
-# - Dimension 0: Phase shifts
-# - Dimension 1: Scales
-# - Dimension 2: Rotations/Orientations
-# - Dimension 3: Number of histograms
-# - Dimension 4: Co-occurrences
-features = sw.gfr.extract("seal1.jpg")
-
-# Simply flatten to a 1D array
-features = features.flatten()
-```
-
 
 ## Acknowledgements and Disclaimer
 

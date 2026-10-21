@@ -20,18 +20,22 @@ Permission to use, copy, modify, and distribute this software for educational, r
 from collections import OrderedDict
 import enum
 import numpy as np
-import os
 from pathlib import Path
-import scipy.signal
-from typing import Union
+import scipy.fft
+from typing import Sequence, Union
+import warnings
 
 from .. import dctr
 from .. import tools
+from .._sealwatch import gfr as rs
 
-# from scipy.signal import fftconvolve
-# from sealwatch.utils.jpeg import decompress_luminance_from_file
-# from sealwatch.features.dctr.dctr import get_symmetric_histogram_coordinates
-# from sealwatch.utils.matlab import matlab_round
+
+# Standard deviations of the Gaussian factor, one per scale.
+# The number of scales is denoted as L in the paper.
+SIGMAS = [0.5, 0.75, 1, 1.25]
+# The [original paper](https://ieeexplore.ieee.org/document/1042386) actually uses -pi/2
+PHASE_SHIFTS = [0, np.pi / 2]
+ASPECT_RATIO = 0.5
 
 
 class Implementation(enum.Enum):
@@ -110,119 +114,93 @@ def compute_gabor_kernel(
     return kernel
 
 
-def extract(
-    img: np.ndarray,
-    *,
+def compute_gabor_kernels(
     num_rotations: int = 32,
-    quantization_steps: int = 75,
-    T: int = 4,
+    *,
     implementation: Implementation = Implementation.GFR_ORIGINAL,
 ) -> np.ndarray:
-    """
-    Extract the Gabor filter residual features from a given image.
+    """Compute the bank of Gabor kernels used by GFR.
 
-    :param img: grayscale image with values in range [0, 255]
-    :type img:
-    :param num_rotations: number of rotations for Gabor kernel
+    :param num_rotations: number of rotations in [0, pi), denoted S in the paper
     :type num_rotations: int
-    :param quantization_steps: quantization step for each of the four scales
-    :type quantization_steps: int
-    :param T: the highest histogram bin value after quantization. The histogram contains T + 1 bins corresponding to the values [0, ..., T]. Quantized values exceeding T will be clamped to T.
-    :type T: int
     :param implementation:
     :type implementation: `Implementation`
-    :return: extracted Gabor features as 5D ndarray. The five dimensions denote:
-        # Dimension 0: Phase shifts
-        # Dimension 1: Scales
-        # Dimension 2: Rotations/Orientations
-        # Dimension 3: Number of histograms
-        # Dimension 4: Co-occurrences
-
-        Flatten the 5D array to obtain a 1D feature descriptor.
-
-        Will be changed in the future to OrderedDict to match the common interface.
-    :rtype:
-
-    :Example:
-
-    >>> # TODO
+    :return: Gabor kernels of shape [phase shifts, scales, rotations, 8, 8]
+    :rtype: np.ndarray
     """
-    assert len(quantization_steps) == 4, "Expected four quantization steps, one for each scale"
-
-    # Set up number of orientations from [0, 180) degree.
-    # The number of rotations is denoted as S in the paper.
-    assert num_rotations % 2 == 0, "Expected number of rotations to be an even number"
+    kernels = np.zeros((len(PHASE_SHIFTS), len(SIGMAS), num_rotations, 8, 8))
     rotations = np.arange(num_rotations) * np.pi / num_rotations
+    for phase_idx, phase_shift in enumerate(PHASE_SHIFTS):
+        for scale_idx, sigma in enumerate(SIGMAS):
+            for rotation_idx, rotation in enumerate(rotations):
+                kernels[phase_idx, scale_idx, rotation_idx] = compute_gabor_kernel(
+                    sigma,
+                    rotation,
+                    phase_shift,
+                    ASPECT_RATIO,
+                    implementation=implementation,
+                )
+    return kernels
 
-    # Set up number of scales
-    # Standard deviations
-    sigmas = [0.5, 0.75, 1, 1.25]
-    # The number of scales is denoted as L in the paper.
-    num_scales = len(sigmas)
 
-    # The [original paper](https://ieeexplore.ieee.org/document/1042386) actually uses -pi/2
-    phase_shifts = [0, np.pi / 2]
-    num_phase_shifts = len(phase_shifts)
-
-    aspect_ratio = 0.5
+def _extract(
+    x: np.ndarray,
+    *,
+    num_rotations: int = 32,
+    quantization_steps: Sequence[float] = (2, 4, 6, 8),
+    T: int = 4,
+    implementation: Implementation = Implementation.GFR_ORIGINAL,
+) -> OrderedDict:
+    """Python implementation of GFR, see extract()."""
+    kernels = compute_gabor_kernels(num_rotations, implementation=implementation)
+    num_phase_shifts, num_scales = kernels.shape[:2]
+    height, width = x.shape
 
     # Compute DCTR locations to be merged
     merged_coordinates = dctr._dctr.get_symmetric_histogram_coordinates()
 
-    # The bins correspond to values [0, ..., T]
-    # np.histogram requires bin edges
-    # Bin 0: [-0.5, 0.5]
-    # Bin 1: [ 0.5, 1.5]
-    # ...
-    # Bin T: [T-0.5, T+0.5]
-    bin_edges = np.arange(T + 2) - 0.5
+    # Phase (row, col) in the 8x8 grid of each residual, as a linear index
+    rows, cols = np.mgrid[:height - 7, :width - 7]
+    phases = (rows % 8) * 8 + cols % 8
+
+    # The convolution is computed in the frequency domain,
+    # the spectrum of the image is shared by all kernels
+    fft_shape = [scipy.fft.next_fast_len(d) for d in (height + 7, width + 7)]
+    x_spectrum = scipy.fft.fft2(x, fft_shape)
 
     # In total, the number of 2D Gabor filters is 2 * L * S = 2 phase shifts * 32 rotations * 4 scales = 256.
     # For each Gabor filter, we have 25 histograms, each of which contains T + 1 values.
     # That results in 32000 feature dimensions before symmetrization.
     intermediate_features = np.zeros((num_phase_shifts, num_scales, num_rotations, len(merged_coordinates), T + 1))
 
-    # Iterate over phase shifts
-    for phase_idx, phase_shift in enumerate(phase_shifts):
+    # Iterate over scales
+    for scale_idx in range(num_scales):
 
-        # Iterate over scales
-        for scale_idx, sigma in enumerate(sigmas):
+        # Iterate over orientations
+        for rotation_idx in range(num_rotations):
 
-            # Iterate over orientations
-            for rotation_idx, rotation in enumerate(rotations):
+            # Convolve image with both phase shifts at once,
+            # as the real and the imaginary part of a complex kernel
+            kernel = kernels[0, scale_idx, rotation_idx] + 1j * kernels[1, scale_idx, rotation_idx]
+            R_complex = scipy.fft.ifft2(x_spectrum * scipy.fft.fft2(kernel, fft_shape))
+            R_complex = R_complex[7:height, 7:width]  # valid part
 
-                # Compute Gabor kernel
-                kernel = compute_gabor_kernel(
-                    sigma,
-                    rotation,
-                    phase_shift,
-                    aspect_ratio,
-                    implementation=implementation,
-                )
-
-                # Convolve image with kernel
-                R = scipy.signal.fftconvolve(img, kernel, mode='valid')
+            for phase_idx, R in enumerate([R_complex.real, R_complex.imag]):
 
                 # Quantization
                 R = np.abs(tools.matlab.round(R / quantization_steps[scale_idx]))
 
                 # Truncation
-                R[R > T] = T
+                R = np.minimum(R, T).astype(int)
+
+                # Histogram of each phase in the 8x8 grid, of shape [64, T + 1]
+                counts = np.bincount((phases * (T + 1) + R).flatten(), minlength=64 * (T + 1))
+                counts = counts.reshape(64, T + 1)
 
                 # Feature extraction and merging, similar to DCTR features
-                # Iterate over the output histograms
                 # merged_coordinates contains a list of lists, where the inner list contains between 0 and 4 coordinate tuples
-                for hist_idx in np.arange(len(merged_coordinates)):
-                    sub_features = np.zeros(T + 1, dtype=int)
-
-                    for (row_shift, col_shift) in merged_coordinates[hist_idx]:
-                        # Get quantized and truncated result at given phase shift
-                        R_sub = R[row_shift::8, col_shift::8]
-
-                        # Compute histogram and add up
-                        sub_features += np.histogram(R_sub, bin_edges)[0]
-
-                    # Assign to output features array
+                for hist_idx, coordinates in enumerate(merged_coordinates):
+                    sub_features = sum(counts[row_shift * 8 + col_shift] for row_shift, col_shift in coordinates)
                     intermediate_features[phase_idx, scale_idx, rotation_idx, hist_idx, :] = sub_features / np.sum(sub_features)
 
     # Prepare for merging histograms with identical scale and symmetrical direction
@@ -233,7 +211,7 @@ def extract(
     # At this point, we have 2 phase shifts * 32 rotations * 4 scales * 25 histograms * (T=4 + 1) values.
     # Now we merge S rotations into (S/2 + 1) values.
 
-    # Dimensions of final feature descriptor
+    # Dimensions of merged features
     # Dimension 0: Phase shifts
     # Dimension 1: Scales
     # Dimension 2: Rotations/Orientations
@@ -247,26 +225,102 @@ def extract(
         T + 1)
 
     # Allocate space
-    features = np.zeros(final_shape, dtype=float)
+    merged_features = np.zeros(final_shape, dtype=float)
 
     # Copy features for orientation 0
-    features[:, :, 0, :, :] = intermediate_features[:, :, 0, :, :]
+    merged_features[:, :, 0, :, :] = intermediate_features[:, :, 0, :, :]
 
     # Copy features for orientation pi / 2
-    features[:, :, -1, :, :] = intermediate_features[:, :, num_rotations // 2, :, :]
+    merged_features[:, :, -1, :, :] = intermediate_features[:, :, num_rotations // 2, :, :]
 
     # Merge orientations i / pi and (pi - i) / pi
     rotation_indices = np.arange(1, num_rotations // 2)
-    features[:, :, rotation_indices, :, :] = (intermediate_features[:, :, rotation_indices, :, :] + intermediate_features[:, :, -rotation_indices, :, :]) / 2
+    merged_features[:, :, rotation_indices, :, :] = (intermediate_features[:, :, rotation_indices, :, :] + intermediate_features[:, :, -rotation_indices, :, :]) / 2
 
+    # One histogram per key, in the order of the dimensions
+    features = OrderedDict()
+    for idx in np.ndindex(final_shape[:-1]):
+        features['_'.join(map(str, idx))] = merged_features[idx]
     return features
+
+
+def extract(
+    x: np.ndarray = None,
+    *,
+    num_rotations: int = 32,
+    quantization_steps: Sequence[float] = (2, 4, 6, 8),
+    T: int = 4,
+    implementation: Implementation = Implementation.GFR_ORIGINAL,
+    img: np.ndarray = None,
+) -> OrderedDict:
+    """
+    Extract the Gabor filter residual features from a given image.
+
+    :param x: decompressed grayscale image with values in range [0, 255]
+    :type x: np.ndarray
+    :param num_rotations: number of rotations for Gabor kernel
+    :type num_rotations: int
+    :param quantization_steps: quantization step for each of the four scales.
+        The default is for JPEG quality factor 75, use [0.1, 1, 1.5, 2] for quality factor 95.
+    :type quantization_steps: list of float
+    :param T: the highest histogram bin value after quantization. The histogram contains T + 1 bins corresponding to the values [0, ..., T]. Quantized values exceeding T will be clamped to T.
+    :type T: int
+    :param implementation:
+    :type implementation: `Implementation`
+    :param img: deprecated, use x
+    :type img: np.ndarray
+    :return: extracted Gabor features, one histogram of T + 1 values per key "{phase}_{scale}_{rotation}_{hist}",
+        indexing the phase shifts, scales, merged rotations (num_rotations / 2 + 1) and merged DCTR phases (25).
+        Use sw.tools.flatten() to obtain a 1D feature descriptor.
+    :rtype: OrderedDict
+
+    :Examples:
+
+    By default, this function uses the Rust implementation. To use the Python implementation, type
+
+    >>> with sw.BACKEND_PYTHON:
+    >>>     features = sw.gfr.extract(x)
+    """
+    if img is not None:
+        warnings.warn('parameter img is deprecated, use x', DeprecationWarning, stacklevel=2)
+        if x is not None:
+            raise TypeError('both x and img given')
+        x = img
+    if x is None:
+        raise TypeError('x must be given')
+    if len(quantization_steps) != 4:
+        raise ValueError('Expected four quantization steps, one for each scale')
+    # Set up number of orientations from [0, 180) degree.
+    # The number of rotations is denoted as S in the paper.
+    if num_rotations % 2 != 0:
+        raise ValueError('Expected number of rotations to be an even number')
+
+    # choose implementation
+    backend = tools.get_backend()
+    if backend == tools.BACKEND_RUST:
+        return OrderedDict(rs.extract(
+            x=np.ascontiguousarray(x, dtype=np.float64),
+            kernels=compute_gabor_kernels(num_rotations, implementation=implementation),
+            quantization_steps=np.array(quantization_steps, dtype=np.float64),
+            T=T,
+        ))
+    elif backend == tools.BACKEND_PYTHON:
+        return _extract(
+            x,
+            num_rotations=num_rotations,
+            quantization_steps=quantization_steps,
+            T=T,
+            implementation=implementation,
+        )
+    else:
+        raise NotImplementedError(f'unknown backend {backend}')
 
 
 def extract_from_file(
     path: Union[Path, str],
     num_rotations: int = 32,
     qf: int = None,
-    quantization_steps: int = None,
+    quantization_steps: Sequence[float] = None,
     T: int = 4,
     implementation: Implementation = Implementation.GFR_ORIGINAL,
 ) -> OrderedDict:
@@ -278,15 +332,9 @@ def extract_from_file(
     :param qf: JPEG quality factor; used to select the quantization steps
     :param quantization_steps: list of four quantization steps, one for each scale
     :param T: truncation threshold
-    :return: extracted Gabor features as 5D ndarray. The five dimensions denote:
-        # Dimension 0: Phase shifts
-        # Dimension 1: Scales
-        # Dimension 2: Rotations/Orientations
-        # Dimension 3: Number of histograms
-        # Dimension 4: Co-occurrences
-
-        Flatten the 5D array to obtain a 1D feature descriptor.
-    :rtype:
+    :param implementation:
+    :return: extracted Gabor features, see extract()
+    :rtype: OrderedDict
     """
     if quantization_steps is not None:
         if not len(quantization_steps) == 4:
@@ -307,7 +355,7 @@ def extract_from_file(
     # Decompress image without rounding
     img = tools.jpeg.decompress_from_file(path)
     return extract(
-        img,
+        x=img,
         num_rotations=num_rotations,
         quantization_steps=quantization_steps,
         T=T,

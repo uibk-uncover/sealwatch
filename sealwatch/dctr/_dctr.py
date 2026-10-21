@@ -23,8 +23,10 @@ import numpy as np
 from pathlib import Path
 import scipy.signal
 from typing import Union, List
+import warnings
 
 from .. import tools
+from .._sealwatch import dctr as rs
 
 
 def get_symmetric_histogram_coordinates() -> List[List]:
@@ -49,7 +51,7 @@ def get_symmetric_histogram_coordinates() -> List[List]:
         [l] = (2, 1), (2, 7), (6, 1), (6, 7)
         [m] = (2, 2), (2, 6), (6, 2), (6, 6)
         [n] = (2, 3), (2, 5), (6, 3), (6, 5)
-        [o] = (2, 4), (2, 6)
+        [o] = (2, 4), (6, 4)
         [p] = (3, 0), (5, 0)
         [q] = (3, 1), (3, 7), (5, 1), (5, 7)
         [r] = (3, 2), (3, 6), (5, 2), (5, 6)
@@ -118,10 +120,10 @@ def extract_from_file(
     """
 
     # Decompress image to spatial domain
-    x1 = tools.jpeg.decompress_from_file(path)
+    x = tools.jpeg.decompress_from_file(path)
 
     # Undo level shift, in line with the Matlab implementation
-    x1 -= 128
+    x -= 128
 
     # Compute quantization step based on quality factor
     if qf < 50:
@@ -130,41 +132,23 @@ def extract_from_file(
         # See Eq. 10
         q = max(8 * (2 - (qf / 50)), 0.2)
 
-    return extract(x1=x1, q=q)
+    return extract(x=x, q=q)
 
 
-def extract(
-    x1: np.ndarray,
+def _extract(
+    x: np.ndarray,
     q: float,
     *,
-    T: np.ndarray = 4,
+    T: int = 4,
+    separable: bool = True,
 ) -> OrderedDict:
-    """Extracts DCTR features from the provided image.
-
-    Note that there can be minor differences during quantization, which is why the Matlab and Python results do not match perfectly.
-
-    :param x1: grayscale image with intensities in range [-128, 127]
-    :type x1:
-    :param q: quantization step
-    :type q: float
-    :param T: truncation threshold. The number of histogram bins is T + 1.
-    :type T:
-    :return: DCTR features of shape [64x25, 5]
-    :rtype:
-
-    :Example:
-
-    >>> # TODO
-    """
-
+    """Python implementation of DCTR, see extract()."""
     # Compute 2D DCT basis patterns as in Eq. 2
     dct_mat = tools.dct.compute_dct_mat()
 
     # Compute DCTR locations to be merged, see Table 1.
     merged_coordinates = get_symmetric_histogram_coordinates()
 
-    # Allocate space for features
-    features = np.zeros((64, len(merged_coordinates), T + 1,))
     features = OrderedDict()
 
     # The bins correspond to values [0, ..., T]
@@ -176,15 +160,21 @@ def extract(
     bin_edges = np.arange(T + 2) - 0.5
 
     for mode_row in np.arange(8):
+        if separable:
+            # The DCT basis is the outer product of dct_mat[mode_row] and dct_mat[mode_col],
+            # the vertical convolution is shared by all modes in the row
+            x_vertical = scipy.signal.convolve2d(x, dct_mat[mode_row][:, None], mode='valid')
+
         for mode_col in np.arange(8):
             # Linear index
             mode_idx = mode_row * 8 + mode_col
 
-            # Get DCT base for current mode
-            DCT_base = np.outer(dct_mat[mode_row], dct_mat[mode_col])
-
             # Obtain DCT residual R by convolution between image in spatial domain the current DCT base
-            R = scipy.signal.convolve2d(x1, DCT_base, mode='valid')
+            if separable:
+                R = scipy.signal.convolve2d(x_vertical, dct_mat[mode_col][None, :], mode='valid')
+            else:
+                DCT_base = np.outer(dct_mat[mode_row], dct_mat[mode_col])
+                R = scipy.signal.convolve2d(x, DCT_base, mode='valid')
 
             # Quantization, rounding, absolute value
             R = np.abs(tools.matlab.round(R / q))
@@ -205,6 +195,58 @@ def extract(
 
                 # Assign to output features array
                 features[f'{mode_idx}_{hist_idx}'] = sub_features / np.sum(sub_features)
-                # features[mode_idx, hist_idx, :] = sub_features / np.sum(sub_features)
 
     return features
+
+
+def extract(
+    x: np.ndarray = None,
+    q: float = None,
+    *,
+    T: int = 4,
+    separable: bool = True,
+    x1: np.ndarray = None,
+) -> OrderedDict:
+    """Extracts DCTR features from the provided image.
+
+    :param x: grayscale image with intensities in range [-128, 127]
+    :type x: np.ndarray
+    :param q: quantization step
+    :type q: float
+    :param T: truncation threshold. The number of histogram bins is T + 1.
+    :type T: int
+    :param separable: compute the convolution with each DCT basis as two 1D convolutions,
+        vertical and horizontal, which is faster and gives the same features.
+        Otherwise as a 2D convolution, as in the original implementation, Python backend only.
+    :type separable: bool
+    :param x1: deprecated, use x
+    :type x1: np.ndarray
+    :return: DCTR features of shape [64x25, 5]
+    :rtype: OrderedDict
+
+    :Examples:
+
+    By default, this function uses the Rust implementation. To use the Python implementation, type
+
+    >>> with sw.BACKEND_PYTHON:
+    >>>     features = sw.dctr.extract(x, q)
+    """
+    if x1 is not None:
+        warnings.warn('parameter x1 is deprecated, use x', DeprecationWarning, stacklevel=2)
+        if x is not None:
+            raise TypeError('both x and x1 given')
+        x = x1
+    if x is None or q is None:
+        raise TypeError('x and q must be given')
+
+    # choose implementation
+    backend = tools.get_backend()
+    if backend == tools.BACKEND_RUST:
+        if not separable:
+            raise NotImplementedError('Rust backend computes separable convolutions only')
+        x = np.ascontiguousarray(x, dtype=np.float64)
+        return OrderedDict(rs.extract(x=x, q=float(q), T=T, dct_mat=tools.dct.compute_dct_mat()))
+    elif backend == tools.BACKEND_PYTHON:
+        return _extract(x, q, T=T, separable=separable)
+    else:
+        raise NotImplementedError(f'unknown backend {backend}')

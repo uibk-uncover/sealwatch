@@ -120,6 +120,8 @@ GFR
 
 .. autofunction:: sealwatch.gfr.extract_from_file
 
+.. autofunction:: sealwatch.gfr.compute_gabor_kernels
+
 .. autoclass:: sealwatch.gfr.Implementation
    :members: GFR_ORIGINAL, GFR_FIX
 
