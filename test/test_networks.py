@@ -193,7 +193,7 @@ class TestNetworks(unittest.TestCase):
         # fresh interpreter, dependencies imported first
         code = (
             'import warnings, h5py, jpeglib, numpy, pandas, PIL, scipy, scipy.special, scipy.stats, '
-            'timm, torch, torchvision, tqdm; '
+            'torch, torchvision, tqdm; '
             'filters = list(warnings.filters); '
             'import sealwatch; '
             'assert filters == list(warnings.filters), "warning filters changed"'
