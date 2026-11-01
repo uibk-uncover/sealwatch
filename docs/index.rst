@@ -1,14 +1,14 @@
 :html_theme.sidebar_secondary.remove:
 
-.. image:: static/seal.png
-   :width: 180px
-   :align: center
-   :alt: sealwatch
-
 .. rst-class:: hero-title
 
 sealwatch
 =========
+
+.. image:: static/seal.png
+   :width: 120px
+   :class: hero-logo
+   :alt: sealwatch
 
 .. rst-class:: hero-tagline
 
