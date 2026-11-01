@@ -17,7 +17,6 @@ dependencies = [
   "h5py",
   "pandas",
   "pillow",
-  "timm",
   "torch",
   "torchvision",
   "tqdm"
@@ -63,6 +62,8 @@ dev = [
     "parameterized",
     "conseal",
     "scikit-learn",
+    # reference EfficientNet in tests
+    "timm",
     # reference metrics of DDELab in tests
     "lightning-utilities",
     "torchmetrics",

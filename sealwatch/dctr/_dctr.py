@@ -26,7 +26,6 @@ from typing import Union, List
 import warnings
 
 from .. import tools
-from .._sealwatch import dctr as rs
 
 
 def get_symmetric_histogram_coordinates() -> List[List]:
@@ -217,7 +216,7 @@ def extract(
     :type T: int
     :param separable: compute the convolution with each DCT basis as two 1D convolutions,
         vertical and horizontal, which is faster and gives the same features.
-        Otherwise as a 2D convolution, as in the original implementation, Python backend only.
+        Otherwise as a 2D convolution, as in the original implementation, in Python.
     :type separable: bool
     :param x1: deprecated, use x
     :type x1: np.ndarray
@@ -239,14 +238,14 @@ def extract(
     if x is None or q is None:
         raise TypeError('x and q must be given')
 
-    # choose implementation
+    # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()
-    if backend == tools.BACKEND_RUST:
-        if not separable:
-            raise NotImplementedError('Rust backend computes separable convolutions only')
+    rs = tools.rust_module('dctr')
+    rust_supported = separable and min(np.shape(x)) >= 8  # only separable in Rust
+    if backend == tools.BACKEND_RUST and rs is not None and rust_supported:
         x = np.ascontiguousarray(x, dtype=np.float64)
         return OrderedDict(rs.extract(x=x, q=float(q), T=T, dct_mat=tools.dct.compute_dct_mat()))
-    elif backend == tools.BACKEND_PYTHON:
+    elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         return _extract(x, q, T=T, separable=separable)
     else:
         raise NotImplementedError(f'unknown backend {backend}')

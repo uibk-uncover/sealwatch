@@ -104,19 +104,17 @@ class TestSpam(unittest.TestCase):
             print('SPAM python:', end - start, 's')
 
     def test_type(self):
-        self._logger.info('TestSpam.test_extract_rs()')
-        #
+        """Inputs other than uint8 need rounding, also when falling back from Rust to Python."""
+        self._logger.info('TestSpam.test_type()')
         path = defs.COVER_UNCOMPRESSED_GRAY_DIR / 'seal1.png'
+        x0 = np.array(Image.open(path)).astype('float32')
         with sw.BACKEND_RUST:
-            x0 = np.array(Image.open(path)).astype('float32')
-            try:
-                sw.tools.flatten(sw.spam.extract(x0))
-            except TypeError:
-                raised = True
-            else:
-                raised = False
-        #
-        self.assertTrue(raised)
+            with self.assertRaises(TypeError):
+                sw.spam.extract(x0)
+            f_rs = sw.spam.extract(x0, rounded=True)
+        with sw.BACKEND_PYTHON:
+            f_py = sw.spam.extract(x0, rounded=True)
+        np.testing.assert_array_equal(sw.tools.flatten(f_rs), sw.tools.flatten(f_py))
 
 
 

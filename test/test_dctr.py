@@ -72,10 +72,15 @@ class TestDctr(unittest.TestCase):
             self.assertEqual(f_py[k].dtype, f_rs[k].dtype, k)
             np.testing.assert_array_equal(f_py[k], f_rs[k], err_msg=k)
 
-    def test_rs_separable_only(self):
+    def test_rs_fallback(self):
+        """Rust backend falls back to Python for the 2D convolution."""
+        x = np.random.default_rng(12345).normal(0, 30, (40, 40))
         with sw.BACKEND_RUST:
-            with self.assertRaises(NotImplementedError):
-                sw.dctr.extract(np.zeros((16, 16)), 4.0, separable=False)
+            f_rs = sw.dctr.extract(x, 4.0, separable=False)
+        with sw.BACKEND_PYTHON:
+            f_py = sw.dctr.extract(x, 4.0, separable=False)
+        for k in f_py:
+            np.testing.assert_array_equal(f_rs[k], f_py[k], err_msg=k)
 
     def test_deprecated_x1(self):
         x = np.random.default_rng(12345).normal(0, 30, (40, 40))

@@ -298,7 +298,7 @@ def extract(
     implementation: Implementation = Implementation.PHARM_FIX,
     q: float = 5,
     T: int = 2,
-    num_projections: int = 100,
+    num_projections: int = 900,
     maximum_projection_size: int = 8,
     first_order_residuals: bool = True,
     second_order_residuals: bool = True,
@@ -325,7 +325,7 @@ def extract(
     :type q: float
     :param T: truncation threshold
     :type T: int
-    :param num_projections: number of random projection matrices. The original implementation defaults to 900, but we use 100 for speed reasons.
+    :param num_projections: number of random projection matrices, 900 as in the original implementation.
     :type num_projections: int
     :param maximum_projection_size: maximum spatial size of each projection matrix
     :type maximum_projection_size: int

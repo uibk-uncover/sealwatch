@@ -11,7 +11,6 @@ from PIL import Image
 from typing import Union
 
 from . import spam as py
-from .._sealwatch import spam as rs
 from .. import tools
 
 
@@ -43,16 +42,13 @@ def extract(
     >>> with sw.BACKEND_PYTHON:
     >>>     features = sw.spam.extract(x)
     """
-    # choose implementation
+    # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()
-    if backend == tools.BACKEND_RUST:
-        # check types
-        if x.dtype != np.uint8:
-            raise TypeError('parameter x must be uint8')
-        #
+    rs = tools.rust_module('spam')
+    if backend == tools.BACKEND_RUST and rs is not None and x.dtype == np.uint8:
         features = rs.extract(x=x, T=T, rounded=rounded)
 
-    elif backend == tools.BACKEND_PYTHON:
+    elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         # check types
         if x.dtype != np.uint8 and not rounded:
             raise TypeError('parameter x must be uint8 or rounding must be on')

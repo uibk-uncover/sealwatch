@@ -8,7 +8,6 @@ from typing import Union, List, Dict
 from .cooccurrence import all1st, all2nd, all3x3, all3rd, all5x5
 from . import symm
 from .. import tools
-from .._sealwatch import srm as rs
 
 
 # Order of the submodels of each family, as in the original Matlab implementation.
@@ -110,14 +109,14 @@ def extract(
     # copy, missing families without quantization steps
     qs = [list(q) for q in qs] + [[] for _ in range(5 - len(qs))]
 
-    # choose implementation
+    # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()
-    if backend == tools.BACKEND_RUST:
-        if x.dtype != np.uint8:
-            raise TypeError('parameter x must be uint8')
+    rs = tools.rust_module('srm')
+    rust_supported = x.dtype == np.uint8 and min(x.shape) >= 5
+    if backend == tools.BACKEND_RUST and rs is not None and rust_supported:
         q_names = [[f'{q}'.replace('.', '') for q in qs_f] for qs_f in qs]
         return OrderedDict(rs.extract(x1=x, qs=qs, q_names=q_names))
-    elif backend == tools.BACKEND_PYTHON:
+    elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         return _extract(x, qs)
     else:
         raise NotImplementedError(f'unknown backend {backend}')

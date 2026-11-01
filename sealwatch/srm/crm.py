@@ -24,7 +24,6 @@ from .cooccurrence import cooccurrence3_col as Cooc3
 from . import symm
 from . import srm
 from .. import tools
-from .._sealwatch import crm as rs
 
 
 def extract_from_file(
@@ -129,15 +128,17 @@ def extract(
 
     >>> features = sw.tools.flatten(sw.crm.extract(x))
     """
-    # choose implementation
+    # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()
-    if backend == tools.BACKEND_RUST:
-        if x.dtype != np.uint8 or x.ndim != 3 or x.shape[2] != 3:
-            raise TypeError('parameter x must be uint8 of shape [height, width, 3]')
-        if implementation != Implementation.CRM_FIX_MIN24:
-            raise NotImplementedError(f'Rust backend implements CRM_FIX_MIN24 only, got {implementation}')
+    rs = tools.rust_module('crm')
+    rust_supported = (
+        x.dtype == np.uint8 and x.ndim == 3 and x.shape[2] == 3 and min(x.shape[:2]) >= 5
+        and 1 <= Tc <= 7
+        and implementation == Implementation.CRM_FIX_MIN24  # only the fixed version in Rust
+    )
+    if backend == tools.BACKEND_RUST and rs is not None and rust_supported:
         return OrderedDict(rs.extract(x1=x, q=q, q_name=f'{q}'.replace('.', ''), Tc=Tc))
-    elif backend == tools.BACKEND_PYTHON:
+    elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         return _extract(x, q, Tc, implementation)
     else:
         raise NotImplementedError(f'unknown backend {backend}')

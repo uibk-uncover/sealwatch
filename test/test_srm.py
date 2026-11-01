@@ -182,11 +182,17 @@ class TestSRM(unittest.TestCase):
             self.assertEqual(f_py[name].dtype, f_rs[name].dtype, name)
             np.testing.assert_array_equal(f_py[name], f_rs[name], err_msg=name)
 
-    def test_rs_type(self):
-        self._logger.info('TestSRM.test_rs_type()')
+    def test_rs_fallback(self):
+        """Rust backend falls back to Python for inputs other than uint8."""
+        self._logger.info('TestSRM.test_rs_fallback()')
+        x = np.random.default_rng(12345).integers(0, 256, (32, 32)).astype('float64')
         with sw.BACKEND_RUST:
-            with self.assertRaises(TypeError):
-                sw.srm.extract(np.zeros((32, 32), dtype='float64'))
+            f_rs = sw.srm.extract(x)
+        with sw.BACKEND_PYTHON:
+            f_py = sw.srm.extract(x)
+        self.assertEqual(list(f_rs), list(f_py))
+        for k in f_py:
+            np.testing.assert_array_equal(f_rs[k], f_py[k], err_msg=k)
 
     @parameterized.expand([['BACKEND_PYTHON'], ['BACKEND_RUST']])
     def test_order_deterministic(self, backend):

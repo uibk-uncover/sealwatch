@@ -111,12 +111,15 @@ class TestCRM(unittest.TestCase):
             self.assertEqual(f_py[name].dtype, f_rs[name].dtype, name)
             np.testing.assert_array_equal(f_py[name], f_rs[name], err_msg=name)
 
-    def test_rs_type(self):
-        self._logger.info('TestCRM.test_rs_type()')
+    @parameterized.expand([('float32', {}), ('uint8', {'implementation': sw.CRM_ORIGINAL})])
+    def test_rs_fallback(self, dtype, kw):
+        """Rust backend falls back to Python for inputs other than uint8, and for CRM_ORIGINAL."""
+        self._logger.info(f'TestCRM.test_rs_fallback({dtype=}, {kw=})')
+        x = np.random.default_rng(12345).integers(0, 256, (32, 32, 3)).astype(dtype)
         with sw.BACKEND_RUST:
-            with self.assertRaises(TypeError):
-                sw.crm.extract(np.zeros((32, 32), dtype='uint8'))
-            with self.assertRaises(TypeError):
-                sw.crm.extract(np.zeros((32, 32, 3), dtype='float32'))
-            with self.assertRaises(NotImplementedError):
-                sw.crm.extract(np.zeros((32, 32, 3), dtype='uint8'), implementation=sw.CRM_ORIGINAL)
+            f_rs = sw.crm.extract(x, **kw)
+        with sw.BACKEND_PYTHON:
+            f_py = sw.crm.extract(x, **kw)
+        self.assertEqual(list(f_rs), list(f_py))
+        for k in f_py:
+            np.testing.assert_array_equal(f_rs[k], f_py[k], err_msg=k)

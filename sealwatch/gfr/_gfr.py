@@ -27,7 +27,6 @@ import warnings
 
 from .. import dctr
 from .. import tools
-from .._sealwatch import gfr as rs
 
 
 # Standard deviations of the Gaussian factor, one per scale.
@@ -295,16 +294,18 @@ def extract(
     if num_rotations % 2 != 0:
         raise ValueError('Expected number of rotations to be an even number')
 
-    # choose implementation
+    # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()
-    if backend == tools.BACKEND_RUST:
+    rs = tools.rust_module('gfr')
+    rust_supported = min(np.shape(x)) >= 8
+    if backend == tools.BACKEND_RUST and rs is not None and rust_supported:
         return OrderedDict(rs.extract(
             x=np.ascontiguousarray(x, dtype=np.float64),
             kernels=compute_gabor_kernels(num_rotations, implementation=implementation),
             quantization_steps=np.array(quantization_steps, dtype=np.float64),
             T=T,
         ))
-    elif backend == tools.BACKEND_PYTHON:
+    elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         return _extract(
             x,
             num_rotations=num_rotations,
