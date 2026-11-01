@@ -24,7 +24,7 @@ def infere_single(
     The model must be trained; the classifier of
     :func:`EfficientNet.pretrained` without path is untrained.
 
-    :param x: grayscale image of shape [H, W], or color image of shape [H, W, C],
+    :param x: grayscale image of shape [H, W], or color image of shape [H, W, C], in [0, 255],
         matching the in_channels of the model
     :type x: np.ndarray
     :param model: trained model in eval mode

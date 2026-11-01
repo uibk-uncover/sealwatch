@@ -57,7 +57,8 @@ def attack(
 
     The goal of WS steganalysis is to estimate the embedding rate of uniform LSB replacement embedding.
 
-    :param x1:
+    :param x1: grayscale image of shape [height, width], or color image of shape [height, width, channels],
+        integers in [0, 255]
     :type x1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param pixel_predictor:
     :type pixel_predictor:

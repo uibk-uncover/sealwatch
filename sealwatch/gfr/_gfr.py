@@ -255,7 +255,7 @@ def extract(
     """
     Extract the Gabor filter residual features from a given image.
 
-    :param x: decompressed grayscale image with values in range [0, 255]
+    :param x: decompressed grayscale image of shape [height, width], in [0, 255]
     :type x: np.ndarray
     :param num_rotations: number of rotations for Gabor kernel
     :type num_rotations: int

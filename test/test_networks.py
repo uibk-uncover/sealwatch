@@ -33,7 +33,7 @@ FIXED_FILTERS = [
 PRETRAINED = [
     ('xunet', sw.xunet, 1),
     ('ucnet', sw.ucnet, 3),
-    ('srnet', sw.srnet, 1),
+    ('srnet', sw.srnet, 3),
 ]
 
 

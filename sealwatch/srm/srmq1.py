@@ -20,7 +20,7 @@ def extract(
 ) -> Dict[str, np.ndarray]:
     """Extracts spatial rich model for steganalysis.
 
-    :param x: 2D input image
+    :param x: grayscale image of shape [height, width], in [0, 255]
     :type x: np.ndarray
     :return: structured SRMQ1 features
     :rtype: collections.OrderedDict

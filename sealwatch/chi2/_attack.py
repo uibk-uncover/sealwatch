@@ -23,7 +23,7 @@ def attack(
 
     LSB replacement (embedding rate = 1) averages the neighboring histogram bins.
 
-    :param spatial: image pixels, of arbitrary shape
+    :param spatial: image pixels of arbitrary shape, integers in [0, 255]
     :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :returns: distance and p-value,
         distance is the chi2 test statistic between the observed histogram and the stego model.

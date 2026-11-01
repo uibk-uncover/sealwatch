@@ -208,7 +208,7 @@ def extract(
 ) -> OrderedDict:
     """Extracts DCTR features from the provided image.
 
-    :param x: grayscale image with intensities in range [-128, 127]
+    :param x: decompressed grayscale image of shape [height, width], in [-128, 127]
     :type x: np.ndarray
     :param q: quantization step
     :type q: float

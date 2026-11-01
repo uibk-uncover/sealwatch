@@ -170,8 +170,6 @@ cython_debug/
 .cargo
 assets
 
-# reference
-reference
 
 # claude
 .claude

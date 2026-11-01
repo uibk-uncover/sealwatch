@@ -187,10 +187,16 @@ class SpatialPyramidPooling(torch.nn.Module):
 
 
 class PENet(torch.nn.Module):
-    """PENet for arbitrary-size color images, of the given size.
+    """A convolutional neural network with a transformer for steganalysis.
+    Intended for binary classification of stego and cover color images, of the given size.
 
     The relative position bias of the attention is learned for the size,
     so that a trained model applies to images of this size only.
+
+    Introduced in
+    K. Wei, W. Luo, J. Huang.
+    Color image steganalysis based on pixel difference convolution and enhanced transformer with selective pooling.
+    IEEE Transactions on Information Forensics and Security, 2024.
     """
 
     def __init__(
@@ -204,8 +210,7 @@ class PENet(torch.nn.Module):
         head: str = 'paper',
         weight_seed: int = None,
     ):
-        """Constructor.
-
+        """
         :param in_channels: number of input channels
         :type in_channels: int
         :param num_classes: number of output classes
@@ -224,6 +229,12 @@ class PENet(torch.nn.Module):
         :param weight_seed: seed of the random initial weights,
             by default the global random number generator
         :type weight_seed: int
+        :return: randomly initialized PENet instance, to be trained or loaded with trained weights
+        :rtype: PENet
+
+        :Example:
+
+        >>> model = sw.nn.PENet(in_channels=3, num_classes=2, input_size=512)
         """
         super().__init__()
         self.input_size = (input_size, input_size) if isinstance(input_size, int) else tuple(input_size)
@@ -286,10 +297,27 @@ class PENet(torch.nn.Module):
             torch.nn.init.trunc_normal_(module.position_bias, std=.02)
 
     def forward(self, x):
-        """Classifies images of shape [B, C, H, W], with values in [0, 255]."""
+        """Forward pass, returns logits.
+
+        :param x: images of shape [B, C, H, W] in [0, 1],
+            where B is the batch size, C is the number of channels (in_channels),
+            and H and W are the height and width of the images (input_size)
+        :type x: torch.Tensor
+        :return: logits of shape [B, num_classes]
+        :rtype: torch.Tensor
+
+        :Example:
+
+        >>> x = torch.from_numpy(
+        ...     x0.astype('float32') / 255.  # normalize to [0, 1]
+        ... ).permute(2, 0, 1)[None]  # [B, C, H, W]
+        >>> logits = model(x)  # [B, 2]
+        >>> y = torch.softmax(logits, dim=1)[:, 1]  # stego probability
+        """
         if tuple(x.shape[2:]) != self.input_size:
             raise ValueError(f'expected images of size {self.input_size}, got {tuple(x.shape[2:])}')
-        x = self.stem(x)
+        # the stem filters and threshold are for [0, 255], as of the authors
+        x = self.stem(x * 255.)
         x = self.block1(x)
         x = self.block2(x)
         x = self.block3(x)
@@ -326,9 +354,13 @@ class PENet(torch.nn.Module):
         :type device: torch.device
         :param strict: whether the weights must match exactly
         :type strict: bool
-        :param kw: other parameters of the constructor, e.g., input_size, implementation, head
         :return: loaded model in eval mode
         :rtype: PENet
+
+        :Example:
+
+        >>> model = sw.nn.PENet.pretrained("penet.pt", input_size=512)  # no published weights
+        >>> y = sw.nn.infere_single(x0, model)  # stego probability
         """
         if path is None:
             raise ValueError('no trained weights of PENet are published, give the path to a checkpoint')
@@ -436,5 +468,4 @@ def infere_single(
     :return: stego probability
     :rtype: np.ndarray
     """
-    # PENet takes the values in [0, 255]
-    return _common.infere_single(x, model, device=device, normalize=False)
+    return _common.infere_single(x, model, device=device)

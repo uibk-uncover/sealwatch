@@ -18,12 +18,12 @@ def attack(
 ) -> float:
     """Run sample-pair analysis.
 
-    :param cover_spatial:
-    :type cover_spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
+    :param x0: grayscale image of shape [height, width], integers in [0, 255]
+    :type x0: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: embedding rate estimate
     :rtype: float
 
-	:Example:
+    :Example:
 
     >>> spatial = np.array(Image.open('suspicious.png'))
     >>> alpha_hat = sw.spa.attack(spatial)

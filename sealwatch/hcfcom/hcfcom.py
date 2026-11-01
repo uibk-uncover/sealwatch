@@ -75,7 +75,7 @@ def extract(
     Proc. SPIE, Security and Watermarking of Multimedia Contents V, vol. 5020, 2003.
 
     :param x: grayscale image of shape [height, width], or color image of shape [height, width, channels],
-        of uint8 values
+        of uint8 values in [0, 255]
     :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param order: order of the center of mass
     :type order: int

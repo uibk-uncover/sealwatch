@@ -316,8 +316,7 @@ def extract(
     SPIE Electronic Imaging, Media Watermarking, Security, and Forensics XVII, vol. 9409, 2015.
     http://dde.binghamton.edu/vholub/pdf/SPIE15_Phase-Aware_Projection_Model_for_Steganalysis_of_JPEG_Images.pdf
 
-    :param x: decompressed JPEG image
-        of shape [height, width]
+    :param x: decompressed grayscale image of shape [height, width], in [0, 255]
     :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param implementation: implementation of PHARM to use
     :type implementation: `Implementation`

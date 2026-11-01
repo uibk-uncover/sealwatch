@@ -132,39 +132,50 @@ class SPP(nn.Module):
 
 
 class ZhuNet(nn.Module):
+    """A convolutional neural network for steganalysis.
+    Intended for binary classification of stego and cover grayscale images.
+
+    Introduced in
+    R. Zhang, F. Zhu, J. Liu, G. Liu.
+    Depth-wise separable convolutions and multi-level pooling for an efficient spatial CNN-based steganalysis.
+    IEEE Transactions on Information Forensics and Security, 2020.
+
+    :param in_channels: number of channels of the input images, defaults to 1 (grayscale)
+    :type in_channels: int
+    :param num_classes: number of output classes, defaults to 2 (one-hot binary)
+    :type num_classes: int
+    :param weight_seed: seed of the random initial weights,
+        by default the global random number generator
+    :type weight_seed: int
+    :return: randomly initialized ZhuNet instance, to be trained
+    :rtype: ZhuNet
+
+    :Example:
+
+    >>> model = sw.nn.ZhuNet(in_channels=1, num_classes=2)
     """
-    Zhu-Net: A convolutional neural network for steganalysis.
 
-    Architecture (Fig. 1):
-    - Preprocessing with 30 trainable SRM-initialized kernels
-    - 2 separable convolution blocks with a residual connection
-    - 4 basic blocks with BN, ReLU, and average pooling
-    - Spatial pyramid pooling with levels 1x1, 2x2, 4x4
-    - Fully connected layers 2688 -> 1024 -> 2
-
-    Intended for binary classification of stego and cover images.
-    """
-
-    def __init__(self, in_channels: int = 1, num_classes: int = 2) -> None:
+    def __init__(self, in_channels: int = 1, num_classes: int = 2, *, weight_seed: int = None) -> None:
         super().__init__()
-        # preprocessing
-        self.preprocessing = Preprocessing(in_channels)
-        # separable convolutions
-        self.sepconv1 = SepConvBlock(30, use_abs=True)
-        self.sepconv2 = SepConvBlock(30, activation=False)
-        # basic blocks
-        self.block1 = BasicBlock(30, 32)
-        self.block2 = BasicBlock(32, 32)
-        self.block3 = BasicBlock(32, 64)
-        self.block4 = BasicBlock(64, 128, pool=False)
-        # classification
-        self.spp = SPP(levels=(1, 2, 4))
-        self.classifier = nn.Sequential(
-            nn.Linear(128 * self.spp.bins, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, num_classes),
-        )
-        self._init_weights()
+        with _common.seeded(weight_seed):
+            # preprocessing
+            self.preprocessing = Preprocessing(in_channels)
+            # separable convolutions
+            self.sepconv1 = SepConvBlock(30, use_abs=True)
+            self.sepconv2 = SepConvBlock(30, activation=False)
+            # basic blocks
+            self.block1 = BasicBlock(30, 32)
+            self.block2 = BasicBlock(32, 32)
+            self.block3 = BasicBlock(32, 64)
+            self.block4 = BasicBlock(64, 128, pool=False)
+            # classification
+            self.spp = SPP(levels=(1, 2, 4))
+            self.classifier = nn.Sequential(
+                nn.Linear(128 * self.spp.bins, 1024),
+                nn.ReLU(),
+                nn.Linear(1024, num_classes),
+            )
+            self._init_weights()
 
     def _init_weights(self) -> None:
         """He initialization of the convolutions, except the preprocessing."""
@@ -190,7 +201,23 @@ class ZhuNet(nn.Module):
         return x
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass, returns logits."""
+        """Forward pass, returns logits.
+
+        :param x: images of shape [B, C, H, W] in [0, 1],
+            where B is the batch size, C is the number of channels (in_channels),
+            and H and W are the height and width of the images
+        :type x: torch.Tensor
+        :return: logits of shape [B, num_classes]
+        :rtype: torch.Tensor
+
+        :Example:
+
+        >>> x = torch.from_numpy(
+        ...     x0.astype('float32') / 255.  # normalize to [0, 1]
+        ... )[None, None]  # [B, C, H, W]
+        >>> logits = model(x)  # [B, 2]
+        >>> y = torch.softmax(logits, dim=1)[:, 1]  # stego probability
+        """
         x = self.forward_features(x)
         x = self.spp(x)
         return self.classifier(x)

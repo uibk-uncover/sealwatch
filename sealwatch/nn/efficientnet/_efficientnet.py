@@ -188,11 +188,20 @@ class EfficientNet(torch.nn.Module):
         :param weight_seed: seed of the random initial weights,
             by default the global random number generator
         :type weight_seed: int
-        :param drop_rate: dropout rate before the classifier
+        :param drop_rate: dropout rate of the pooled features, before the classifier,
+            during training, defaults to 0 (off)
         :type drop_rate: float
-        :param drop_path_rate: stochastic depth rate of the last block,
-            the earlier blocks increase linearly from zero
+        :param drop_path_rate: probability of skipping the residual branch of a block
+            during training (stochastic depth), per image,
+            increasing linearly from 0 in the first block to this value in the last,
+            defaults to 0 (off)
         :type drop_path_rate: float
+        :return: randomly initialized EfficientNet instance, to be trained or loaded with pretrained weights
+        :rtype: EfficientNet
+
+        :Example:
+
+        >>> model = sw.nn.B0(in_channels=1, num_classes=2)
         """
         super().__init__()
         # stem
@@ -261,6 +270,23 @@ class EfficientNet(torch.nn.Module):
             state_dict[prefix + k[len(f'{prefix}backbone.'):]] = state_dict.pop(k)
 
     def forward(self, x):
+        """Forward pass, returns logits.
+
+        :param x: images of shape [B, C, H, W] in [0, 1],
+            where B is the batch size, C is the number of channels (in_channels),
+            and H and W are the height and width of the images
+        :type x: torch.Tensor
+        :return: logits of shape [B, num_classes]
+        :rtype: torch.Tensor
+
+        :Example:
+
+        >>> x = torch.from_numpy(
+        ...     x0.astype('float32') / 255.  # normalize to [0, 1]
+        ... )[None, None]  # [B, C, H, W]
+        >>> logits = model(x)  # [B, 2]
+        >>> y = torch.softmax(logits, dim=1)[:, 1]  # stego probability
+        """
         x = self.bn1(self.conv_stem(x))
         x = self.blocks(x)
         x = self.bn2(self.conv_head(x))
@@ -288,6 +314,8 @@ class EfficientNet(torch.nn.Module):
         num_classes: int = 2,
         device: torch.device = torch.device('cpu'),
         strict: bool = True,
+        reset_classifier: bool = False,
+        weight_seed: int = None,
         **kw,
     ) -> 'EfficientNet':
         """Loads pretrained model. Downloads if missing.
@@ -307,11 +335,24 @@ class EfficientNet(torch.nn.Module):
         :type device: torch.device
         :param strict: whether the weights must match exactly
         :type strict: bool
+        :param reset_classifier: whether to initialize the FC layer randomly,
+            instead of loading it, e.g., for fine-tuning.
+            Always for the ImageNet weights, as their classifier has 1000 classes.
+        :type reset_classifier: bool
+        :param weight_seed: seed of the random initial weights, i.e., of the FC layer,
+            by default the global random number generator
+        :type weight_seed: int
         :return: loaded model in eval mode
         :rtype: EfficientNet
+
+        :Example:
+
+        >>> model = sw.nn.B0.pretrained()  # ImageNet weights, to be fine-tuned
+        >>> model = sw.nn.B0.pretrained("detector.pt")  # trained detector
+        >>> y = sw.nn.infere_single(x0, model)  # stego probability
         """
         # create model
-        model = cls(in_channels=in_channels, num_classes=num_classes, **kw)
+        model = cls(in_channels=in_channels, num_classes=num_classes, weight_seed=weight_seed, **kw)
 
         if path is None:
             # download weights
@@ -322,13 +363,16 @@ class EfficientNet(torch.nn.Module):
             if state_dict['conv_stem.weight'].size(1) != in_channels:
                 state_dict['conv_stem.weight'] = cls.adapt_input_conv(in_channels, state_dict['conv_stem.weight'])
 
-            # remove FC
-            model_state_dict = model.state_dict()
-            state_dict['classifier.weight'] = model_state_dict['classifier.weight']
-            state_dict['classifier.bias'] = model_state_dict['classifier.bias']
+            # classifier of ImageNet
+            reset_classifier = True
         else:
             source = path
             state_dict = _common.load_state_dict(source)
+
+        # keep FC weights of the random initialization
+        if reset_classifier:
+            state_dict['classifier.weight'] = model.classifier.weight.data
+            state_dict['classifier.bias'] = model.classifier.bias.data
 
         # load weights
         model.load_state_dict(state_dict, strict=strict)
@@ -337,17 +381,30 @@ class EfficientNet(torch.nn.Module):
 
 
 class B0(EfficientNet):
-    """EfficientNet-B0, the baseline network."""
+    """EfficientNet-B0, the baseline network, adapted for steganalysis.
+    Intended for binary classification of stego and cover images.
+
+    Introduced in
+    M. Tan, Q. V. Le.
+    EfficientNet: Rethinking model scaling for convolutional neural networks.
+    International Conference on Machine Learning (ICML), 2019.
+    """
     width_multiplier = 1.
     depth_multiplier = 1.
     weights_url = 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b0_ra-3dd342df.pth'
 
 
 class B4(EfficientNet):
-    """EfficientNet-B4.
+    """EfficientNet-B4, adapted for steganalysis.
+    Intended for binary classification of stego and cover images.
 
     The coefficients of the compound scaling, width 1.4 and depth 1.8,
     are of the official implementation, as the paper gives only the scaling rule.
+
+    Introduced in
+    M. Tan, Q. V. Le.
+    EfficientNet: Rethinking model scaling for convolutional neural networks.
+    International Conference on Machine Learning (ICML), 2019.
     """
     width_multiplier = 1.4
     depth_multiplier = 1.8

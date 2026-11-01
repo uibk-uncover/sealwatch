@@ -44,7 +44,8 @@ def attack(
 
     Pools the estimates for the DCT AC modes 01, 10, and 11.
 
-    :param y1: Stego DCT coefficients.
+    :param y1: quantized stego DCT coefficients
+        of shape [num_vertical_blocks, num_horizontal_blocks, 8, 8]
     :type y1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param qt: quantization table
     :type qt: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__

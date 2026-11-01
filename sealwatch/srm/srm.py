@@ -89,7 +89,7 @@ def extract(
 ) -> Dict[str, np.ndarray]:
     """Extracts spatial rich model for steganalysis.
 
-    :param x: 2D input image
+    :param x: grayscale image of shape [height, width], in [0, 255]
     :type x: np.ndarray
     :param qs: quantization steps of the five residual families,
         1st, 2nd, 3rd order, 3x3, 5x5

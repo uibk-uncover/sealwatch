@@ -1,4 +1,5 @@
 
+import contextlib
 import numpy as np
 from pathlib import Path
 import torch
@@ -59,6 +60,21 @@ def load_state_dict(source: Union[str, Path]) -> Dict:
     return torch.load(path, map_location='cpu', weights_only=True)
 
 
+@contextlib.contextmanager
+def seeded(seed: int = None):
+    """Draws the random numbers of torch from the seed, keeping the global state.
+
+    :param seed: seed, by default the global random number generator is used
+    :type seed: int
+    """
+    if seed is None:
+        yield
+        return
+    with torch.random.fork_rng():
+        torch.manual_seed(seed)
+        yield
+
+
 def infere_single(
     x: np.ndarray,
     model: torch.nn.Module,
@@ -68,7 +84,7 @@ def infere_single(
 ) -> np.ndarray:
     """Runs inference for a single image.
 
-    :param x: grayscale image of shape [H, W], or color image of shape [H, W, C]
+    :param x: grayscale image of shape [H, W], or color image of shape [H, W, C], in [0, 255]
     :type x: np.ndarray
     :param model: model in eval mode, returning two logits (cover, stego)
     :type model: torch.nn.Module

@@ -26,7 +26,7 @@ def extract(
 
     The final feature set has 686 dimensions.
 
-    :param x: 2D ndarray
+    :param x: grayscale image of shape [height, width], in [0, 255]
     :type x: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :param T: truncation threshold
     :type T: int

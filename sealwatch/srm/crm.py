@@ -109,7 +109,7 @@ def extract(
 ) -> Dict[str, np.ndarray]:
     """Extracts color rich model for steganalysis.
 
-    :param x: color input image, of shape [height, width, 3]
+    :param x: color image of shape [height, width, 3], in [0, 255]
     :type x: np.ndarray
     :param q: quantization step
     :type q: float
@@ -120,7 +120,7 @@ def extract(
         CRM_ORIGINAL counts it twice, as the original Matlab implementation by DDE,
         i.e., the submodel s3_minmax24c is doubled.
         The Rust backend implements CRM_FIX_MIN24 only.
-    :type implementation: Implementation
+    :type implementation: :class:`~sealwatch.srm.cooccurrence.Implementation`
     :return: structured CRM features
     :rtype: OrderedDict
 

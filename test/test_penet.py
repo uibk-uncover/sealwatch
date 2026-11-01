@@ -122,7 +122,7 @@ class TestPENet(unittest.TestCase):
         model, reference = self._models()
         x = images()
         with torch.no_grad():
-            torch.testing.assert_close(model.eval()(x), reference.eval()(x))
+            torch.testing.assert_close(model.eval()(x / 255.), reference.eval()(x))
 
     def test_train(self):
         """PENET_ORIGINAL gives the same outputs and gradients as the reference, in training mode."""
@@ -130,7 +130,7 @@ class TestPENet(unittest.TestCase):
         self._require_reference()
         model, reference = self._models()
         x = images()[:2]
-        y, y_ref = model.train()(x), reference.train()(x)
+        y, y_ref = model.train()(x / 255.), reference.train()(x)
         torch.testing.assert_close(y, y_ref)
         y.square().sum().backward()
         y_ref.square().sum().backward()
@@ -180,7 +180,7 @@ class TestPENet(unittest.TestCase):
         self._logger.info(f'TestPENet.test_input_size({size=})')
         model = sw.nn.PENet(input_size=size).eval()
         self.assertEqual(model.transformer.position_bias.shape, bias_shape)
-        x = torch.rand((1, 3) + model.input_size) * 255
+        x = torch.rand((1, 3) + model.input_size)
         with torch.no_grad():
             self.assertEqual(model(x).shape, (1, 2))
 
@@ -209,7 +209,7 @@ class TestPENet(unittest.TestCase):
             model = sw.nn.PENet.pretrained(path, implementation=sw.nn.penet.PENET_ORIGINAL)
         x = images()[:2]
         with torch.no_grad():
-            torch.testing.assert_close(model(x), reference.eval()(x))
+            torch.testing.assert_close(model(x / 255.), reference.eval()(x))
 
     def test_pretrained(self):
         """Checkpoint of PENet loads unchanged."""
@@ -219,7 +219,7 @@ class TestPENet(unittest.TestCase):
             path = os.path.join(tmpdir, 'penet.pt')
             torch.save(model.state_dict(), path)
             model_loaded = sw.nn.PENet.pretrained(path, input_size=64)
-        x = torch.rand(2, 3, 64, 64) * 255
+        x = torch.rand(2, 3, 64, 64)
         with torch.no_grad():
             torch.testing.assert_close(model_loaded(x), model(x), rtol=0, atol=0)
 
@@ -232,7 +232,7 @@ class TestPENet(unittest.TestCase):
             torch.save(model.state_dict(), path)
             model_linear = sw.nn.PENet.pretrained(path, input_size=64, head='linear')
         self.assertEqual(model_linear.head, 'linear')
-        x = torch.rand(2, 3, 64, 64) * 255
+        x = torch.rand(2, 3, 64, 64)
         with torch.no_grad():
             # float32 rounding of the merged head, see test_merge_head
             torch.testing.assert_close(model_linear(x), model(x), rtol=1e-5, atol=1e-6)
@@ -256,19 +256,19 @@ class TestPENet(unittest.TestCase):
         model = sw.nn.PENet(input_size=64, weight_seed=12345).double().eval()
         model_linear = sw.nn.PENet(input_size=64, head='linear').double().eval()
         model_linear.load_state_dict(sw.nn.penet.merge_head(model.state_dict()), strict=True)
-        x = torch.rand(4, 3, 64, 64, dtype=torch.float64) * 255
+        x = torch.rand(4, 3, 64, 64, dtype=torch.float64)
         with torch.no_grad():
             # same up to rounding, as (W2 W1) x and W2 (W1 x) are computed in different order
             torch.testing.assert_close(model_linear(x), model(x), rtol=1e-12, atol=1e-12)
 
     def test_infere_single(self):
-        """Single image in [0, 255], as the model."""
+        """Single image in [0, 255], the model in [0, 1]."""
         self._logger.info('TestPENet.test_infere_single()')
         model = sw.nn.PENet(input_size=256, weight_seed=12345).eval()
         x = images(256)[0]
         y = sw.nn.penet.infere_single(x.permute(1, 2, 0).numpy(), model)
         with torch.no_grad():
-            y_ref = torch.softmax(model(x[None]), dim=1)[0, 1]
+            y_ref = torch.softmax(model(x[None] / 255.), dim=1)[0, 1]
         self.assertAlmostEqual(float(y), float(y_ref), places=5)
 
     def test_weight_seed(self):
