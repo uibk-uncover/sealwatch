@@ -163,6 +163,18 @@ Detectors
 
 .. autofunction:: sealwatch.efficientnet.infere_single
 
+.. autoclass:: sealwatch.nn.penet.PENet
+   :members: forward, pretrained
+
+.. autoclass:: sealwatch.nn.penet.Implementation
+   :members: PENET_ORIGINAL, PENET_FIX
+
+.. autofunction:: sealwatch.nn.penet.convert_state_dict
+
+.. autofunction:: sealwatch.nn.penet.merge_head
+
+.. autofunction:: sealwatch.nn.penet.infere_single
+
 Helper functions
 """"""""""""""""
 
