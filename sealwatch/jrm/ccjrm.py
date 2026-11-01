@@ -38,6 +38,11 @@ def extract(
     :type qt: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: cc-JRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 22510
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> jpeg1 = jpeglib.read_dct('seal1.jpg')
+    >>> features = sw.ccjrm.extract(jpeg1.Y, qt=jpeg1.qt[0])
     """
     return jrm.extract(y1=y1, calibrated=True, qt=qt)
 
@@ -55,8 +60,12 @@ def extract_from_file(
     http://dde.binghamton.edu/kodovsky/pdf/SPIE2012_Kodovsky_Steganalysis_of_JPEG_Images_Using_Rich_Models_paper.pdf
 
     :param path: path to JPEG image
-    :type path:
+    :type path: str or pathlib.Path
     :return: cc-JRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 22510
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.ccjrm.extract_from_file('seal1.jpg')
     """
     return jrm.extract_from_file(path=path, calibrated=True)

@@ -145,6 +145,11 @@ def extract(
     :type qt: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: JRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 11255
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> jpeg1 = jpeglib.read_dct('seal1.jpg')
+    >>> features = sw.jrm.extract(jpeg1.Y, qt=jpeg1.qt[0])
     """
 
     # extract features
@@ -183,6 +188,10 @@ def extract_from_file(
     :type calibrated: bool
     :return: JRM features as ordered dict, where the keys are the names of the submodels. All submodels together have dimensionality 11255
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.jrm.extract_from_file('seal1.jpg')
     """
     # read file
     jpeg1 = jpeglib.read_dct(path)

@@ -36,5 +36,11 @@ def extract(
     :type x: np.ndarray
     :return: structured SRMQ1 features
     :rtype: collections.OrderedDict
+
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
+
+    :Example:
+
+    >>> features = sw.srmq1.extract(x)
     """
     return srm.extract(x, **kw, qs=[[1]]*5)

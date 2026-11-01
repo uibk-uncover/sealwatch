@@ -33,14 +33,11 @@ def extract(
     :return: ordered dict containing 686 feature dimensions in total.
     :rtype: collections.OrderedDict
 
-    :Examples:
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
+
+    :Example:
 
     >>> features = sw.spam.extract(x)
-
-    By default, this function uses Rust-accelerated backend. To use the (substantially slower) Python implementation, type
-
-    >>> with sw.BACKEND_PYTHON:
-    >>>     features = sw.spam.extract(x)
     """
     # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()

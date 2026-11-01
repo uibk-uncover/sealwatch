@@ -136,9 +136,11 @@ def extract(
     :return: structured CRM features
     :rtype: collections.OrderedDict
 
-    :Examples:
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
 
-    >>> features = sw.tools.flatten(sw.crm.extract(x))
+    :Example:
+
+    >>> features = sw.crm.extract(x)
     """
     # choose implementation, Python if Rust is not available or does not support the input
     backend = tools.get_backend()

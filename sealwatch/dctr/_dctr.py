@@ -116,6 +116,10 @@ def extract_from_file(
     :return: DCTR features
         of shape [64x25, 5]
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.dctr.extract_from_file('seal1.jpg', qf=75)
     """
 
     # Decompress image to spatial domain
@@ -223,12 +227,12 @@ def extract(
     :return: DCTR features of shape [64x25, 5]
     :rtype: collections.OrderedDict
 
-    :Examples:
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
 
-    By default, this function uses the Rust implementation. To use the Python implementation, type
+    :Example:
 
-    >>> with sw.BACKEND_PYTHON:
-    >>>     features = sw.dctr.extract(x, q)
+    >>> x = sw.tools.jpeg.decompress_from_file('seal1.jpg') - 128
+    >>> features = sw.dctr.extract(x, q=4)  # quantization step of quality 75
     """
     if x1 is not None:
         warnings.warn('parameter x1 is deprecated, use x', DeprecationWarning, stacklevel=2)

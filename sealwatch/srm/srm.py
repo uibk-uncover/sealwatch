@@ -109,12 +109,11 @@ def extract(
     :return: structured SRM features, ordered as the original Matlab implementation
     :rtype: collections.OrderedDict
 
-    :Examples:
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
 
-    By default, this function uses the Python implementation. To use the (substantially faster) Rust implementation, type
+    :Example:
 
-    >>> with sw.BACKEND_RUST:
-    >>>     features = sw.srm.extract(x)
+    >>> features = sw.srm.extract(x)
     """
     assert len(x.shape) == 2, 'single channel expected'
     assert len(qs) <= 5, f'invalid quantization steps {qs=}'

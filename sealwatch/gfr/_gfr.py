@@ -273,12 +273,12 @@ def extract(
         Use sw.tools.flatten() to obtain a 1D feature descriptor.
     :rtype: collections.OrderedDict
 
-    :Examples:
+    The Rust implementation is used by default, see :doc:`/guide/backends`.
 
-    By default, this function uses the Rust implementation. To use the Python implementation, type
+    :Example:
 
-    >>> with sw.BACKEND_PYTHON:
-    >>>     features = sw.gfr.extract(x)
+    >>> x = sw.tools.jpeg.decompress_from_file('seal1.jpg')
+    >>> features = sw.gfr.extract(x)
     """
     if img is not None:
         warnings.warn('parameter img is deprecated, use x', DeprecationWarning, stacklevel=2)
@@ -336,6 +336,10 @@ def extract_from_file(
     :param implementation:
     :return: extracted Gabor features, see extract()
     :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.gfr.extract_from_file('seal1.jpg', qf=75)
     """
     if quantization_steps is not None:
         if not len(quantization_steps) == 4:
