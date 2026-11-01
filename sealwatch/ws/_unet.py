@@ -14,6 +14,10 @@ from typing import Callable
 from ..nn import _common
 
 
+# weights of the U-Net, trained against LSB replacement at 0.4 bpp
+MODEL_NAME = '240222160214-2804736-unet_2-alpha_0.400_grayscale_l1ws_0.25_lr_0.0001_.pt.tar'
+
+
 class UNet(nn.Module):
     def __init__(
         self,
@@ -167,7 +171,7 @@ def infere_single(
 def pretrained(
     model_path: str = None,
     *,
-    model_name: str = '240222160214-2804736-unet_2-alpha_0.400_grayscale_l1ws_0.25_lr_0.0001_.pt.tar',
+    model_name: str = MODEL_NAME,
     device: torch.nn.Module = torch.device('cpu')
 ):
     # model
@@ -188,9 +192,38 @@ def pretrained(
     return model
 
 
-def unet_estimator(*args, **kw):
+def unet_estimator(
+    model_path: str = None,
+    *,
+    model_name: str = MODEL_NAME,
+) -> Callable:
+    """Pixel predictor for WS, a U-Net trained to predict the cover pixels,
+    so that WS estimates the change rate accurately.
+
+    The U-Net takes grayscale images of 512x512 pixels.
+
+    Introduced in
+    M. Beneš, R. Böhme.
+    Exploring diffusion-inspired pixel predictors for WS steganalysis.
+    ACM Workshop on Information Hiding and Multimedia Security (IH&MMSec), 2024.
+
+    :param model_path: directory with the weights,
+        by default downloads them once into the torch hub cache
+    :type model_path: str
+    :param model_name: file name of the weights
+    :type model_name: str
+    :return: pixel predictor for :func:`attack`,
+        taking the image of shape [height, width, channels]
+        and returning the prediction of shape [height - 2, width - 2, 1]
+    :rtype: callable
+
+    :Example:
+
+    >>> predictor = sw.ws.unet_estimator()
+    >>> beta_hat = sw.ws.attack(x1, pixel_predictor=predictor)
+    """
     # load model
-    model = pretrained(*args, **kw)
+    model = pretrained(model_path, model_name=model_name)
     device = torch.device('cpu')
 
     def predict(x):

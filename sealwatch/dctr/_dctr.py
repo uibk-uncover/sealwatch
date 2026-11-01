@@ -112,10 +112,10 @@ def extract_from_file(
     :param path: path to JPEG image
     :type path: str
     :param qf: JPEG quality factor used to determine the quantization step
-    :type qf:
+    :type qf: int
     :return: DCTR features
         of shape [64x25, 5]
-    :rtype:
+    :rtype: collections.OrderedDict
     """
 
     # Decompress image to spatial domain
@@ -221,7 +221,7 @@ def extract(
     :param x1: deprecated, use x
     :type x1: np.ndarray
     :return: DCTR features of shape [64x25, 5]
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
 
     :Examples:
 

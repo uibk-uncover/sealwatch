@@ -44,6 +44,11 @@ def attack(
 
     Pools the estimates for the DCT AC modes 01, 10, and 11.
 
+    Introduced in
+    J. Fridrich, M. Goljan, D. Hogea.
+    Steganalysis of JPEG images: Breaking the F5 algorithm.
+    Information Hiding, Lecture Notes in Computer Science, vol. 2578, 2002.
+
     :param y1: quantized stego DCT coefficients
         of shape [num_vertical_blocks, num_horizontal_blocks, 8, 8]
     :type y1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__

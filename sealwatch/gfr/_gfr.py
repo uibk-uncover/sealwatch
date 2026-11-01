@@ -271,7 +271,7 @@ def extract(
     :return: extracted Gabor features, one histogram of T + 1 values per key "{phase}_{scale}_{rotation}_{hist}",
         indexing the phase shifts, scales, merged rotations (num_rotations / 2 + 1) and merged DCTR phases (25).
         Use sw.tools.flatten() to obtain a 1D feature descriptor.
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
 
     :Examples:
 
@@ -335,7 +335,7 @@ def extract_from_file(
     :param T: truncation threshold
     :param implementation:
     :return: extracted Gabor features, see extract()
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
     """
     if quantization_steps is not None:
         if not len(quantization_steps) == 4:

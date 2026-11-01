@@ -87,7 +87,7 @@ class TestPENet(unittest.TestCase):
         reference.apply(self.reference.initWeights)
         # the position bias is not initialized in the reference
         torch.nn.init.trunc_normal_(reference.entrans.B, std=.02)
-        model = sw.nn.PENet(implementation=sw.nn.penet.PENET_ORIGINAL)
+        model = sw.nn.PENet(implementation=sw.PENET_ORIGINAL)
         model.load_state_dict(sw.nn.penet.convert_state_dict(reference.state_dict()), strict=True)
         return model, reference
 
@@ -104,7 +104,7 @@ class TestPENet(unittest.TestCase):
         self._require_reference()
         reference = self.reference.Net()
         state_dict = sw.nn.penet.convert_state_dict(reference.state_dict())
-        model = sw.nn.PENet(implementation=sw.nn.penet.PENET_ORIGINAL)
+        model = sw.nn.PENet(implementation=sw.PENET_ORIGINAL)
         self.assertEqual(set(state_dict), set(model.state_dict()))
         for k, v in model.state_dict().items():
             self.assertEqual(v.shape, state_dict[k].shape, k)
@@ -157,7 +157,7 @@ class TestPENet(unittest.TestCase):
     def test_batch_independent(self):
         """The output of an image does not depend on the other images in the batch."""
         self._logger.info('TestPENet.test_batch_independent()')
-        transformer = self._transformer(sw.nn.penet.PENET_FIX)
+        transformer = self._transformer(sw.PENET_FIX)
         x = torch.randn(3, 256, 16, 16)
         with torch.no_grad():
             torch.testing.assert_close(transformer(x)[:1], transformer(x[:1]))
@@ -165,7 +165,7 @@ class TestPENet(unittest.TestCase):
     def test_batch_dependent_original(self):
         """PENET_ORIGINAL normalizes the queries over the batch, so that the output depends on it."""
         self._logger.info('TestPENet.test_batch_dependent_original()')
-        transformer = self._transformer(sw.nn.penet.PENET_ORIGINAL)
+        transformer = self._transformer(sw.PENET_ORIGINAL)
         x = torch.randn(3, 256, 16, 16)
         with torch.no_grad():
             self.assertGreater((transformer(x)[:1] - transformer(x[:1])).abs().max(), 1e-3)
@@ -206,7 +206,7 @@ class TestPENet(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, 'penet.pt')
             torch.save({'original_state': reference.state_dict(), 'epoch': 1}, path)
-            model = sw.nn.PENet.pretrained(path, implementation=sw.nn.penet.PENET_ORIGINAL)
+            model = sw.nn.PENet.pretrained(path, implementation=sw.PENET_ORIGINAL)
         x = images()[:2]
         with torch.no_grad():
             torch.testing.assert_close(model(x / 255.), reference.eval()(x))

@@ -23,14 +23,17 @@ def attack(
 
     LSB replacement (embedding rate = 1) averages the neighboring histogram bins.
 
+    Introduced in
+    A. Westfeld, A. Pfitzmann.
+    Attacks on steganographic systems: Breaking the steganographic utilities EzStego, Jsteg, Steganos,
+    and S-Tools - and some lessons learned.
+    Information Hiding, Lecture Notes in Computer Science, vol. 1768, 2000.
+
     :param spatial: image pixels of arbitrary shape, integers in [0, 255]
     :type spatial: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
-    :returns: distance and p-value,
-        distance is the chi2 test statistic between the observed histogram and the stego model.
-        A small distance means that the image matches the model (e.g., because it was embedded with LSB replacement).
-        The p-value turns the score into a probability.
-        A p-value of 0 means that the image contains no steganography.
-        p-value of 1 indicates that the image contains LSBR steganography.
+    :return: chi2 distance to the histogram after LSB replacement, small for stego,
+        and its p-value, close to 1 after LSB replacement of all pixels
+    :rtype: tuple of float
     """
     # Calculate histogram
     h, bin_edges = np.histogram(spatial.flatten(), bins=np.arange(0, 2**8+1))

@@ -30,6 +30,18 @@ def extract_from_file(
     path: Union[str, Path],
     **kw,
 ) -> Dict[str, np.ndarray]:
+    """Extract CRM features from a color image file, decoded with PIL.
+
+    :param path: a color image, e.g., PNG
+    :type path: str or pathlib.Path
+    :param kw: other parameters of extract()
+    :return: CRM features, see extract()
+    :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.crm.extract_from_file('seal1.png')
+    """
     img = np.array(Image.open(path))
     return extract(img, **kw)
 
@@ -122,7 +134,7 @@ def extract(
         The Rust backend implements CRM_FIX_MIN24 only.
     :type implementation: :class:`~sealwatch.srm.cooccurrence.Implementation`
     :return: structured CRM features
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
 
     :Examples:
 

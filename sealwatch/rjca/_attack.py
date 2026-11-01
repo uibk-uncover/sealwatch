@@ -24,6 +24,11 @@ def attack(
     Rounding error should be around 0.04-0.07.
     For stego, it grows towards 0.08333 (1/12).
 
+    Introduced in
+    J. Butora, J. Fridrich.
+    Reverse JPEG compatibility attack.
+    IEEE Transactions on Information Forensics and Security, vol. 15, 2020.
+
     :param y1: quantized cover DCT coefficients
         of shape [num_vertical_blocks, num_horizontal_blocks, 8, 8]
     :type y1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__

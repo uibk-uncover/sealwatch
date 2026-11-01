@@ -47,7 +47,7 @@ PENet
 .. autoclass:: sealwatch.nn.PENet
    :members: forward, pretrained
 
-.. autoclass:: sealwatch.nn.Implementation
+.. autoclass:: sealwatch.nn.penet.Implementation
    :members: PENET_ORIGINAL, PENET_FIX
 
 

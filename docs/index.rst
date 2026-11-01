@@ -12,9 +12,9 @@ sealwatch
 
 .. rst-class:: hero-tagline
 
-Modern steganalysis in Python.
+Making research in steganalysis reproducible and accessible.
 
-**sealwatch** is a Python package implementing modern image steganalysis algorithms,
+**sealwatch** is a Python package implementing modern image steganalysis detectors, both analytical and learning-based,
 for JPEG and spatial images.
 
 .. code-block:: console
@@ -47,7 +47,7 @@ for JPEG and spatial images.
       :link: faq
       :link-type: doc
 
-      Contributing and common questions.
+      Contributing, scope of the package, and common questions.
 
 
 Quick start

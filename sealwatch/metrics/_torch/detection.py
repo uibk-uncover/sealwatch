@@ -132,9 +132,13 @@ def _delegate(numpy_cls: type) -> type:
         '__module__': __name__,
     }
     # functions of the metric, e.g., roc or optimal_pe
-    for attr in ('roc', 'roc_quantile', 'given_pe', 'optimal_pe', 'auc', 'fnr_at_fpr', 'wauc_fix_direction', 'wauc_alaska'):
+    for attr in ('roc', 'roc_quantile', 'given_pe', 'optimal_pe', 'eer', 'auc', 'fnr_at_fpr', 'wauc_fix_direction', 'wauc_alaska'):
         if hasattr(numpy_cls, attr):
             namespace[attr] = _wrap(getattr(numpy_cls, attr))
+    # results besides avg, e.g., tau of P_E
+    for attr in ('tau',):
+        if hasattr(numpy_cls, attr):
+            namespace[attr] = property(lambda self, attr=attr: float(getattr(self.to_numpy(), attr)))
     cls = type(numpy_cls.__name__, (DetectionMeter,), namespace)
     return register_meter(
         name=numpy_cls.name,
@@ -152,3 +156,4 @@ PEMeter = _delegate(_numpy.PEMeter)
 AUCMeter = _delegate(_numpy.AUCMeter)
 wAUCMeter = _delegate(_numpy.wAUCMeter)
 FNRatFPRMeter = _delegate(_numpy.FNRatFPRMeter)
+EERMeter = _delegate(_numpy.EERMeter)

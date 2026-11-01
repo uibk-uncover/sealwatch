@@ -11,6 +11,18 @@ def extract_from_file(
     path: Union[str, Path],
     **kw,
 ) -> Dict[str, np.ndarray]:
+    """Extract SRMQ1 features from a grayscale image file, decoded with PIL.
+
+    :param path: a grayscale image, e.g., PNG
+    :type path: str or pathlib.Path
+    :param kw: other parameters of extract()
+    :return: SRMQ1 features, see extract()
+    :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.srmq1.extract_from_file('seal1.png')
+    """
     return srm.extract_from_file(path=path, **kw, qs=[[1]]*5)
 
 

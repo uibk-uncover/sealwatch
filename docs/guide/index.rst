@@ -1,13 +1,16 @@
 User guide
 ==========
 
-The guide explains how to load a suspicious image
-and how to train a detector.
-For a first example, see the `title page <../index.html#quick-start>`__.
+The guide explains how to load a suspicious image,
+how to attack it analytically, and how to train and evaluate a detector.
+For a first example, see the :ref:`title page <index:Quick start>`.
 
 .. toctree::
    :maxdepth: 1
 
    loading
+   attacks
    features
    detector
+   metrics
+   backends

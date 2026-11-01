@@ -4,7 +4,7 @@ Implementation of PENet, as described in
 K. Wei, W. Luo, and J. Huang, Color Image Steganalysis Based on Pixel Difference Convolution
 and Enhanced Transformer With Selective Pooling.
 IEEE Transactions on Information Forensics and Security, vol. 19, pp. 9970-9983, 2024.
-https://doi.org/10.1109/TIFS.2024.3478825
+https://doi.org/10.1109/TIFS.2024.3486027
 
 The network for arbitrary-size images, with spatial pyramid pooling.
 The authors' implementation is https://github.com/revere7/PENet_Steganalysis
@@ -217,7 +217,7 @@ class PENet(torch.nn.Module):
         :type num_classes: int
         :param input_size: height and width of the input images, 512 in the paper
         :type input_size: int or tuple
-        :param implementation: implementation of PENet
+        :param implementation: implementation of PENet, sw.PENET_FIX or sw.PENET_ORIGINAL
         :type implementation: `Implementation`
         :param eta: weight of the pixel difference in PDConv, Eq. 5 of the paper,
             0.5 in the authors' implementation

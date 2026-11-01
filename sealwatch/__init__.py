@@ -93,6 +93,8 @@ __all__ = [
 # moved to sealwatch.nn, deprecated
 _NN_MODULES = ('efficientnet', 'srnet', 'ucnet', 'xunet', 'zhunet')
 _NN_CLASSES = ('B0', 'B4', 'SRNet', 'UcNet', 'XuNet', 'ZhuNet')
+# implementations of PENet, e.g., sw.PENET_FIX
+_NN_CONSTANTS = ('PENET_ORIGINAL', 'PENET_FIX')
 
 
 def __getattr__(name: str):
@@ -111,4 +113,6 @@ def __getattr__(name: str):
             stacklevel=2,
         )
         return getattr(importlib.import_module('.nn', __name__), name)
+    if name in _NN_CONSTANTS:
+        return getattr(importlib.import_module('.nn.penet', __name__), name)
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

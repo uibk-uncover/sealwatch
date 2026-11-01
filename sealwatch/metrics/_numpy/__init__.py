@@ -8,6 +8,6 @@ from . import common
 from . import detection
 from . import prediction
 
-from .detection import AccuracyMeter, MisclassificationMeter, PrecisionMeter, RecallMeter, PEMeter, FNRatFPRMeter, AUCMeter, wAUCMeter
+from .detection import AccuracyMeter, MisclassificationMeter, PrecisionMeter, RecallMeter, PEMeter, FNRatFPRMeter, EERMeter, AUCMeter, wAUCMeter
 from .prediction import LossMeter, MSEMeter, MAEMeter, PSNRMeter, WSMeter
 from .scalar import ScalarMeter

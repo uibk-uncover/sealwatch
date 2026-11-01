@@ -57,17 +57,41 @@ def attack(
 
     The goal of WS steganalysis is to estimate the embedding rate of uniform LSB replacement embedding.
 
+    Introduced in
+    J. Fridrich, M. Goljan.
+    On estimation of secret message length in LSB steganography in spatial domain.
+    Security, Steganography, and Watermarking of Multimedia Contents VI, Proc. SPIE, vol. 5306, 2004.
+
+    Revisited in
+    A. D. Ker, R. Böhme.
+    Revisiting weighted stego-image steganalysis.
+    Security, Forensics, Steganography, and Watermarking of Multimedia Contents X, Proc. SPIE, vol. 6819, 2008.
+
     :param x1: grayscale image of shape [height, width], or color image of shape [height, width, channels],
         integers in [0, 255]
     :type x1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
-    :param pixel_predictor:
-    :type pixel_predictor:
-    :param correct_bias:
+    :param pixel_predictor: predictor of each pixel from its neighbors,
+        'KB' for the predictor of Ker and Böhme, 'AVG' for the average of the 8 neighbors,
+        or a callable, taking the image of shape [height, width, channels]
+        and returning the prediction of shape [height - 2, width - 2, 1],
+        e.g., the U-Net of unet_estimator()
+    :type pixel_predictor: str or callable
+    :param correct_bias: whether to correct the bias of the estimate, as of Ker and Böhme
     :type correct_bias: bool
-    :param weighted:
+    :param weighted: whether to weight the pixels by their local variance, flat areas more
     :type weighted: bool
-    :return: change rate estimate
+    :return: estimated change rate, i.e., half of the embedding rate of LSB replacement
     :rtype: float
+
+    :Example:
+
+    >>> x1 = np.array(Image.open("suspicious.png").convert("L"))
+    >>> beta_hat = sw.ws.attack(x1)  # change rate, about 0 for cover
+
+    With the U-Net pixel predictor, for grayscale images of 512x512 pixels,
+
+    >>> predictor = sw.ws.unet_estimator()  # downloads the weights once
+    >>> beta_hat = sw.ws.attack(x1, pixel_predictor=predictor)
     """
     # add channel axis
     if len(x1.shape) == 2:

@@ -1,144 +1,126 @@
 [![PyPI version](https://badge.fury.io/py/sealwatch.svg)](https://pypi.org/project/sealwatch/)
-[![Commit CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml/badge.svg)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml)
-[![Release CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_release.yml/badge.svg)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_release.yml)
+[![Commit CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml/badge.svg?branch=main)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml)
 [![Documentation Status](https://readthedocs.org/projects/sealwatch/badge/?version=latest)](https://sealwatch.readthedocs.io/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/sealwatch)](https://pypi.org/project/sealwatch/)
-[![Stars](https://img.shields.io/github/stars/uibk-uncover/sealwatch.svg)](https://GitHub.com/uibk-uncover/sealwatch)
-[![Contributors](https://img.shields.io/github/contributors/uibk-uncover/sealwatch)](https://GitHub.com/uibk-uncover/sealwatch)
-[![Wheel](https://img.shields.io/pypi/wheel/sealwatch)](https://pypi.org/project/sealwatch/)
-[![Status](https://img.shields.io/pypi/status/sealwatch)](https://pypi.com/project/sealwatch/)
-<!-- [![PyPi license](https://badgen.net/pypi/license/sealwatch/)](https://pypi.com/project/sealwatch/) -->
-[![Last commit](https://img.shields.io/github/last-commit/uibk-uncover/sealwatch)](https://GitHub.com/uibk-uncover/sealwatch)
+[![License](https://img.shields.io/github/license/uibk-uncover/sealwatch)](https://github.com/uibk-uncover/sealwatch/blob/main/LICENSE)
 
-<img src="https://raw.githubusercontent.com/uibk-uncover/sealwatch/main/docs/static/seal.png" width="300" />
+<img src="https://raw.githubusercontent.com/uibk-uncover/sealwatch/main/docs/static/seal.png" width="200" />
 
 # sealwatch
 
-Python package, containing implementations of modern image steganalysis algorithms.
+Modern steganalysis in Python.
 
-> :warning: This project is under intensive development as we speak.
+**sealwatch** is a Python package implementing modern image steganalysis algorithms,
+for JPEG and spatial images.
+
+- **Analytical attacks**: chi2, SPA, WS, the F5 histogram attack, and RJCA.
+- **Handcrafted features**: from SPAM to the rich models, with the FLD ensemble as detector,
+  matching the Matlab reference implementations of the DDE Lab, Binghamton University.
+- **Neural networks**: XuNet, SRNet, Zhu-Net, UcNet, EfficientNet and PENet,
+    with pretrained weights.
+- **Fast**: Rust backends for SPAM, SRM, CRM, DCTR and GFR.
+
+Documentation: https://sealwatch.readthedocs.io
+
 
 ## Installation
 
-Simply install the package with pip3
-
-
 ```bash
-pip3 install sealwatch
+pip install sealwatch
 ```
 
-or using the cloned repository
+Prebuilt wheels contain the Rust backend.
+Building from source, e.g., on other platforms or from a clone of the repository,
+requires the [Rust toolchain](https://rustup.rs/).
 
-```bash
-git clone https://github.com/uibk-uncover/sealwatch/
-cd sealwatch
-pip3 install .
-```
 
-Import to Python by typing
+## Quick start
 
-```python
-import sealwatch as sw
-```
-
-## Contents
-
-| Abbreviation | Dimensionality | Domain | Reference | Output format |
-|--------------|----------------|--------|----------:|---------------|
-| SPAM: subtractive pixel adjacency matrix | 686 | spatial | [Reference](https://doi.org/10.1109/TIFS.2010.2045842) | ordered dict |
-| JRM: JPEG rich model | 11255 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
-| CC-JRM: cartesian-calibrated JRM | 22510 | JPEG | [Reference](https://doi.org/10.1117/12.907495) | ordered dict |
-| DCTR: discrete cosine transform residual features | 8000 | spatial | [Reference](https://doi.org/10.1109/TIFS.2014.2364918) | ordered dict |
-| PHARM: phase-aware projection rich model | 12600 | JPEG | [Reference](https://doi.org/10.1117/12.2075239) | ordered dict |
-| GFR: Gabor filter residual features | 17000 | JPEG | [Reference](https://dl.acm.org/doi/10.1145/2756601.2756608) | ordered dict |
-| SRM: spatial rich models | 34671 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
-| SRMQ1: SRM with quantization 1 | 12753 | spatial | [Reference](https://doi.org/10.1109/TIFS.2012.2190402) | ordered dict |
-| CRM: color rich models | 5404 | spatial | [Reference](https://doi.org/10.1109/WIFS.2014.7084325) | ordered dict |
-
-These implementations are based on the [Matlab reference implementations](https://dde.binghamton.edu/download/feature_extractors/) provided by the DDE lab at Binghamton University.
-
-## Usage
-
-Extract GFR features from a single JPEG image
-
-```python
-features = sw.gfr.extract_from_file("seal1.jpg", qf=75)
-```
-
-After having extracted features from cover and stego images, you can train an FLD ensemble as binary classifier.
+Spatial steganalysis, with the WS attack:
 
 ```python
 import numpy as np
-
-Xc_tr, Xs_tr, Xc_te, Xs_te = sw.ensemble_classifier.helpers.load_and_split_features(
-    cover_features_filename="cover_features.h5",
-    stego_features_filename="stego_features.h5",
-    train_csv="train.csv",
-    test_csv="test.csv",
-)
-
-# Training is faster when arrays are C-contiguous
-Xc_tr = np.ascontiguousarray(Xc_tr)
-Xs_tr = np.ascontiguousarray(Xs_tr)
-
-# The hyper-parameter search is wrapped inside a trainer class
-trainer = sw.ensemble_classifier.FldEnsembleTrainer(
-    Xc=Xc_tr,
-    Xs=Xs_tr,
-    seed=12345,
-    verbose=1,
-)
-
-# Train with hyper-parameter search
-trained_ensemble, training_records = trainer.train()
-
-# Concatenate the test features and labels
-X_test = np.concatenate((cover_features_test, stego_features_test), axis=0)
-y_test = np.concatenate((
-    -np.ones(len(cover_features_test)),
-    +np.ones(len(stego_features_test))
-), axis=0)
-
-# Calculate test accuracy
-test_accuracy = trained_ensemble.score(X_test, y_test)
-```
-
-### Feature formats
-
-The feature extractors return ordered dicts.
-The reason is that feature descriptors are composed of multiple submodels. Retaining the structure allows the user to select a specific submodel. The following snippet shows how to flatten the features to a 1D array.
-
-**Ordered dict**
-```python
-# The PHARM feature extraction returns an ordered dict
-features_grouped = sw.pharm.extract_from_file("seal1.jpg", implementation=sw.PHARM_FIX)
-
-# Flatten dict to a 1D array
-features = sw.tools.flatten(features_grouped)
-```
-
-<!-- After saving a batch of flattened features to an HDF5 file, you can also re-group them.
-```python
+from PIL import Image
 import sealwatch as sw
-from sealwatch.utils.grouping import group_batch
-from sealwatch.utils.constants import PHARM_REVISITED
-import h5py
 
-# Load the flattened features
-with h5py.File("pharm_features.h5", "r") as f:
-  features_flat = f["features"][()]
+# load suspicious image
+x1 = np.array(Image.open("suspicious.png"))
 
-# Re-group the flat features
-features_grouped = group_batch(features_flat, feature_type=PHARM_REVISITED)
+# estimate change rate of LSB replacement
+beta_hat = sw.ws.attack(x1)
+```
 
-# features_grouped is an ordered dict. The keys are the submodel names. Each value is an array with the shape [num_samples, submodel_size].
-``` -->
+JPEG steganalysis, with [jpeglib](https://jpeglib.readthedocs.io/) to access the DCT coefficients:
 
-## Acknowledgements and Disclaimer
+```python
+import jpeglib
+import sealwatch as sw
 
-Developed by [Martin Benes](https://github.com/martinbenes1996) and [Benedikt Lorch](https://github.com/btlorch/), University of Innsbruck, 2024.
+# load suspicious image
+jpeg1 = jpeglib.read_dct("suspicious.jpeg")
 
-The implementations of feature extractors and the detector in this package are based on the original Matlab code provided by the Digital Data Embedding Lab at Binghamton University.
+# extract cc-JRM features, for a trained detector
+features = sw.ccjrm.extract(y1=jpeg1.Y, qt=jpeg1.qt[0])
+features = sw.tools.features.flatten(features)
+```
 
-We have made our best effort to ensure that our implementations produce identical results as the original Matlab implementations. However, it is the user's responsibility to verify this.
-For notes on compatibility with previous implementation, see [compatibility.md](compatibility.md).
+How to train a detector is in the [user guide](https://sealwatch.readthedocs.io/en/latest/guide/index.html).
+
+
+## Methods
+
+| Method | Type | Domain | Paper |
+| --- | --- | --- | --- |
+| chi2: chi-square attack | attack | spatial | [link](https://doi.org/10.1007/10719724_5) |
+| SPA: sample pair analysis | attack | spatial | [link](https://doi.org/10.1109/ICIP.2002.1039052) |
+| WS: weighted stego-image | attack | spatial | [link](https://doi.org/10.1117/12.521350), [link](https://doi.org/10.1117/12.766820) |
+| F5 histogram attack | attack | JPEG | [link](https://doi.org/10.1007/3-540-36415-3_20) |
+| RJCA: reverse JPEG compatibility attack | attack | JPEG | [link](https://doi.org/10.1109/TIFS.2019.2940904) |
+| HCF-COM: center of mass of the histogram characteristic function | features | spatial | [link](https://doi.org/10.1117/12.476813) |
+| SPAM: subtractive pixel adjacency matrix (686) | features | spatial | [link](https://doi.org/10.1109/TIFS.2010.2045842) |
+| SRM: spatial rich model (34671) | features | spatial | [link](https://doi.org/10.1109/TIFS.2012.2190402) |
+| SRMQ1: SRM with quantization 1 (12753) | features | spatial | [link](https://doi.org/10.1109/TIFS.2012.2190402) |
+| CRM: color rich model (5404) | features | spatial | [link](https://doi.org/10.1109/WIFS.2014.7084325) |
+| JRM: JPEG rich model (11255) | features | JPEG | [link](https://doi.org/10.1117/12.907495) |
+| cc-JRM: cartesian-calibrated JRM (22510) | features | JPEG | [link](https://doi.org/10.1117/12.907495) |
+| DCTR: discrete cosine transform residual (8000) | features | JPEG | [link](https://doi.org/10.1109/TIFS.2014.2364918) |
+| PHARM: phase-aware projection rich model (12600) | features | JPEG | [link](https://doi.org/10.1117/12.2075239) |
+| GFR: Gabor filter residual (17000) | features | JPEG | [link](https://dl.acm.org/doi/10.1145/2756601.2756608) |
+| FLD ensemble | detector | | [link](https://doi.org/10.1109/TIFS.2011.2175919) |
+| XuNet | neural network | spatial | [link](https://doi.org/10.1109/LSP.2016.2548421) |
+| SRNet | neural network | spatial, JPEG | [link](https://doi.org/10.1109/TIFS.2018.2871749) |
+| Zhu-Net | neural network | spatial | [link](https://doi.org/10.1109/TIFS.2019.2936913) |
+| UcNet | neural network | color | [link](https://doi.org/10.1109/TIFS.2022.3196265) |
+| EfficientNet | neural network | JPEG | [link](https://proceedings.mlr.press/v97/tan19a.html) |
+| PENet | neural network | color | [link](https://doi.org/10.1109/TIFS.2024.3486027) |
+
+<!-- TODO: add RS steganalysis, not implemented yet:
+J. Fridrich, M. Goljan, R. Du.
+Reliable detection of LSB steganography in color and grayscale images.
+ACM Workshop on Multimedia and Security, 2001.
+https://doi.org/10.1145/1232454.1232466 -->
+
+The number in brackets is the dimensionality of the features.
+
+
+## Scope
+
+sealwatch detects steganography, for research in steganalysis.
+To generate stego images, see our sister project [conseal](https://github.com/uibk-uncover/conseal).
+
+
+## Contributing
+
+Contributions are welcome.
+Please report bugs and deviations from reference implementations as [GitHub issues](https://github.com/uibk-uncover/sealwatch/issues).
+
+
+## Acknowledgements
+
+Developed by [Martin Beneš](https://github.com/martinbenes1996) and [Benedikt Lorch](https://github.com/btlorch/), University of Innsbruck.
+
+The feature extractors and the FLD ensemble match the reference author's implementations.
+However, it is the user's responsibility to verify this.
+For the differences, see [compatibility.md](compatibility.md).
+
+sealwatch is released under the [Mozilla Public License 2.0](https://github.com/uibk-uncover/sealwatch/blob/main/LICENSE).

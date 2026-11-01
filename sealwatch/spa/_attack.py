@@ -18,6 +18,11 @@ def attack(
 ) -> float:
     """Run sample-pair analysis.
 
+    Introduced in
+    S. Dumitrescu, X. Wu, N. Memon.
+    On steganalysis of random LSB embedding in continuous-tone images.
+    International Conference on Image Processing (ICIP), 2002.
+
     :param x0: grayscale image of shape [height, width], integers in [0, 255]
     :type x0: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: embedding rate estimate

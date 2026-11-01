@@ -52,7 +52,7 @@ def extract_from_file(
     :type path: str or pathlib.Path
     :param kw: other parameters of extract()
     :return: HCF-COM per channel, see extract()
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
 
     :Example:
 
@@ -71,8 +71,9 @@ def extract(
     """Extract the center of mass of the histogram characteristic function (HCF-COM).
 
     Introduced in
-    J. J. Harmsen and W. A. Pearlman, Steganalysis of additive noise modelable information hiding,
-    Proc. SPIE, Security and Watermarking of Multimedia Contents V, vol. 5020, 2003.
+    J. J. Harmsen, W. A. Pearlman.
+    Steganalysis of additive-noise modelable information hiding.
+    Security and Watermarking of Multimedia Contents V, Proc. SPIE, vol. 5020, 2003.
 
     :param x: grayscale image of shape [height, width], or color image of shape [height, width, channels],
         of uint8 values in [0, 255]
@@ -82,7 +83,7 @@ def extract(
     :param x1: deprecated, use x
     :type x1: `np.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`__
     :return: HCF-COM per channel, the keys are the channel indices
-    :rtype: `OrderedDict`
+    :rtype: collections.OrderedDict
 
     :Example:
 

@@ -49,6 +49,18 @@ def extract_from_file(
     path: Union[str, Path],
     **kw,
 ) -> Dict[str, np.ndarray]:
+    """Extract SRM features from a grayscale image file, decoded with PIL.
+
+    :param path: a grayscale image, e.g., PNG
+    :type path: str or pathlib.Path
+    :param kw: other parameters of extract()
+    :return: SRM features, see extract()
+    :rtype: collections.OrderedDict
+
+    :Example:
+
+    >>> features = sw.srm.extract_from_file('seal1.png')
+    """
     # load
     img = np.array(Image.open(path))
     return extract(img, **kw)
@@ -95,7 +107,7 @@ def extract(
         1st, 2nd, 3rd order, 3x3, 5x5
     :type qs: list of list of float
     :return: structured SRM features, ordered as the original Matlab implementation
-    :rtype: OrderedDict
+    :rtype: collections.OrderedDict
 
     :Examples:
 

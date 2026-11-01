@@ -159,6 +159,10 @@ class PEMeter(ROCMeter):
 
     P_E = min over tau of (P_FA + P_MD) / 2.
 
+    The threshold tau is optimized on the given data, by default.
+    If threshold is given, P_E is evaluated at it instead,
+    e.g., at the threshold optimized on the training set, see tau.
+
     Source: https://github.com/DDELab/deepsteganalysis
     Unlike there, P_E of zero (perfect detector) is not excluded.
     """
@@ -182,16 +186,26 @@ class PEMeter(ROCMeter):
         idx_best = np.argmin(p_e)
         return p_e[idx_best], taus[idx_best]
 
-    @property
-    def avg(self):
+    def _pe(self):
+        """P_E and its threshold, optimized unless threshold is given."""
         labels, scores = self.y_true, self.y_pred
 
         # NaNs guard
         if self._undefined(labels) or np.isnan(labels).any() or np.isnan(scores).any():
-            return np.nan
+            return np.nan, np.nan
 
-        p_e, tau = self.optimal_pe(labels, scores)
-        return p_e
+        if self.threshold is None:
+            return self.optimal_pe(labels, scores)
+        return self.given_pe(labels, scores, self.threshold)
+
+    @property
+    def avg(self):
+        return self._pe()[0]
+
+    @property
+    def tau(self):
+        """Threshold of P_E, optimized unless threshold is given."""
+        return self._pe()[1]
 
 
 @register_meter(name='fnr_at_fpr', backend='numpy', objective='minimize', name_abbr='fnr_fpr')
@@ -245,6 +259,49 @@ class FNRatFPRMeter(ROCMeter):
             self.y_pred,
             fpr_level=self.fpr_level,
             strategy=self.strategy)[0]
+
+
+@register_meter(name='eer', backend='numpy', objective='minimize')
+class EERMeter(ROCMeter):
+    """Equal error rate, at the threshold where the false alarm rate equals the missed detection rate.
+
+    Interpolated linearly on the ROC curve, as fnr_at_fpr.
+    The threshold is optimized on the given data, see tau.
+    """
+    @classmethod
+    def eer(cls, labels, scores, **kw):
+        """EER, interpolated where FPR crosses FNR on the ROC curve.
+
+        :return: EER and threshold
+        """
+        fpr, tpr, taus = cls.roc(labels=labels, scores=scores, **kw)
+        if np.isnan(fpr).any() or np.isnan(tpr).any():
+            return np.nan, np.nan
+
+        # FPR - FNR is non-decreasing, from -1 at (0, 0) to 1 at (1, 1)
+        d = fpr - (1 - tpr)
+        idx = np.flatnonzero(d >= 0)[0]
+        if d[idx] == 0:
+            return fpr[idx], taus[idx]
+
+        # interpolate between the points before and after the crossing
+        alpha = -d[idx - 1] / (d[idx] - d[idx - 1])
+        eer = (1 - alpha) * fpr[idx - 1] + alpha * fpr[idx]
+        tau = (1 - alpha) * taus[idx - 1] + alpha * taus[idx] if np.isfinite(taus[idx - 1]) else taus[idx]
+        return eer, tau
+
+    @property
+    def avg(self):
+        if self._undefined(self.y_true):
+            return np.nan
+        return self.eer(self.y_true, self.y_pred)[0]
+
+    @property
+    def tau(self):
+        """Threshold of EER."""
+        if self._undefined(self.y_true):
+            return np.nan
+        return self.eer(self.y_true, self.y_pred)[1]
 
 
 @register_meter(name='roc_auc', backend='numpy', objective='maximize', name_abbr='auc')

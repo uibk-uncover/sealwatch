@@ -45,4 +45,4 @@ For a classifier, flatten them to a vector.
 .. code-block:: python
 
    f = sw.spam.extract(x0)
-   f = sw.tools.features.flatten(f)
+   f = sw.tools.flatten(f)

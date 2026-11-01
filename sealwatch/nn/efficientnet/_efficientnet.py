@@ -3,7 +3,7 @@ Implementation of EfficientNet, as described in
 
 M. Tan and Q. V. Le, EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks.
 International Conference on Machine Learning (ICML), 2019.
-https://arxiv.org/abs/1905.11946
+https://proceedings.mlr.press/v97/tan19a.html
 
 The modules are named as in timm (https://github.com/huggingface/pytorch-image-models),
 so that its weights, and checkpoints of the former timm-based implementation, load unchanged.

@@ -46,7 +46,8 @@ def extract(
     backend = tools.get_backend()
     rs = tools.rust_module('spam')
     if backend == tools.BACKEND_RUST and rs is not None and x.dtype == np.uint8:
-        features = rs.extract(x=x, T=T, rounded=rounded)
+        # dict of Rust, ordered as the Python implementation
+        features = OrderedDict(rs.extract(x=x, T=T, rounded=rounded))
 
     elif backend in {tools.BACKEND_RUST, tools.BACKEND_PYTHON}:
         # check types

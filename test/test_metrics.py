@@ -203,6 +203,7 @@ DETECTION_KW = {
     'recall': [{'threshold': 0.}, {'threshold': 1.}],
     'p_e': [{}],
     'roc_auc': [{}],
+    'eer': [{}],
     'roc_wauc': [{}, {'implementation': sw.metrics.WAUC_ALASKA}],
     'fnr_at_fpr': [{}, {'strategy': 'below'}, {'strategy': 'above'}, {'fpr_level': .01}, {'fpr_level': .5}],
 }
@@ -223,6 +224,8 @@ class TestMetricsReference(unittest.TestCase):
         ys = HAND_LABELS, HAND_SCORES
         self.assertAlmostEqual(compute('pe', backend, *ys), .25)
         self.assertAlmostEqual(compute('auc', backend, *ys), 13/16)
+        # FPR = FNR = 1/4 at threshold .35
+        self.assertAlmostEqual(compute('eer', backend, *ys), .25)
         self.assertAlmostEqual(compute('acc', backend, *ys, threshold=.3), 5/8)
         self.assertAlmostEqual(compute('misc', backend, *ys, threshold=.3), 3/8)
         self.assertAlmostEqual(compute('precision', backend, *ys, threshold=.3), 3/5)
@@ -235,6 +238,22 @@ class TestMetricsReference(unittest.TestCase):
         meter = sw.metrics.get_meter('pe', backend)
         p_e, _ = meter.given_pe(BACKENDS[backend](HAND_LABELS), BACKENDS[backend](HAND_SCORES), .3)
         self.assertAlmostEqual(p_e, .5 * (2/4 + 1/4))
+
+    @parameterized.expand([[b] for b in BACKENDS])
+    def test_pe_threshold(self, backend: str):
+        """P_E at a given threshold, e.g., optimized on another set, and the threshold used."""
+        self._logger.info(f'TestMetricsReference.test_pe_threshold({backend=})')
+        ys = BACKENDS[backend](HAND_LABELS), BACKENDS[backend](HAND_SCORES)
+        # optimized
+        meter = sw.metrics.get_meter('pe', backend)
+        meter.update(*ys)
+        self.assertAlmostEqual(meter.avg, .25)
+        self.assertAlmostEqual(meter.avg, compute('pe', backend, *ys, threshold=meter.tau))
+        # given, as of given_pe
+        meter = sw.metrics.get_meter('pe', backend, threshold=.3)
+        meter.update(*ys)
+        self.assertAlmostEqual(meter.avg, .5 * (2/4 + 1/4))
+        self.assertEqual(meter.tau, .3)
 
     @parameterized.expand([
         (backend, threshold)

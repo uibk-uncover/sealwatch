@@ -350,7 +350,7 @@ def extract(
     :type x1: np.ndarray
     :return: features as ordered dictionary, where the keys are the submodel names and the values are the features of shape [num_projections, T].
         Unless normalize is True, the features are not normalized.
-    :rtype: `OrderedDict`
+    :rtype: collections.OrderedDict
 
     :Example:
 
@@ -410,7 +410,7 @@ def extract_from_file(
     :type q: float
     :param kw: other parameters of extract()
     :return: features as ordered dictionary, see extract()
-    :rtype: `OrderedDict`
+    :rtype: collections.OrderedDict
 
     :Example:
 
