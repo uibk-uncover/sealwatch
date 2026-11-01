@@ -5,6 +5,12 @@ Affiliation: University of Innsbruck
 """
 
 import enum
+import warnings
+
+try:
+    from .. import _sealwatch
+except ImportError:  # extension not built, e.g., installed from source without Rust
+    _sealwatch = None
 
 
 class Backend(enum.Enum):
@@ -26,7 +32,16 @@ class Backend(enum.Enum):
         backend = self._backend_prev
 
 
-backend = Backend.BACKEND_RUST
+def rust_module(name: str):
+    """Rust implementation of a module, or None if the extension is not available."""
+    return getattr(_sealwatch, name) if _sealwatch is not None else None
+
+
+if _sealwatch is not None:
+    backend = Backend.BACKEND_RUST
+else:
+    warnings.warn('Rust extension of sealwatch not available, using the Python implementations')
+    backend = Backend.BACKEND_PYTHON
 
 
 def get_backend() -> Backend:
