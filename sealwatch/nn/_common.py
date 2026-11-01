@@ -64,6 +64,7 @@ def infere_single(
     model: torch.nn.Module,
     *,
     device: torch.device = None,
+    normalize: bool = True,
 ) -> np.ndarray:
     """Runs inference for a single image.
 
@@ -74,13 +75,15 @@ def infere_single(
     :param device: torch device to move the model to,
         by default the model stays where it is
     :type device: torch.device
+    :param normalize: if True, divide the values by 255, otherwise the model takes [0, 255]
+    :type normalize: bool
     :return: stego probability
     :rtype: np.ndarray
     """
     if model.training:
         raise ValueError('model must be in eval mode, call model.eval() first')
     # prepare data
-    x = np.asarray(x) / 255.
+    x = np.asarray(x) / 255. if normalize else np.asarray(x, dtype=float)
     if x.ndim == 2:
         x = x[None]
     elif x.ndim == 3:
