@@ -1,5 +1,5 @@
 import numpy as np
-from sealwatch.ensemble_classifier.fld import FisherLinearDiscriminantLearner
+from .fld import FisherLinearDiscriminantLearner
 
 
 class BaseLearner(object):

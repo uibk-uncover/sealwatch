@@ -19,7 +19,7 @@ import scipy.io
 from . import defs
 
 
-LEGACY = "sealwatch.ensemble_classifier"
+LEGACY = "sealwatch.ensemble_classifier_legacy"
 REWORK2 = "sealwatch.ensemble_classifier_rework2"
 
 

@@ -64,7 +64,7 @@ FEATURES_DIR = defs.ASSETS_DIR / "features_matlab" / "spam"
 # Short key -> package under test, so the same Matlab reference runs against both
 # the legacy and the reworked implementation.
 MODULES = {
-    "legacy": "sealwatch.ensemble_classifier",
+    "legacy": "sealwatch.ensemble_classifier_legacy",
     "rework": "sealwatch.ensemble_classifier_rework",
 }
 

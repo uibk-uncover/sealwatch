@@ -23,6 +23,7 @@ from .srm import srmq1
 
 # classifier
 from . import ensemble_classifier
+from . import ensemble_classifier_legacy
 # neural networks in sealwatch.nn, imported on first use, see __getattr__
 
 #
@@ -56,6 +57,9 @@ CRM_FIX_MIN24 = srm.CRM_FIX_MIN24
 GFR_ORIGINAL = gfr.GFR_ORIGINAL
 GFR_FIX = gfr.GFR_FIX
 #
+FLD_LEGACY = ensemble_classifier.FLD_LEGACY
+FLD_OPTIMIZED = ensemble_classifier.FLD_OPTIMIZED
+#
 WAUC_ALASKA = metrics.WAUC_ALASKA
 WAUC_FIX_DIRECTION = metrics.WAUC_FIX_DIRECTION
 
@@ -85,6 +89,7 @@ __all__ = [
     'srmq1',
     'spam',
     'ensemble_classifier',
+    'ensemble_classifier_legacy',
     'metrics',
     '__version__',
 ]

@@ -57,7 +57,7 @@ For now, you can use it as follows.
    y_te = np.concatenate([np.zeros(len(idx_te)), np.ones(len(idx_te))])
 
    # train
-   trainer = sw.ensemble_classifier.FldEnsembleTrainer(
+   trainer = sw.ensemble_classifier_legacy.FldEnsembleTrainer(
        Xc=f0[idx_tr],
        Xs=f1[idx_tr],  # stego of the covers, in the same order
        seed=42,
