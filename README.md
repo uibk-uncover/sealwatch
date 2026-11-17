@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/sealwatch.svg)](https://pypi.org/project/sealwatch/)
 [![Commit CI/CD](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml/badge.svg?branch=main)](https://github.com/uibk-uncover/sealwatch/actions/workflows/on_commit.yml)
-[![Documentation Status](https://readthedocs.org/projects/sealwatch/badge/?version=latest)](https://sealwatch.readthedocs.io/)
+[![Documentation Status](https://img.shields.io/readthedocs/sealwatch/latest)](https://sealwatch.readthedocs.io/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/sealwatch)](https://pypi.org/project/sealwatch/)
 [![License](https://img.shields.io/github/license/uibk-uncover/sealwatch)](https://github.com/uibk-uncover/sealwatch/blob/main/LICENSE)
 
