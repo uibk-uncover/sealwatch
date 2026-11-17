@@ -6,8 +6,28 @@ on: # trigger
   workflow_dispatch:  # <- allows manual triggering
 
 jobs:
+  check_version:
+    name: Check that the tag matches the package version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"  # tomllib
+      - name: Compare the release tag with pyproject.toml
+        if: github.event_name == 'release'  # manual runs have no tag
+        run: |
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          tag="${{ github.event.release.tag_name }}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Release tag $tag does not match the version $version in pyproject.toml. Bump the version, then tag."
+            exit 1
+          fi
+          echo "Version $version matches the tag"
+
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
+    needs: check_version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -37,6 +57,7 @@ jobs:
 
   make_sdist:
     name: Make source distribution
+    needs: check_version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
