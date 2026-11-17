@@ -13,7 +13,7 @@ Contents, for each seed of the Matlab tutorial data in ../matlab (12345, 98765):
     tutorial_<seed>_w, _b        weights and threshold of each base learner
     tutorial_<seed>_confidence   confidence on the test samples (covers, then stegos)
     tutorial_<seed>_predict      prediction on the test samples
-and of a single FLD on 200 small random datasets with many tied scores:
+and of a single FLD on 200 small random datasets with many tied scores (10 to 59 samples per class):
     fld_w, fld_b                 weights and threshold of each
 """
 
@@ -47,7 +47,7 @@ for seed in (12345, 98765):
 rng = np.random.RandomState(0)
 w, b = [], []
 for _ in range(200):
-    n = rng.randint(2, 60)
+    n = rng.randint(10, 60)  # enough samples for a well-conditioned 5 x 5 scatter matrix
     X = np.round(rng.randn(2 * n, 5), rng.randint(0, 2))  # coarse values, many ties
     y = np.concatenate([-np.ones(n, dtype=int), np.ones(n, dtype=int)])
     X[n:, 0] += rng.rand()
