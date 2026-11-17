@@ -34,16 +34,13 @@ The backend ``"numpy"`` takes arrays, and ``"torch"`` takes tensors.
 The torch meters detach the tensors, so that they don't keep the computational graph during training.
 The detached tensors are kept on their device, and the average is a Python float.
 
-.. warning::
-
-   The detectors label cover and stego differently.
-   The neural networks predict 0 for cover and 1 for stego,
-   which arises naturally from the softmax activation.
-   The ensembles predict -1 for cover and +1 for stego, which makes the voting of the FLD more natural.
-   The ensemble of FLD predicts -1 for cover and +1 for stego, for backward compatibility,
+.. note::
 
    The meters are adaptive in the scale of soft predictions, but they expect labels and hard predictions to be 0 and 1.
-   To convert predictions of the ensemble of FLD to 0 and 1, use ``(y_hat + 1) / 2``.
+   The neural networks predict 0 for cover and 1 for stego.
+   The ensemble of FLD predicts the labels it was trained with, so train it with 0 and 1.
+   Its ``decision_function`` is a soft prediction in the range from -1 (cover) to +1 (stego).
+   The deprecated ``FldEnsembleTrainer`` predicts -1 and +1; convert them with ``(y_hat + 1) / 2``.
 
 
 Soft predictions

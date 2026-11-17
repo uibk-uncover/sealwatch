@@ -1,44 +1,102 @@
+"""Fisher linear discriminant (FLD)."""
+
+from __future__ import annotations
+
+import typing
 
 import numpy as np
 
+from ._implementation import Implementation
 
-class FisherLinearDiscriminantLearner(object):
-    def __init__(self, w=None, b=None):
-        """
-        Initialize Fisher linear discriminant (FLD) base learner.
-        The decision threshold of each base learner is adjusted to minimize the total detector error under equal priors on the training set
-            P_E = min_{P_FA} 1/2 ( P_FA + P_MD(P_FA) ) ,
-        where P_FA is the probability of false alarms and P_MD is the probability of missed detections.
 
-        Advantages of FLD classifiers:
-        - Low training complexity
-        - A single FLD classifier is relatively weak and unstable, but forming an ensemble of FLD classifiers increases diversity.
-        """
+class FisherLinearDiscriminant(object):
+    """Fisher linear discriminant (FLD) for two classes, covers (0) and stegos (1).
+
+    The weights ``w`` solve a linear system with the within-class scatter matrix.
+    The threshold ``b`` minimizes the total error under equal priors on the training set,
+    :math:`P_E = \\min_{P_{FA}} \\frac{1}{2} (P_{FA} + P_{MD}(P_{FA}))`.
+    The sign of ``w`` is chosen such that stegos score higher than covers.
+    Features that are constant in both classes get zero weight.
+
+    A single FLD is weak and unstable, but cheap to train; an ensemble of them
+    increases diversity.
+
+    :param implementation: code path, see :class:`~sealwatch.ensemble_classifier.Implementation`.
+    :param w: weights of shape ``[num_features]``; ``None`` until fitted.
+    :param b: bias (threshold); ``None`` until fitted.
+    """
+
+    def __init__(
+        self,
+        implementation: Implementation = Implementation.FLD_LEGACY,
+        w: typing.Optional[np.ndarray] = None,
+        b: typing.Optional[float] = None,
+    ):
+        self.implementation = implementation
         self.w = w
         self.b = b
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray) -> FisherLinearDiscriminant:
+        """Fit on a stacked design matrix.
+
+        :param X: samples of shape ``[num_samples, num_features]``.
+        :param y: labels of shape ``[num_samples]``, 0 for covers and 1 for stegos.
+        :return: the fitted learner.
+        :raises ValueError: if ``y`` does not contain exactly the labels 0 and 1.
         """
-        Fit the classifier
-        :param X: ndarray of shape [num_samples, num_features]
-        :param y: ndarray of target labels, where -1 denotes the negative class and +1 denotes the positive class
+        if set(np.unique(y)) != {0, 1}:
+            raise ValueError("Expected samples with 0 and 1 labels")
+        return self.fit_presplit(X[y == 0], X[y == 1])
+
+    def fit_presplit(self, Xc: np.ndarray, Xs: np.ndarray) -> FisherLinearDiscriminant:
+        """Fit on covers and stegos that are already separate, same result as :meth:`fit`.
+
+        Saves concatenating them and indexing them apart again.
+
+        :param Xc: cover samples of shape ``[num_covers, num_features]``.
+        :param Xs: stego samples of shape ``[num_stegos, num_features]``.
+        :return: the fitted learner.
+        :raises ValueError: if the implementation is unknown.
         """
-        # Validate input args
-        assert set(np.unique(y)) == {-1, +1}, "Expected samples with -1 and +1 labels"
+        if not isinstance(self.implementation, Implementation):
+            raise ValueError(f"Unknown implementation: {self.implementation!r}")
+        num_feature_dims = Xc.shape[1]
 
-        # Split into covers and stegos
-        cover_mask = (y == -1)
-        stego_mask = (y == +1)
+        # Features that are constant in both classes get zero weight
+        drop_feature_dims = self._constant_dims(Xc, Xs)
 
-        Xc = X[cover_mask]
-        Xs = X[stego_mask]
+        # Within-class scatter matrix, made positive definite
+        mu, sigma_cs = self._scatter(Xc, Xs)
+        sigma_cs = self._regularize(sigma_cs)
 
-        num_covers = len(Xc)
-        num_stegos = len(Xs)
+        # Check for NaN values (may occur when the feature value is constant over images)
+        drop_feature_dims = drop_feature_dims | np.any(np.isnan(sigma_cs), axis=0)
 
-        # Remove feature dimensions columns with constant values
-        num_feature_dims = X.shape[1]
-        drop_feature_dims = np.zeros(num_feature_dims, dtype=bool)
+        # Drop feature dimensions from mean and covariance
+        sigma_cs = sigma_cs[~drop_feature_dims, :][:, ~drop_feature_dims]
+        mu = mu[~drop_feature_dims]
+
+        w = self._solve(sigma_cs, mu)
+
+        if len(w) != num_feature_dims:
+            # Resolve previously found NaN columns: Set the corresponding elements of w equal to zero
+            w_new = np.zeros(num_feature_dims)
+            w_new[~drop_feature_dims] = w
+            w = w_new
+
+        # Adjust threshold to minimize the total error under equal priors
+        self.w, self.b = self._find_threshold(Xc, Xs, w)
+        return self
+
+    @staticmethod
+    def _constant_dims(Xc: np.ndarray, Xs: np.ndarray) -> np.ndarray:
+        """Find the feature dimensions that hold the same single value in both classes.
+
+        :param Xc: cover samples of shape ``[num_covers, num_features]``.
+        :param Xs: stego samples of shape ``[num_stegos, num_features]``.
+        :return: boolean mask of shape ``[num_features]``, ``True`` for dimensions to drop.
+        """
+        drop_feature_dims = np.zeros(Xc.shape[1], dtype=bool)
 
         drop_dim_candidates = np.unique(np.concatenate([
             np.where(np.all(Xc == Xc[0][None, :], axis=0))[0],
@@ -55,6 +113,17 @@ class FisherLinearDiscriminantLearner(object):
                     # Flag dimension for dropping
                     drop_feature_dims[drop_dim_candidate] = True
 
+        return drop_feature_dims
+
+    @staticmethod
+    def _scatter(Xc: np.ndarray, Xs: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
+        """Calculate the difference of the class means and the within-class scatter matrix.
+
+        :param Xc: cover samples of shape ``[num_covers, num_features]``.
+        :param Xs: stego samples of shape ``[num_stegos, num_features]``.
+        :return: ``(mu, sigma_cs)``, the mean difference of shape ``[num_features]`` and
+            the scatter matrix of shape ``[num_features, num_features]``, a fresh array.
+        """
         # Calculate means of each class
         mu_c = np.mean(Xc, axis=0)
         mu_s = np.mean(Xs, axis=0)
@@ -63,85 +132,103 @@ class FisherLinearDiscriminantLearner(object):
         # Calculate covariance for covers
         Xc_zero_mean = Xc - mu_c[None, :]
         sigma_c = Xc_zero_mean.T @ Xc_zero_mean
-        sigma_c /= num_covers
+        sigma_c /= len(Xc)
 
         # Calculate covariance for stegos
         Xs_zero_mean = Xs - mu_s[None, :]
         sigma_s = Xs_zero_mean.T @ Xs_zero_mean
-        sigma_s /= num_stegos
+        sigma_s /= len(Xs)
 
         # Within-class scatter matrix
-        sigma_cs = sigma_c + sigma_s
+        return mu, sigma_c + sigma_s
 
-        # Add stabilizing constant to ensure that the within-class scatter matrix is positive definite
-        sigma_cs = sigma_cs + 1e-10 * np.eye(num_feature_dims)
+    @staticmethod
+    def _regularize(sigma_cs: np.ndarray) -> np.ndarray:
+        """Add a small ridge to ensure that the scatter matrix is positive definite.
 
-        # Check for NaN values (may occur when the feature value is constant over images)
-        drop_feature_dims = drop_feature_dims | np.any(np.isnan(sigma_cs), axis=0)
+        Added in place on the diagonal, which gives the same values as
+        ``sigma_cs + ridge * np.eye(d)`` without allocating a d x d identity or
+        upcasting float32 to float64.
 
-        # Drop feature dimensions from mean and covariance
-        sigma_cs = sigma_cs[~drop_feature_dims, :][:, ~drop_feature_dims]
-        mu = mu[~drop_feature_dims]
+        :param sigma_cs: scatter matrix of shape ``[num_features, num_features]``, modified in place.
+        :return: the regularized scatter matrix.
+        """
+        num_feature_dims = len(sigma_cs)
 
-        # Calculate weights
-        solved = False
+        if sigma_cs.dtype == np.float64:
+            # Same constant as the legacy code
+            ridge = 1e-10
+        else:
+            # In float32, 1e-10 is far below the machine epsilon (about 1.2e-7) and does not
+            # regularize at all; the solve then generates denormals and
+            # is about 10x slower. Use a scale-aware ridge instead (about 10x the epsilon,
+            # relative to the mean diagonal).
+            ridge = 1e-6 * (np.trace(sigma_cs) / num_feature_dims)
+        sigma_cs.flat[::num_feature_dims + 1] += ridge
+        return sigma_cs
+
+    def _solve(self, sigma_cs: np.ndarray, mu: np.ndarray) -> np.ndarray:
+        """Solve ``sigma_cs @ w = mu`` for the weights.
+
+        If the matrix is numerically singular, the regularization is increased
+        until the solve succeeds.
+
+        :param sigma_cs: symmetric positive definite scatter matrix, modified in place
+            if the regularization is increased.
+        :param mu: mean difference of shape ``[len(sigma_cs)]``.
+        :return: weights of shape ``[len(sigma_cs)]``.
+        """
         solve_counter = 0
-        while not solved:
+        while True:
             try:
-                # According to [Matlab's mldivide](https://de.mathworks.com/help/matlab/ref/mldivide.html), Matlab solves this linear system of equations via its Cholesky decomposition.
-                w = np.linalg.solve(sigma_cs, mu)
-                solved = True
+                # LU, as the legacy code, which keeps the results bit for bit identical.
+                # sigma_cs is symmetric positive definite, so Cholesky would also apply
+                # (scipy.linalg.solve(sigma_cs, mu, assume_a="pos"); Matlab's mldivide uses it too).
+                # We tried it: it changes w in the last bits (more on near-singular matrices)
+                # and was not faster for the d_sub of up to about 2000 typical with SRM;
+                # it pays off (1.2-1.4x per learner) only from d_sub of about 2500.
+                return np.linalg.solve(sigma_cs, mu)
             except np.linalg.LinAlgError:
-                # Catch warnings about singular matrix
-
-                # Increase regularization
+                # Numerically not positive definite or singular: increase the regularization
                 if 0 == solve_counter:
                     solve_counter = 1
-
                 else:
                     solve_counter *= 5
 
-                # Distance from 1 to the next larger representable real number in double precision
-                eps = np.spacing(1)
+                # Distance from 1 to the next larger representable real number in the working
+                # precision. For float64, this is np.spacing(1), as in the legacy code. In float32,
+                # the double precision value would vanish next to values of order 1.
+                eps = np.finfo(sigma_cs.dtype).eps
 
                 # Dynamically increase stabilizing constant
-                sigma_cs += solve_counter * eps * np.eye(num_feature_dims)
+                sigma_cs += solve_counter * eps * np.eye(len(sigma_cs))
 
-        if len(sigma_cs) != len(sigma_c):
-            # Resolve previously found NaN columns: Set the corresponding elements of w equal to zero
-            w_new = np.zeros(num_feature_dims)
-            w_new[~drop_feature_dims] = w
-            w = w_new
+    def _find_threshold(
+        self,
+        Xc: np.ndarray,
+        Xs: np.ndarray,
+        w: np.ndarray,
+    ) -> typing.Tuple[np.ndarray, float]:
+        """Find the threshold that minimizes :math:`(P_{MD} + P_{FA}) / 2`.
 
-        # Adjust threshold to minimize the total error under equal priors
-        w, b = self._find_threshold(Xc, Xs, w)
+        Also decides whether the sign of ``w`` must be flipped, so that stegos score
+        higher. Ties go to the first optimum, scanning from low to high scores.
 
-        self.w = w
-        self.b = b
-
-    @staticmethod
-    def _find_threshold(Xc, Xs, w):
+        :param Xc: cover samples of shape ``[num_covers, num_subspace_dims]``.
+        :param Xs: stego samples of shape ``[num_stegos, num_subspace_dims]``.
+        :param w: unsigned weights of shape ``[num_subspace_dims]``.
+        :return: ``(w, bias)``, with ``w`` signed.
         """
-        Find threshold through minimizing (P_MD + P_FA) / 2, where P_MD stands for the missed detection rate and P_FA for the false alarm rate.
-        :param Xc: cover samples of shape [num_cover_samples, num_subspace_dims]
-        :param Xs: stego samples of shape [num_stego_samples, num_subspace_dims]
-        :param w: unsigned base learner weights of shape [num_subspace_dims]
-        :return: (w, bias) as 2-tuple
-            w are the signed base learner weights. Compared to the given w argument, the sign could have switched.
-            bias is a scalar
-        """
-
         num_covers = len(Xc)
         num_stegos = len(Xs)
-        num_samples = num_covers + num_stegos
 
         y_pred_covers = Xc @ w
         y_pred_stegos = Xs @ w
         y_pred = np.concatenate([y_pred_covers, y_pred_stegos])
 
         y_true = np.concatenate([
-            -np.ones(num_covers),
-            +np.ones(num_stegos),
+            np.zeros(num_covers),
+            np.ones(num_stegos),
         ])
 
         # Sort predictions
@@ -149,58 +236,7 @@ class FisherLinearDiscriminantLearner(object):
         y_pred = y_pred[permutation]
         y_true = y_true[permutation]
 
-        # The base learner only aimed to spread the probabilities, but did not take care of the correct class assignment.
-        # This method automatically decides whether the sign of the weights needs to be flipped.
-
-        # Case 1: Covers received lower score than stego images (sgn = 1)
-        # We start with the lowest possible threshold. At this threshold, there are no missed detections and all covers are misclassified as stego (false alarms).
-        # Scores below the threshold are predicted as covers, while scores above the threshold are predicted as stego.
-        MD = 0
-        FA = num_covers
-        error_per_threshold = np.zeros(num_samples - 1)
-
-        # Case 2: Covers received higher score than stego images (sgn = -1)
-        # Scores below the threshold are predicted as stego, while scores above the threshold are predicted as covers.
-        MD2 = num_stegos
-        FA2 = 0
-        error_per_threshold2 = np.zeros(num_samples - 1)
-
-        # Keep track of best threshold
-        E_min = (FA + MD)
-        threshold_idx = None
-        sgn = None
-
-        # Iterate over sorted probabilities, moving from low to high prediction scores
-        for idx in range(num_samples - 1):
-            if y_true[idx] == -1:
-                # We encountered a cover
-                # Case 1: Decrease false alarms
-                FA = FA - 1
-                # Case 2: Increase missed detections
-                MD2 = MD2 + 1
-            else:
-                # We encountered a stego
-                # Case 1: Increase missed detections
-                MD = MD + 1
-                # Case 2: Decrease false alarms
-                FA2 = FA2 - 1
-
-            # Recompute current error
-            error_per_threshold[idx] = FA + MD
-            error_per_threshold2[idx] = FA2 + MD2
-
-            # Update optimal threshold
-            if error_per_threshold[idx] < E_min:
-                # Case 1
-                E_min = error_per_threshold[idx]
-                threshold_idx = idx
-                sgn = 1
-
-            if error_per_threshold2[idx] < E_min:
-                # Case 2
-                E_min = error_per_threshold2[idx]
-                threshold_idx = idx
-                sgn = -1
+        threshold_idx, sgn = self._search_threshold(y_true, num_covers, num_stegos)
 
         # Calculate bias term
         bias = sgn * 0.5 * (y_pred[threshold_idx] + y_pred[threshold_idx + 1])
@@ -210,25 +246,69 @@ class FisherLinearDiscriminantLearner(object):
 
         return w, bias
 
-    def predict(self, X):
+    @staticmethod
+    def _search_threshold(
+        y_true: np.ndarray,
+        num_covers: int,
+        num_stegos: int,
+    ) -> typing.Tuple[typing.Optional[int], typing.Optional[int]]:
+        """Search the best threshold over the sorted samples, moving from low to high scores.
+
+        Case 1 (``sgn = 1``): covers score lower than stegos; below the threshold is predicted
+        cover, above stego. Case 2 (``sgn = -1``): the opposite. With ``c`` and ``s`` the numbers
+        of covers and stegos among the samples below the threshold, case 1 has error
+        ``num_covers - c + s`` and case 2 ``num_stegos + c - s``. The first minimum in the order
+        ``error1(0), error2(0), error1(1), ...`` wins, and only if it beats ``num_covers``, which
+        is the error of the lowest possible threshold. This is the same selection, including
+        ties, as a loop over the samples that keeps a running minimum with a strict ``<``.
+
+        :param y_true: labels (0 cover, 1 stego) sorted by score, of shape ``[num_samples]``.
+        :param num_covers: number of covers.
+        :param num_stegos: number of stegos.
+        :return: ``(threshold_idx, sgn)``; the threshold lies between sorted samples
+            ``threshold_idx`` and ``threshold_idx + 1``.
         """
-        Predict scores for given samples
-        :param X: samples of shape [num_samples, num_features]
-        :return: soft predictions of shape [num_samples]
+        num_samples = num_covers + num_stegos
+
+        is_cover = y_true[:-1] == 0
+        c = np.cumsum(is_cover)
+        s = np.cumsum(~is_cover)
+
+        error1 = num_covers - c + s
+        error2 = num_stegos + c - s
+
+        # Interleave as [error1(0), error2(0), error1(1), error2(1), ...]
+        candidates = np.empty(2 * (num_samples - 1), dtype=error1.dtype)
+        candidates[0::2] = error1
+        candidates[1::2] = error2
+
+        best = int(np.argmin(candidates))
+        if candidates[best] < num_covers:  # initial E_min in the loop
+            return best // 2, (1 if best % 2 == 0 else -1)
+        return None, None
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """Predict scores; positive means stego.
+
+        :param X: samples of shape ``[num_samples, num_features]``.
+        :return: scores of shape ``[num_samples]``.
+        :raises AttributeError: if the learner is not fitted.
         """
         if self.w is None or self.b is None:
             raise AttributeError("Weights or bias not initialized yet. Have you trained the classifier?")
 
         return X @ self.w - self.b
 
-    def score(self, X, y_true):
-        """
-        Calculate accuracy
-        :param X: samples of shape [num_samples, num_features]
-        :param y_true: labels of shape [num_samples], where -1 indicates a cover image and +1 indicates a stego image
-        :return: accuracy
-        """
-        assert set(np.unique(y_true)) == {-1, +1}, "Expected input labels with values -1 and +1"
+    def score(self, X: np.ndarray, y_true: np.ndarray) -> float:
+        """Calculate the accuracy.
 
-        y_pred = np.sign(self.predict(X))
+        :param X: samples of shape ``[num_samples, num_features]``.
+        :param y_true: labels of shape ``[num_samples]``, 0 for covers and 1 for stegos.
+        :return: accuracy.
+        :raises ValueError: if ``y_true`` does not contain exactly the labels 0 and 1.
+        """
+        if set(np.unique(y_true)) != {0, 1}:
+            raise ValueError("Expected input labels with values 0 and 1")
+
+        y_pred = (self.predict(X) > 0).astype(int)
         return (y_true == y_pred).mean()

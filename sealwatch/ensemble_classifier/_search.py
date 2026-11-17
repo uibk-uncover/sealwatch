@@ -1,3 +1,11 @@
+"""Compass search for the optimal subspace dimensionality ``d_sub``.
+
+Implements Algorithm 2 of Kodovsky et al. (IEEE TIFS 2012): a one-dimensional
+grid search that approaches the OOB-error minimum "from the left" (low ``d_sub``
+to high), refining the step size until a tolerance or minimum step is reached.
+The search exploits the unimodal shape of the ``P_E(d_sub)`` curve (Fig. 2).
+"""
+
 import numpy as np
 
 
@@ -131,8 +139,10 @@ class SubspaceDimensionalitySearch(object):
             else:
                 # Hitting the full dimensionality
                 if (min_oob_error / self.oob_errors[-2] >= 1 - self.oob_error_tolerance  # Desired tolerance fulfilled
-                        or self.oob_errors[-2] - min_oob_error < self.epsilon  # maximal precision in terms of error set to 0.5%
-                        or self.d_sub_step < self.d_sub_candidates[min_idx] * 0.05):  # step is smaller than 5% of the optimal value of k
+                        # maximal precision in terms of error set to 0.5%
+                        or self.oob_errors[-2] - min_oob_error < self.epsilon
+                        # step is smaller than 5% of the optimal value of k
+                        or self.d_sub_step < self.d_sub_candidates[min_idx] * 0.05):
 
                     # Stopping criterion is met
                     self.search_in_progress = False
@@ -154,7 +164,7 @@ class SubspaceDimensionalitySearch(object):
               and self.d_sub_candidates[min_idx] + self.d_sub_step <= self.max_dim
               and np.min(np.abs(self.d_sub_candidates[min_idx] + self.d_sub_step - self.d_sub_candidates)) > self.d_sub_step / 2
               and not (self.oob_errors[-1] > self.oob_errors[-2] and self.oob_errors[-1] > self.oob_errors[-3])
-        ):
+              ):
             # Condition 1: If lowest is the second to last
             # Condition 2: One more step to the right is still possible (less than or equal to max_dim)
             # Condition 3: One more step to the right is not too close to any other candidate

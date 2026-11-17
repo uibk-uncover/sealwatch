@@ -17,6 +17,21 @@ from ._defs import setup_custom_logger, BufferedWriter, EPS
 from ._backend import Backend, set_backend, get_backend, rust_module
 from .features import flatten, group, Features
 from .dct import jpeglib_to_jpegio, jpegio_to_jpeglib
+from ._zarr import (
+    create_feature_store,
+    feature_task_rows,
+    num_feature_tasks,
+    write_feature_task,
+    missing_feature_tasks,
+    load_zarr,
+)
+from ._hdf5 import load_hdf5
+from ._loaders import (
+    load_features,
+    load_and_split_features,
+    load_features_subset,
+    remove_file_extension,
+)
 
 #
 BACKEND_PYTHON = Backend.BACKEND_PYTHON
@@ -49,6 +64,17 @@ __all__ = [
     'group',
     'jpeglib_to_jpegio',
     'jpegio_to_jpeglib',
+    'create_feature_store',
+    'feature_task_rows',
+    'num_feature_tasks',
+    'write_feature_task',
+    'missing_feature_tasks',
+    'load_zarr',
+    'load_hdf5',
+    'load_features',
+    'load_and_split_features',
+    'load_features_subset',
+    'remove_file_extension',
 ]
 
 

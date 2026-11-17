@@ -169,7 +169,17 @@ cython_debug/
 *.lock
 .cargo
 assets
+# ... except the reference outputs of the legacy ensemble classifier, needed by the tests, and their script
+!test/assets/
+test/assets/**
+!test/assets/**/
+!test/assets/ensemble/numpy/reference.npz
+!test/assets/ensemble/numpy/make_reference.py
 
 
 # claude
 .claude
+
+CHANGELOG.md
+compatibility.md
+run.py
