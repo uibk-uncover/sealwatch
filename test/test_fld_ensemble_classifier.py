@@ -4,7 +4,8 @@ Groups
 ------
 1. Reference: the training trajectory of ``FLD_LEGACY`` matches Matlab.
 2. Equivalence: ``FLD_LEGACY`` reproduces the legacy package bit for bit (frozen outputs in
-   ``assets/ensemble_legacy/reference.npz``, made with the ``ensemble_classifier`` of release 2026.11).
+   ``assets/ensemble/numpy/reference.npz``, made with the ``ensemble_classifier`` of release 2026.11
+   by ``make_reference.py`` in the same folder).
 3. Labels: any two labels work.
 4. Scikit-learn contract and input validation.
 5. Parameters: fixed ``L``, fixed ``d_sub``, ``search_L``, ``dtype``.
@@ -32,8 +33,8 @@ from . import defs
 
 
 TUTORIAL = {
-    12345: "ensemble_matlab/tutorial_seed_12345.mat",
-    98765: "ensemble_matlab/tutorial_seed_98765.mat",
+    12345: "ensemble/matlab/tutorial_seed_12345.mat",
+    98765: "ensemble/matlab/tutorial_seed_98765.mat",
 }
 FldEnsembleClassifier = sw.ensemble_classifier.FldEnsembleClassifier
 FisherLinearDiscriminant = sw.ensemble_classifier.FisherLinearDiscriminant
@@ -42,7 +43,7 @@ FisherLinearDiscriminant = sw.ensemble_classifier.FisherLinearDiscriminant
 @functools.lru_cache(maxsize=None)
 def _legacy_reference():
     """Outputs of the legacy package (release 2026.11), see the module docstring."""
-    with np.load(defs.ASSETS_DIR / "ensemble_legacy/reference.npz") as f:
+    with np.load(defs.ASSETS_DIR / "ensemble/numpy/reference.npz") as f:
         return dict(f)
 
 
