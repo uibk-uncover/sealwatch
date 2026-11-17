@@ -5,8 +5,8 @@ project = 'sealwatch'
 copyright = '2025–2026, Martin Benes & Benedikt Lorch, University of Innsbruck'
 author = 'Martin Benes, Benedikt Lorch'
 
-release = '2026.06'
-version = '2026.06'
+release = '2026.12'
+version = '2026.12'
 
 # -- General configuration
 

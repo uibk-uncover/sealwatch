@@ -39,11 +39,12 @@ Extract features from covers, and from stegos simulated with `conseal <https://c
 Ensemble of FLD
 ---------------
 
-The ensemble of FLD is the classifier popular in steganalysis.
-It is fully functional, tested against the Matlab.
-However, its interface does not match sklearn at the moment.
-This may change in one of the future releases.
-For now, you can use it as follows.
+The ensemble of FLD [Kodovsky2012]_ is the classifier popular in steganalysis.
+It follows the scikit-learn interface, and matches the Matlab reference implementation.
+
+The ensemble assumes pairs: the training set holds each cover together with its stego,
+covers first and stegos in the same order.
+Therefore, split the images, not the samples.
 
 .. code-block:: python
 
@@ -57,20 +58,53 @@ For now, you can use it as follows.
    y_te = np.concatenate([np.zeros(len(idx_te)), np.ones(len(idx_te))])
 
    # train
-   trainer = sw.ensemble_classifier_legacy.FldEnsembleTrainer(
-       Xc=f0[idx_tr],
-       Xs=f1[idx_tr],  # stego of the covers, in the same order
-       seed=42,
-       verbose=0,
-   )
-   model, _ = trainer.train()
+   model = sw.ensemble_classifier.FldEnsembleClassifier(random_state=42)
+   model.fit(X_tr, y_tr)
 
-   # evaluate, predictions are in {-1, +1}, the meters take {0, 1}
+   # evaluate, predictions are in {0, 1}
    acc_tr = sw.metrics.get_meter("accuracy", backend="numpy")
-   acc_tr.update(y_tr, (model.predict(X_tr) + 1) / 2)
+   acc_tr.update(y_tr, model.predict(X_tr))
    acc_te = sw.metrics.get_meter("accuracy", backend="numpy")
-   acc_te.update(y_te, (model.predict(X_te) + 1) / 2)
+   acc_te.update(y_te, model.predict(X_te))
    print(f"accuracy: train {acc_tr.avg} test {acc_te.avg}")
+
+The subspace dimensionality ``d_sub`` and the number of base learners ``L`` are
+found automatically, from the out-of-bag error estimate on the training set.
+The search over ``d_sub`` trains an ensemble for each candidate, which is costly on large features such as SRM.
+It can be sped up, or skipped.
+
+.. code-block:: python
+
+   # cheaper search: at most 50 base learners per d_sub candidate
+   model = sw.ensemble_classifier.FldEnsembleClassifier(search_L=50, random_state=42)
+
+   # no search
+   model = sw.ensemble_classifier.FldEnsembleClassifier(d_sub=1000, random_state=42)
+
+``model.decision_function(X)`` gives the confidence in the range from -1 (cover) to +1 (stego),
+the vote of the base learners.
+``model.training_records_`` lists the ``d_sub`` candidates, with their out-of-bag errors.
+
+.. note::
+
+   Until release 2026.11, the ensemble was trained with ``FldEnsembleTrainer``,
+   on separate covers and stegos, with labels -1 and +1.
+   This interface still works, with a deprecation warning, and gives the same results.
+   To migrate, concatenate the covers and the stegos and pass them to ``fit``.
+
+   .. code-block:: python
+
+      # before
+      model, _ = sw.ensemble_classifier.FldEnsembleTrainer(Xc=Xc, Xs=Xs, seed=42).train()
+
+      # now
+      X = np.concatenate([Xc, Xs])
+      y = np.concatenate([np.zeros(len(Xc)), np.ones(len(Xs))])
+      model = sw.ensemble_classifier.FldEnsembleClassifier(random_state=42).fit(X, y)
+
+.. [Kodovsky2012] J. Kodovský, J. Fridrich, V. Holub.
+   Ensemble classifiers for steganalysis of digital media.
+   IEEE TIFS, 7(2):432–444, 2012.
 
 
 scikit-learn classifier

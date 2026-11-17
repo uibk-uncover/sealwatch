@@ -173,3 +173,7 @@ assets
 
 # claude
 .claude
+
+CHANGELOG.md
+compatibility.md
+run.py

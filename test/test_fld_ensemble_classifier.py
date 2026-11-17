@@ -1,17 +1,15 @@
 """Tests of :mod:`sealwatch.ensemble_classifier`.
 
-Written against the interface before the implementation is ported, so most of
-these fail until then.
-
 Groups
 ------
-1. Reference: the training trajectory matches Matlab, for every implementation.
-2. Equivalence: all implementations give the same output.
+1. Reference: the training trajectory of ``FLD_LEGACY`` matches Matlab.
+2. Equivalence: ``FLD_LEGACY`` reproduces the legacy package bit for bit (frozen outputs in
+   ``assets/ensemble_legacy/reference.npz``, made with the ``ensemble_classifier`` of release 2026.11).
 3. Labels: any two labels work.
 4. Scikit-learn contract and input validation.
 5. Parameters: fixed ``L``, fixed ``d_sub``, ``search_L``, ``dtype``.
 6. Robustness: degenerate data.
-7. Deprecated :class:`FldEnsembleTrainer`.
+7. Deprecated :class:`FldEnsembleTrainer` and :class:`EnsembleClassifier`.
 
 Trainings on the Matlab tutorial data are expensive and shared between tests
 through :func:`_fit_tutorial`.
@@ -20,9 +18,7 @@ Run from the repository root (asset paths are relative).
 """
 
 import functools
-import importlib
 import unittest
-import warnings
 
 import numpy as np
 import scipy.io
@@ -39,8 +35,15 @@ TUTORIAL = {
     12345: "ensemble_matlab/tutorial_seed_12345.mat",
     98765: "ensemble_matlab/tutorial_seed_98765.mat",
 }
-IMPLEMENTATIONS = [sw.FLD_LEGACY, sw.FLD_OPTIMIZED]
 FldEnsembleClassifier = sw.ensemble_classifier.FldEnsembleClassifier
+FisherLinearDiscriminant = sw.ensemble_classifier.FisherLinearDiscriminant
+
+
+@functools.lru_cache(maxsize=None)
+def _legacy_reference():
+    """Outputs of the legacy package (release 2026.11), see the module docstring."""
+    with np.load(defs.ASSETS_DIR / "ensemble_legacy/reference.npz") as f:
+        return dict(f)
 
 
 @functools.lru_cache(maxsize=None)
@@ -61,7 +64,7 @@ def _load_tutorial(seed):
 
 
 @functools.lru_cache(maxsize=None)
-def _fit_tutorial(seed, implementation, search_L=None):
+def _fit_tutorial(seed, implementation=sw.FLD_LEGACY, search_L=None):
     """Fit once per configuration; do not mutate the returned classifier."""
     X, y, *_ = _load_tutorial(seed)
     return FldEnsembleClassifier(
@@ -89,15 +92,31 @@ def _detection_error(y_true, y_pred):
     return 0.5 * (p_fa + p_md)
 
 
-class TestReference(unittest.TestCase):
-    """1. The training trajectory (d_sub, L, OOB error per step) matches Matlab."""
+def _threshold_search_loop(y_true, num_covers, num_stegos):
+    """Reference: the original loop over the sorted samples (0 cover, 1 stego)."""
+    num_samples = num_covers + num_stegos
+    MD, FA = 0, num_covers                  # case 1: covers score lower
+    MD2, FA2 = num_stegos, 0                # case 2: covers score higher
+    E_min = FA + MD
+    threshold_idx = sgn = None
+    for idx in range(num_samples - 1):
+        if y_true[idx] == 0:
+            FA, MD2 = FA - 1, MD2 + 1
+        else:
+            MD, FA2 = MD + 1, FA2 - 1
+        if FA + MD < E_min:
+            E_min, threshold_idx, sgn = FA + MD, idx, 1
+        if FA2 + MD2 < E_min:
+            E_min, threshold_idx, sgn = FA2 + MD2, idx, -1
+    return threshold_idx, sgn
 
-    @parameterized.expand([
-        (f"seed{seed}_{impl.name}", seed, impl)
-        for seed in TUTORIAL for impl in IMPLEMENTATIONS
-    ])
-    def test_matlab_trajectory(self, _name, seed, implementation):
-        clf = _fit_tutorial(seed, implementation)
+
+class TestReference(unittest.TestCase):
+    """1. The training trajectory (d_sub, L, OOB error per step) of FLD_LEGACY matches Matlab."""
+
+    @parameterized.expand([(seed,) for seed in TUTORIAL])
+    def test_matlab_trajectory(self, seed):
+        clf = _fit_tutorial(seed)
         mat = _load_tutorial(seed)[-1]
 
         d_sub = mat["search_d_sub"].flatten()
@@ -111,39 +130,59 @@ class TestReference(unittest.TestCase):
 
 
 class TestEquivalence(unittest.TestCase):
-    """2. All implementations give the same output, not only the same trajectory."""
+    """2. The output is the same as of the legacy package, not only the trajectory."""
 
-    @parameterized.expand([(seed,) for seed in TUTORIAL])
-    def test_legacy_equals_optimized(self, seed):
-        X_test = _load_tutorial(seed)[2]
-        legacy = _fit_tutorial(seed, sw.FLD_LEGACY)
-        optimized = _fit_tutorial(seed, sw.FLD_OPTIMIZED)
-
-        self.assertEqual(legacy.d_sub_, optimized.d_sub_)
-        self.assertEqual(legacy.num_base_learners, optimized.num_base_learners)
-        for a, b in zip(legacy.base_learners_, optimized.base_learners_):
-            np.testing.assert_array_equal(a.subspace, b.subspace)
-            np.testing.assert_allclose(a.learner.w, b.learner.w, rtol=1e-8, atol=1e-10)
-            self.assertAlmostEqual(a.learner.b, b.learner.b, places=8)
-        np.testing.assert_allclose(
-            legacy.decision_function(X_test), optimized.decision_function(X_test))
-        np.testing.assert_array_equal(legacy.predict(X_test), optimized.predict(X_test))
-
-    def test_fld_threshold_matches_reference_loop(self):
-        """The vectorized threshold search picks the same threshold as the original
-        loop, including ties, on random scores with many duplicates."""
-        legacy_fld = importlib.import_module("sealwatch.ensemble_classifier_legacy.fld")
-        new_fld = importlib.import_module("sealwatch.ensemble_classifier._fld")
-        rng = np.random.RandomState(0)
+    def test_fld_matches_legacy_package(self):
+        """The FLD reproduces the original FLD bit for bit, including the threshold
+        tie-breaking, on random data with many duplicate scores."""
+        ref = _legacy_reference()
+        rng = np.random.RandomState(0)  # the generator of the reference trials
         for trial in range(200):
             n = rng.randint(2, 60)
             X = np.round(rng.randn(2 * n, 5), rng.randint(0, 2))  # coarse -> ties
             y = np.concatenate([-np.ones(n, dtype=int), np.ones(n, dtype=int)])
             X[n:, 0] += rng.rand()
-            a = legacy_fld.FisherLinearDiscriminantLearner().fit(X, y)
-            b = new_fld.FisherLinearDiscriminantLearner().fit(X, y)
-            np.testing.assert_allclose(a.w, b.w, rtol=1e-6, atol=1e-8, err_msg=f"trial {trial}")
-            self.assertAlmostEqual(a.b, b.b, places=6, msg=f"trial {trial}")
+            fld = FisherLinearDiscriminant().fit(X, (y + 1) // 2)
+            np.testing.assert_array_equal(fld.w, ref["fld_w"][trial], err_msg=f"trial {trial}")
+            self.assertEqual(fld.b, ref["fld_b"][trial], msg=f"trial {trial}")
+
+    def test_fld_threshold_search_is_identical(self):
+        """The vectorized search selects exactly the same threshold as the original loop."""
+        fld = FisherLinearDiscriminant
+        rng = np.random.RandomState(1)
+        for trial in range(500):
+            nc, ns = rng.randint(1, 40, size=2)
+            y_true = rng.permutation(np.concatenate([np.zeros(nc), np.ones(ns)]))
+            self.assertEqual(
+                _threshold_search_loop(y_true, nc, ns),
+                fld._search_threshold(y_true, nc, ns),
+                f"trial {trial}")
+
+    @parameterized.expand([(seed,) for seed in TUTORIAL])
+    def test_legacy_matches_legacy_package_exactly(self, seed):
+        """FLD_LEGACY reproduces the original implementation bit for bit."""
+        prefix = f"tutorial_{seed}_"
+        ref = {k[len(prefix):]: v for k, v in _legacy_reference().items() if k.startswith(prefix)}
+        X_test = _load_tutorial(seed)[2]
+        new = _fit_tutorial(seed)
+
+        records = [[r["d_sub"], r["num_base_learners"], r["oob_error"]] for r in new.training_records_]
+        np.testing.assert_array_equal(records, ref["records"])  # d_sub, L, and the OOB errors
+        np.testing.assert_array_equal(new.subspaces_, ref["subspaces"])
+        np.testing.assert_array_equal([b.w for b in new.learners_], ref["w"])
+        np.testing.assert_array_equal([b.b for b in new.learners_], ref["b"])
+        np.testing.assert_array_equal(new.decision_function(X_test), ref["confidence"])
+        np.testing.assert_array_equal(new.predict(X_test), ref["predict"])
+
+    def test_fld_validation(self):
+        fld = FisherLinearDiscriminant
+        X = np.random.RandomState(2).randn(10, 3)
+        with self.assertRaises(ValueError):
+            fld().fit(X, np.ones(10, dtype=int))                    # one class only
+        with self.assertRaises(ValueError):
+            fld(implementation="fast").fit_presplit(X[:5], X[5:])   # unknown implementation
+        with self.assertRaises(AttributeError):
+            fld().predict(X)                                        # not fitted
 
     def test_reproducible_and_deterministic_ties(self):
         """Same seed gives the same model, another seed another; ties in ``predict``
@@ -193,7 +232,7 @@ class TestContractAndValidation(unittest.TestCase):
         self.assertEqual(copy.get_params(), clf.get_params())
         copy.set_params(d_sub=20)
         self.assertEqual((copy.d_sub, clf.d_sub), (20, 10))
-        self.assertFalse(hasattr(clf, "base_learners_"))  # constructor does no work
+        self.assertFalse(hasattr(clf, "learners_"))  # constructor does no work
 
     def test_fit_and_fitted_attributes(self):
         X, y = _make_paired(80, 30, seed=6)
@@ -202,8 +241,9 @@ class TestContractAndValidation(unittest.TestCase):
         self.assertEqual(clf.n_features_in_, 30)
         self.assertEqual(clf.d_sub_, 15)
         self.assertEqual(clf.num_base_learners, 10)
-        for base_learner in clf.base_learners_:
-            self.assertEqual(len(np.unique(base_learner.subspace)), 15)
+        self.assertEqual(len(clf.learners_), 10)
+        for subspace in clf.subspaces_:
+            self.assertEqual(len(np.unique(subspace)), 15)
 
     def test_not_fitted(self):
         clf = FldEnsembleClassifier()
@@ -236,6 +276,14 @@ class TestContractAndValidation(unittest.TestCase):
         with self.assertRaises((ValueError, TypeError)):
             FldEnsembleClassifier(implementation="fast", d_sub=5, L=3).fit(X, y)
 
+    def test_n_jobs_warns(self):
+        """Parallel training is not implemented; asking for it warns, and trains sequentially."""
+        X, y = _make_paired(40, 10, seed=16)
+        reference = FldEnsembleClassifier(d_sub=5, L=3, random_state=16).fit(X, y)
+        with self.assertWarns(FutureWarning):
+            clf = FldEnsembleClassifier(d_sub=5, L=3, n_jobs=4, random_state=16).fit(X, y)
+        np.testing.assert_array_equal(clf.decision_function(X), reference.decision_function(X))
+
     def test_input_not_modified(self):
         X, y = _make_paired(60, 20, seed=15)
         X_before, y_before = X.copy(), y.copy()
@@ -245,8 +293,7 @@ class TestContractAndValidation(unittest.TestCase):
 
     def test_exports(self):
         self.assertIsInstance(sw.FLD_LEGACY, sw.ensemble_classifier.Implementation)
-        self.assertIsInstance(sw.FLD_OPTIMIZED, sw.ensemble_classifier.Implementation)
-        self.assertIsNot(sw.FLD_LEGACY, sw.FLD_OPTIMIZED)
+        self.assertIs(FldEnsembleClassifier().implementation, sw.FLD_LEGACY)  # the default
 
 
 class TestParameters(unittest.TestCase):
@@ -291,11 +338,20 @@ class TestParameters(unittest.TestCase):
     def test_search_L_close_to_exact(self, seed):
         """A capped search costs at most a small increase in detection error."""
         _, _, X_test, y_test, _ = _load_tutorial(seed)
-        exact = _fit_tutorial(seed, sw.FLD_OPTIMIZED)
-        capped = _fit_tutorial(seed, sw.FLD_OPTIMIZED, search_L=50)
+        exact = _fit_tutorial(seed)
+        capped = _fit_tutorial(seed, search_L=50)
         pe_exact = _detection_error(y_test, exact.predict(X_test))
         pe_capped = _detection_error(y_test, capped.predict(X_test))
         self.assertLessEqual(pe_capped, pe_exact + 0.02)
+
+    def test_float32_singular_retry(self):
+        """A singular float32 scatter matrix is regularized with the float32 epsilon. The float64
+        epsilon vanishes next to values of order 1 in float32, which made the retry loop spin."""
+        sigma = np.ones((2, 2), dtype=np.float32)  # singular
+        w = FisherLinearDiscriminant()._solve(sigma, np.array([1.0, -1.0], dtype=np.float32))
+        self.assertTrue(np.all(np.isfinite(w)))
+        eps = np.finfo(np.float32).eps
+        np.testing.assert_array_equal(sigma, [[1 + eps, 1], [1, 1 + eps]])  # one retry, in place
 
     def test_float32(self):
         X, y = _make_paired(100, 48, seed=27)
@@ -335,12 +391,30 @@ class TestDeprecatedTrainer(unittest.TestCase):
         np.testing.assert_array_equal([r["d_sub"] for r in records], mat["search_d_sub"].flatten())
         np.testing.assert_array_equal(
             [r["num_base_learners"] for r in records], mat["search_L"].flatten())
-        # Same model as the classifier, with the old -1/+1 interface
-        clf = _fit_tutorial(12345, sw.FLD_OPTIMIZED)
+        # Same model as the FLD_LEGACY classifier, with the old -1/+1 interface
+        clf = _fit_tutorial(12345)  # the compatibility layer reproduces earlier releases
         X_test = _load_tutorial(12345)[2]
         np.testing.assert_array_equal(ensemble.predict(X_test), clf.predict(X_test))
         np.testing.assert_allclose(ensemble.predict_confidence(X_test), clf.decision_function(X_test))
         self.assertTrue(set(np.unique(ensemble.predict(X_test))) <= {-1, 1})
+
+    def test_ensemble_classifier(self):
+        """The old EnsembleClassifier wraps a fitted classifier with labels -1 and +1."""
+        X, y = _make_paired(60, 20, seed=40)
+        clf = FldEnsembleClassifier(d_sub=10, L=7, random_state=40).fit(X, y)
+        with self.assertWarns(DeprecationWarning):
+            ensemble = sw.ensemble_classifier.EnsembleClassifier(clf)
+
+        self.assertEqual((ensemble.d_sub, ensemble.num_base_learners), (10, 7))
+        base_learner = ensemble.base_learners[0]
+        np.testing.assert_array_equal(base_learner.subspace, clf.subspaces_[0])
+        np.testing.assert_array_equal(
+            base_learner.predict(X, subset=np.arange(5)), clf.learners_[0].predict(X[:5, clf.subspaces_[0]]))
+        np.testing.assert_array_equal(ensemble.predict_confidence(X), clf.decision_function(X))
+        np.testing.assert_array_equal(ensemble.predict(X), clf.predict(X))
+        self.assertEqual(ensemble.score(X, y), np.mean(clf.predict(X) == y))
+        with self.assertRaises(ValueError):
+            ensemble.score(X, (y + 1) // 2)  # labels 0 and 1
 
 
 __all__ = [

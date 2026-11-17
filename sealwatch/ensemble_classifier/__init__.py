@@ -4,11 +4,13 @@ Public interface:
 
 - :class:`FldEnsembleClassifier`, a scikit-learn-style ensemble of Fisher linear
   discriminant (FLD) base learners on random subspaces.
-- :class:`Implementation` and the constants :data:`FLD_LEGACY` and
-  :data:`FLD_OPTIMIZED`, which select the code path. Both produce the same output.
-- :class:`FldEnsembleTrainer`, the deprecated trainer interface of earlier releases.
-
-The original implementation is kept as :mod:`sealwatch.ensemble_classifier_legacy`.
+- :class:`Implementation` and the constant :data:`FLD_LEGACY`, which selects the code path.
+  ``FLD_LEGACY`` matches the legacy implementation exactly.
+- :class:`FisherLinearDiscriminant`, the base learner, usable on its own.
+- :class:`FldEnsembleTrainer` and :class:`EnsembleClassifier`, deprecated wrappers that keep
+  the interface of earlier releases (separate covers and stegos, labels -1 and +1).
+- :mod:`~sealwatch.ensemble_classifier.helpers`, deprecated loaders of feature files,
+  moved to :mod:`sealwatch.tools`.
 
 Authors: Benedikt Lorch, Martin Benes
 Affiliation: University of Innsbruck
@@ -16,7 +18,8 @@ Affiliation: University of Innsbruck
 
 from ._implementation import Implementation
 from ._classifier import FldEnsembleClassifier
-from ._trainer import FldEnsembleTrainer
+from .fld import FisherLinearDiscriminant
+from ._deprecated import EnsembleClassifier, FldEnsembleTrainer
+from . import helpers
 
 FLD_LEGACY = Implementation.FLD_LEGACY
-FLD_OPTIMIZED = Implementation.FLD_OPTIMIZED
